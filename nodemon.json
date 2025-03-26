@@ -1,0 +1,14 @@
+{
+  "verbose": true,
+  "watch": [
+    "routes/",
+    "services/",
+    "app.js",
+    "bin/"
+  ],
+  "ext": "js,json,ejs",
+  "ignore": [
+    "node_modules/",
+    "public/"
+  ]
+}
