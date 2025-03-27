@@ -3,11 +3,13 @@ module.exports = {
     {
       name: "nodeRed",
       script: "./bin/www",
-      // log_date_format: "YYYY-MM-DD HH:mm:ss",
-      // error_file: "logs/error.log",
-      // out_file: "logs/out.log",
-      // merge_logs: true,
-      // log_type: "json",
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+      error_file: "logs/error.log",
+      out_file: "logs/out.log",
+      merge_logs: true,
+      log_type: "json",
+      time: true,
+      timestamp: true,
       env_production: {
         PORT: 3000,
         NODE_ENV: "production",
