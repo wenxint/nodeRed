@@ -53,7 +53,7 @@ async function deploy() {
         // 使用PM2启动应用
         console.log('使用PM2启动应用...');
         await ssh.execCommand('pm2 delete nodeRed || true', { cwd: remotePath });
-        await ssh.execCommand('ecosystem.config.js --env production', {
+        await ssh.execCommand('pm2 restart ecosystem.config.js --env production', {
             cwd: remotePath
         });
 
