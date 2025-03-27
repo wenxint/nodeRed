@@ -20,7 +20,8 @@ class DeepSeekService {
         try {
             const response = await this.client.post('/chat/completions', {
                 model: options.model || 'deepseek-chat',
-                messages: [{ role: 'user', content: prompt }],
+                messages: prompt,
+                "stream": false,
                 temperature: options.temperature || 0.7,
                 max_tokens: options.max_tokens || 1000
             });
@@ -35,9 +36,10 @@ class DeepSeekService {
         try {
             const response = await this.client.post('/chat/completions', {
                 model: options.model || 'deepseek-coder',
-                messages: [{ role: 'user', content: prompt }],
+                messages: prompt,
                 temperature: options.temperature || 0.2,
-                max_tokens: options.max_tokens || 2000
+                max_tokens: options.max_tokens || 2000,
+                "stream": false
             });
             return response.data;
         } catch (error) {
