@@ -1,0 +1,4 @@
+{"message":"https://api.deepseek.com this.baseURL\n","timestamp":"2025-03-26 17:22:48","type":"out","process_id":0,"app_name":"nodeRed"}
+{"message":"Server running at http://localhost:3000\n","timestamp":"2025-03-26 17:22:48","type":"out","process_id":0,"app_name":"nodeRed"}
+{"message":"\u001b[0mGET / \u001b[36m304 \u001b[0m7.945 ms - -\u001b[0m\n","timestamp":"2025-03-26 17:41:05","type":"out","process_id":0,"app_name":"nodeRed"}
+{"message":"\u001b[0mGET /stylesheets/style.css \u001b[36m304 \u001b[0m1.298 ms - -\u001b[0m\n","timestamp":"2025-03-26 17:41:05","type":"out","process_id":0,"app_name":"nodeRed"}
