@@ -18,8 +18,10 @@ if (process.env.NODE_ENV === "production") {
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
-
 app.use(logger("dev"));
+// app.use(logger("combined", {
+//   skip: function (req, res) { return true }
+// }));
 app.use(
   cors({
     origin: ["http://9.134.36.40:3000", "http://9.134.36.40"],

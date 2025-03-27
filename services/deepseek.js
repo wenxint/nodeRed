@@ -5,7 +5,7 @@ class DeepSeekService {
   constructor() {
     this.apiKey = process.env.DEEPSEEK_API_KEY;
     this.baseURL = process.env.DEEPSEEK_API_BASE_URL;
-    console.log(this.baseURL, "this.baseURL");
+
 
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -18,8 +18,7 @@ class DeepSeekService {
 
   async generateText(prompt, options = {}) {
     try {
-      console.log(prompt, "prompt");
-      console.log("1111", "111");
+
 
       const response = await this.client.post("/chat/completions", {
         model: options.model || "deepseek-chat",
