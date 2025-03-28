@@ -8,7 +8,7 @@ var app = express();
 app.use(
   cors({
     origin: "*",
-    credentials: true,
+    credentials: false,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
@@ -52,6 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/static', express.static(path.join(__dirname, 'static')));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);

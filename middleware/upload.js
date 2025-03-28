@@ -4,7 +4,7 @@ const path = require('path');
 // 配置文件存储
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../public/uploads'));
+    cb(null, path.join(__dirname, '../static'));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -12,23 +12,20 @@ const storage = multer.diskStorage({
   }
 });
 
-// 默认的文件过滤器
-const defaultFileFilter = (req, file, cb) => {
-  // 默认允许所有文件类型
-  cb(null, true);
-};
-
-// 默认的文件大小限制
-const defaultLimits = {
-  fileSize: 5 * 1024 * 1024 // 默认限制文件大小为5MB
-};
-
 // 创建可配置的multer实例
-const createUpload = (options = {}) => {
+const createUpload = () => {
   const config = {
     storage: storage,
-    fileFilter: options.fileFilter || defaultFileFilter,
-    limits: options.limits || defaultLimits
+    // 添加文件大小限制，默认是无限制
+    limits: {
+      // fileSize: 10 * 1024 * 1024 // 10MB
+    },
+    // 添加文件过滤器，用于调试
+    fileFilter: function (req, file, cb) {
+      console.log('收到文件上传请求:', file);
+      // 接受所有文件
+      cb(null, true);
+    }
   };
 
   return multer(config);
