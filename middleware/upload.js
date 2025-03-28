@@ -3,9 +3,9 @@ const path = require('path');
 
 // 配置文件存储
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../static'));
-  },
+  // destination: function (req, file, cb) {
+  //   cb(null, path.join(__dirname, '../static'));
+  // },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
