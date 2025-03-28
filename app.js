@@ -4,12 +4,37 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
-
+var app = express();
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-request-id",
+      "Accept",
+      "Origin",
+      "X-Requested-With",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers",
+      "sign",
+      "uid",
+      'client-ip',
+      'currenttime',
+      'phone-brand',
+      'device-id',
+      'token',
+      'Proxy-Authorization'
+    ],
+  })
+);
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-var apiRouter = require("./routes/deepseek");
+var deepseekRouter = require("./routes/deepseek");
+var proto = require("./routes/redApi/proto");
 
-var app = express();
 if (process.env.NODE_ENV === "production") {
   console.log("Running in production mode");
 } else {
@@ -22,15 +47,7 @@ app.use(logger("dev"));
 // app.use(logger("combined", {
 //   skip: function (req, res) { return true }
 // }));
-app.use(
-  cors({
-    origin: ["http://9.134.36.40:3000", "http://9.134.36.40"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
-  })
-);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -38,7 +55,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/deepseek", apiRouter);
+app.use("/deepseek", deepseekRouter);
+app.use("/myapi", proto);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
