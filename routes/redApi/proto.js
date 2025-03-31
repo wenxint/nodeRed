@@ -5,6 +5,7 @@ const upload = createUpload();
 const path = require("path");
 const protobuf = require("protobufjs");
 const fs = require("fs");
+const { AppError } = require('../../middleware/errorHandler');
 
 async function convertBase64ToJson(protoFilePath, base64, input) {
   try {
@@ -32,8 +33,7 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
 
     return object;
   } catch (error) {
-    console.error("Base64解析失败:", error);
-    throw error;
+    throw new AppError(400, `Base64解析失败: ${error.message}`);
   }
 }
 
@@ -46,16 +46,10 @@ router.post("/proto/submit", upload.single("file"), async (req, res) => {
   console.log("是否包含文件:", !!req.file);
 
   if (!req.body.input) {
-    return res.status(400).json({
-      success: false,
-      message: "请提供input参数",
-    });
+    throw new AppError(400, "请提供input参数");
   }
   if (!req.body.base64) {
-    return res.status(400).json({
-      success: false,
-      message: "请提供base64参数",
-    });
+    throw new AppError(400, "请提供base64参数");
   }
   const input = req.body.input.split(",");
   const base64 = req.body.base64;
@@ -66,10 +60,7 @@ router.post("/proto/submit", upload.single("file"), async (req, res) => {
   try {
     // 检查是否有文件上传
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "请上传文件",
-      });
+      throw new AppError(400, "请上传文件");
     }
 
     // 获取文件信息和路径
@@ -105,12 +96,7 @@ router.post("/proto/submit", upload.single("file"), async (req, res) => {
       throw new Error(`处理Proto文件失败: ${error.message}`);
     }
   } catch (error) {
-    console.error("文件上传错误:", error);
-    res.status(500).json({
-      success: false,
-      message: "文件上传失败",
-      error: error.message,
-    });
+    next(error);
   }
 });
 
