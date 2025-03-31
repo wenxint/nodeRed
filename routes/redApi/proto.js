@@ -33,31 +33,31 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
 
     return object;
   } catch (error) {
-    throw new AppError(400, `Base64解析失败: ${error.message}`);
+    throw new AppError(400, `解析失败: ${error.message}`);
   }
 }
 
 // 文件上传接口
-router.post("/proto/submit", upload.single("file"), async (req, res) => {
-  // 添加详细的请求信息日志
-  console.log("Content-Type:", req.headers["content-type"]);
-  console.log("请求体大小:", req.headers["content-length"]);
-  console.log("完整请求头:", req.headers);
-  console.log("是否包含文件:", !!req.file);
-
-  if (!req.body.input) {
-    throw new AppError(400, "请提供input参数");
-  }
-  if (!req.body.base64) {
-    throw new AppError(400, "请提供base64参数");
-  }
-  const input = req.body.input.split(",");
-  const base64 = req.body.base64;
-  console.log("请求体:", req.body);
-  console.log("文件信息:", req.file);
-  console.log("请求头:", req.headers);
-
+router.post("/proto/submit", upload.single("file"), async (req, res, next) => {
   try {
+    // 添加详细的请求信息日志
+    console.log("Content-Type:", req.headers["content-type"]);
+    console.log("请求体大小:", req.headers["content-length"]);
+    console.log("完整请求头:", req.headers);
+    console.log("是否包含文件:", !!req.file);
+
+    if (!req.body.input) {
+      throw new AppError(400, "请提供input参数");
+    }
+    if (!req.body.base64) {
+      throw new AppError(400, "请提供base64参数");
+    }
+    const input = req.body.input.split(",");
+    const base64 = req.body.base64;
+    console.log("请求体:", req.body);
+    console.log("文件信息:", req.file);
+    console.log("请求头:", req.headers);
+
     // 检查是否有文件上传
     if (!req.file) {
       throw new AppError(400, "请上传文件");
@@ -67,34 +67,30 @@ router.post("/proto/submit", upload.single("file"), async (req, res) => {
     const fileUrl = `/static/${req.file.filename}`; // 文件的URL路径
     const filePath = req.file.path;
 
-    try {
-      // 调用convertBase64ToJson处理文件内容和base64字符串
-      const jsonResult = await convertBase64ToJson(
-        filePath,
-        base64,
-        input
-      );
+    // 调用convertBase64ToJson处理文件内容和base64字符串
+    const jsonResult = await convertBase64ToJson(
+      filePath,
+      base64,
+      input
+    );
 
-      const fileInfo = {
-        uid: Date.now().toString(), // 生成唯一ID
-        filename: req.file.filename,
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        path: fileUrl,
-        input: input, // 添加input字段
-        result: jsonResult, // 添加转换结果
-      };
+    const fileInfo = {
+      uid: Date.now().toString(), // 生成唯一ID
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: fileUrl,
+      input: input, // 添加input字段
+      result: jsonResult, // 添加转换结果
+    };
 
-      // 返回文件信息和处理结果
-      res.json({
-        success: true,
-        message: "文件处理成功",
-        data: fileInfo,
-      });
-    } catch (error) {
-      throw new Error(`处理Proto文件失败: ${error.message}`);
-    }
+    // 返回文件信息和处理结果
+    res.json({
+      success: true,
+      message: "文件处理成功",
+      data: fileInfo,
+    });
   } catch (error) {
     next(error);
   }
