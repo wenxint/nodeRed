@@ -5,13 +5,16 @@ const upload = createUpload();
 const path = require("path");
 const protobuf = require("protobufjs");
 const fs = require("fs");
-const { AppError } = require('../../middleware/errorHandler');
+const { AppError } = require("../../middleware/errorHandler");
 
 async function convertBase64ToJson(protoFilePath, base64, input) {
   try {
     // 将Base64字符串转换为Buffer
+
     const buffer = Buffer.from(base64, "base64");
 
+
+    // console.log("buffer:", buffer);
     // 加载proto文件
     const root = await protobuf.load(protoFilePath);
 
@@ -53,6 +56,7 @@ router.post("/proto/submit", upload.single("file"), async (req, res, next) => {
       throw new AppError(400, "请提供base64参数");
     }
     const input = req.body.input.split(",");
+    console.log("input:", input);
     const base64 = req.body.base64;
     // console.log("请求体:", req.body);
     // console.log("文件信息:", req.file);
@@ -68,11 +72,7 @@ router.post("/proto/submit", upload.single("file"), async (req, res, next) => {
     const filePath = req.file.path;
 
     // 调用convertBase64ToJson处理文件内容和base64字符串
-    const jsonResult = await convertBase64ToJson(
-      filePath,
-      base64,
-      input
-    );
+    const jsonResult = await convertBase64ToJson(filePath, base64, input);
 
     const fileInfo = {
       uid: Date.now().toString(), // 生成唯一ID

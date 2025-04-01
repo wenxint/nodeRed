@@ -22,7 +22,7 @@ const createUpload = () => {
     },
     // 添加文件过滤器，用于调试
     fileFilter: function (req, file, cb) {
-      console.log('收到文件上传请求:', file);
+      // console.log('收到文件上传请求:', file);
       // 接受所有文件
       cb(null, true);
     }
