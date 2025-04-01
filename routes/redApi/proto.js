@@ -41,10 +41,10 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
 router.post("/proto/submit", upload.single("file"), async (req, res, next) => {
   try {
     // 添加详细的请求信息日志
-    console.log("Content-Type:", req.headers["content-type"]);
-    console.log("请求体大小:", req.headers["content-length"]);
-    console.log("完整请求头:", req.headers);
-    console.log("是否包含文件:", !!req.file);
+    // console.log("Content-Type:", req.headers["content-type"]);
+    // console.log("请求体大小:", req.headers["content-length"]);
+    // console.log("完整请求头:", req.headers);
+    // console.log("是否包含文件:", !!req.file);
 
     if (!req.body.input) {
       throw new AppError(400, "请提供input参数");
@@ -54,9 +54,9 @@ router.post("/proto/submit", upload.single("file"), async (req, res, next) => {
     }
     const input = req.body.input.split(",");
     const base64 = req.body.base64;
-    console.log("请求体:", req.body);
-    console.log("文件信息:", req.file);
-    console.log("请求头:", req.headers);
+    // console.log("请求体:", req.body);
+    // console.log("文件信息:", req.file);
+    // console.log("请求头:", req.headers);
 
     // 检查是否有文件上传
     if (!req.file) {
