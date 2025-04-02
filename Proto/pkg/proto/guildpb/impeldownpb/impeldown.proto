@@ -1,0 +1,458 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.impeldownpb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/impeldownpb";
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "clientpb/record.proto";
+
+// 勇闯推进城服务
+service GuildImpelDownService {
+  // 推进城主界面
+  rpc ImpelDownMainMenu(ImpelDownMainMenuRequest) returns (ImpelDownMainMenuReply);
+  // 开启推进城
+  rpc OpenImpelDown(OpenImpelDownRequest) returns (OpenImpelDownReply);
+  // 进入推进城
+  rpc EnterImpelDown(EnterImpelDownRequest) returns (EnterImpelDownReply);
+  // 移除玩家新手标志
+  rpc MarkPlayerNotNewbie(MarkPlayerNotNewbieRequest) returns (MarkPlayerNotNewbieReply);
+  // 同盟背包信息
+  rpc GuildBagInfo(GuildBagInfoRequest) returns (GuildBagInfoReply);
+  // 贡献排名信息
+  rpc ContributionRankInfo(ContributionRankInfoRequest) returns (ContributionRankInfoReply);
+  // 探索奖励信息
+  rpc ExplorationRewardInfo(ExplorationRewardInfoRequest) returns (ExplorationRewardInfoReply);
+  // 同盟目标信息
+  rpc GuildTaskInfo(GuildTaskInfoRequest) returns (GuildTaskInfoReply);
+  // 领取同盟目标奖励
+  rpc ReceiveGuildTask(ReceiveGuildTaskRequest) returns (ReceiveGuildTaskReply);
+  // 批量领取同盟目标奖励
+  rpc BatchReceiveGuildTask(BatchReceiveGuildTaskRequest) returns (BatchReceiveGuildTaskReply);
+  // 领取探索进度奖励
+  rpc ReceiveExplorationReward(ReceiveExplorationRewardRequest) returns (ReceiveExplorationRewardReply);
+  // 批量领取探索进度奖励
+  rpc BatchReceiveExplorationReward(BatchReceiveExplorationRewardRequest) returns (BatchReceiveExplorationRewardReply);
+  // 购买行动力
+  rpc BuyEnergy(BuyEnergyRequest) returns (BuyEnergyReply);
+  // 购买行动力花费道具
+  rpc BuyEnergyCost(BuyEnergyCostRequest) returns (BuyEnergyCostReply);
+  // 局内心跳，用于判断玩家是否退出地图
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);
+  // 查询某个事件的详情，在玩家处理事件前需要调用
+  rpc EventDetail(EventDetailRequest) returns (EventDetailReply);
+  // 客户端上报事件完成
+  rpc FinishEvent(FinishEventRequest) returns (FinishEventReply);
+  // 开始战斗(BOSS、精英怪、小怪事件战斗开始前需要调用)
+  rpc PreFight(PreFightRequest) returns (PreFightReply);
+  // 结束战斗(BOSS、精英怪、小怪事件战斗结束后需要调用)
+  rpc PostFight(PostFightRequest) returns (PostFightReply);
+  // 快速扫荡战斗事件
+  rpc RaidBattle(RaidBattleRequest) returns (RaidBattleReply);
+}
+
+message ImpelDownMainMenuRequest {}
+
+message ImpelDownMainMenuReply {
+  bool is_opened                    = 1;  // 是否开启（false 表示未开启，true 表示已开启，可进入）
+  int64 curr_level                  = 2;  // 当前挑战层数
+  int64 max_level                   = 3;  // 最大可挑战层数
+  repeated LevelDetail level_detail = 4;  // 每层详情
+}
+
+message LevelDetail {
+  int64 level                 = 1;  // 层数
+  repeated corepb.Item awards = 2;  // 奖励预览
+}
+
+message OpenImpelDownRequest {
+  int64 open_level = 1;  // 开启层数
+}
+
+message OpenImpelDownReply {}
+
+message EnterImpelDownRequest {
+  int64 enter_level = 1;  // 进入层数
+}
+
+enum EventStatus {
+  EVENT_STATUS_UNKNOWN = 0;  // 未知
+  NEW                  = 1;  // 新事件
+  PROCESSING           = 2;  // 进行中
+  FINISHED             = 3;  // 已完成
+}
+
+message EventInfo {
+  int64 event_id      = 1;  // 事件 ID
+  EventStatus status  = 2;  // 事件状态
+  int64 fight_players = 3;  // 战斗中玩家数量
+}
+
+message PointInfo {
+  uint32 x             = 1;  // x 坐标
+  uint32 y             = 2;  // y 坐标
+  bool visible         = 3;  // 是否可见
+  EventInfo event_info = 4;  // 事件信息(如果 visible 为 false，则不会有 event info)
+  bool birth_point     = 5;  // 是否为出生点
+}
+
+message PlayerPosition {
+  int64 gid = 1;  // 玩家 gid
+  uint32 x  = 2;  // x 坐标
+  uint32 y  = 3;  // y 坐标
+}
+
+message PlayerProfile {
+  string name     = 1;  // 玩家名称
+  string plat_pic = 2;  // 玩家头像
+}
+
+// 地图信息
+message MapInfo {
+  int64 map_id                              = 1;  // 地图 ID
+  int64 version                             = 2;  // 地图版本号
+  repeated PointInfo points                 = 3;  // 地图上的点信息
+  repeated PlayerPosition player_positions  = 4;  // 玩家位置信息
+  map<int64, PlayerProfile> player_profiles = 5;  // 玩家信息(gid -> profile)
+}
+
+// 进入推进城，返回当前地图的详细信息
+message EnterImpelDownReply {
+  int64 current_exploration                      = 1;   // 当前探索进度
+  int64 all_exploration                          = 2;   // 总探索进度
+  int64 remain_buy_times                         = 3;   // 剩余可购买次数
+  int64 all_buy_times                            = 4;   // 总可购买次数
+  int64 current_energy                           = 5;   // 当前行动力
+  repeated int64 buff_list                       = 6;   // buff 列表
+  repeated Task tasks                            = 7;   // 任务列表
+  repeated ExplorationReward exploration_rewards = 8;   // 所有探索奖励列表
+  MapInfo map_info                               = 9;   // 全量的地图信息
+  bool player_is_newbie                          = 10;  // 玩家是否为新手
+}
+
+// 移除玩家新手标记
+message MarkPlayerNotNewbieRequest {}
+
+message MarkPlayerNotNewbieReply {}
+
+message GuildBagInfoRequest {}
+
+message GuildBagInfoReply {
+  repeated corepb.Item items = 1;  // 同盟背包道具列表
+}
+
+message ContributionRankInfoRequest {}
+
+message ContributionRankPlayerInfo {
+  int64 gid                  = 1;  // 玩家 gid
+  string name                = 2;  // 玩家名称
+  string plat_pic            = 3;  // 玩家头像
+  int64 boss_damaged         = 4;  // 对 Boss 造成的伤害
+  int64 elite_damaged        = 5;  // 对精英怪物造成的伤害
+  int64 exploration_progress = 6;  // 探索度
+  int64 first_enter_map_time = 7;  // 首次进入地图时间戳
+}
+
+message ContributionRankInfoReply {
+  repeated ContributionRankPlayerInfo players = 1;
+}
+
+message GuildTaskInfoRequest {}
+
+enum TaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNDONE = 0;  // 不可领奖
+  REWARD = 1;  // 可领奖
+  FINISH = 2;  // 已领奖
+}
+
+message Task {
+  int64 id                    = 1;  // 任务 ID
+  int64 curr                  = 2;  // 当前完成度
+  int64 target                = 3;  // 目标完成度
+  TaskStatus status           = 4;  // 任务状态
+  repeated corepb.Item awards = 5;  // 任务奖励
+}
+
+message GuildTaskInfoReply {
+  repeated Task tasks = 1;  // 任务列表
+}
+
+message ExplorationRewardInfoRequest {}
+
+message ExplorationRewardInfoReply {
+  int64 current_exploration                      = 1;  // 当前探索进度
+  int64 all_exploration                          = 2;  // 总探索进度
+  repeated ExplorationReward exploration_rewards = 3;  // 探索奖励列表
+}
+
+message ReceiveGuildTaskRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message BatchReceiveGuildTaskRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message ReceiveGuildTaskReply {
+  Task task                   = 1;  // 对应 task id 的任务信息
+  repeated corepb.Item awards = 2;  // 领取到的同盟目标奖励
+}
+
+message BatchReceiveGuildTaskReply {
+  repeated corepb.Item awards = 1;  // 领取到的同盟目标奖励
+  repeated int64 awarded_ids  = 2;  // 本次领取的奖励的id列表
+}
+
+message ReceiveExplorationRewardRequest {
+  int64 exploration_id = 1;  // 探索进度 ID
+}
+
+message BatchReceiveExplorationRewardRequest {
+  int64 exploration_id = 1;  // 探索进度 ID
+}
+
+enum ExplorationStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNFINISHED = 0;  // 不可领奖
+  REWARDED   = 1;  // 可领奖
+  COMPLETED  = 2;  // 已领奖
+}
+
+message ExplorationReward {
+  int64 exploration_id                 = 1;  // 探索奖励 ID
+  int64 exploration_value              = 2;  // 探索目标值
+  ExplorationStatus exploration_status = 3;  // 探索奖励状态
+  repeated corepb.Item awards          = 4;  // 探索奖励道具
+}
+
+message ReceiveExplorationRewardReply {
+  repeated corepb.Item awards                    = 1;  // 领取到的探索进度奖励
+  repeated ExplorationReward exploration_rewards = 2;  // 所有探索奖励列表
+}
+
+message BatchReceiveExplorationRewardReply {
+  repeated corepb.Item awards                    = 1;  // 领取到的探索进度奖励
+  repeated ExplorationReward exploration_rewards = 2;  // 所有探索奖励列表
+  repeated int64 awarded_ids                     = 3;  // 本次领取的奖励的id列表
+}
+
+message BuyEnergyRequest {
+  int64 buy_times = 1;  // 本次购买次数
+}
+
+message BuyEnergyReply {
+  int64 remain_buy_times = 1;  // 剩余可购买次数
+  int64 current_energy   = 2;  // 当前行动力
+}
+
+message BuyEnergyCostRequest {
+  int64 buy_times = 1;  // 本次购买次数
+}
+
+message BuyEnergyCostReply {
+  repeated corepb.Item cost = 1;  // 购买道具花费
+}
+
+message HeartbeatRequest {
+  int64 map_id = 1;  // 客户端正在使用的 map id
+}
+
+message HeartbeatReply {}
+
+message EventDetailRequest {
+  uint32 x       = 1;  // 坐标 X
+  uint32 y       = 2;  // 坐标 Y
+  int64 event_id = 3;  // 事件ID
+}
+
+message QuestionEventDetail {
+  repeated int64 question_id = 1;  // 问题ID
+}
+
+message CollectionEventDetail {
+  repeated corepb.Item awards = 1;  // 奖励列表
+}
+
+message TaskEventDetail {
+  repeated corepb.Item deduct = 1;  // 扣除道具列表
+  repeated corepb.Item awards = 2;  // 奖励道具列表
+}
+
+message BuffEventDetail {
+  repeated int64 buff_list = 1;  // 可获得的 buff 列表
+}
+
+message DonationEventDetail {
+  repeated corepb.Item deduct = 1;  // 扣除道具列表
+}
+
+message MonsterEventDetail {
+  int64 recommend_fc                 = 1;  // 推荐战力
+  repeated corepb.Item guild_rewards = 2;  // 如果通过，同盟道具奖励
+  bool can_raid                      = 3;  // 能否扫荡
+}
+
+// BOSS/精英怪挑战记录
+message BossEliteFightRecord {
+  int64 gid          = 1;  // 玩家 gid
+  string name        = 2;  // 玩家名称
+  int64 total_damage = 4;  // 累计伤害
+}
+
+message EliteEventDetail {
+  int64 recommend_fc                    = 1;  // 推荐战力
+  repeated corepb.Item player_rewards   = 2;  // 如果通过，遗留宝箱奖励
+  bool can_raid                         = 3;  // 能否扫荡
+  int64 remain_hp                       = 4;  // 剩余血量
+  int64 total_hp                        = 5;  // 总血量
+  repeated BossEliteFightRecord records = 6;  // 战斗记录
+  repeated int64 buffs                  = 7;  // buff 列表
+}
+
+message BossEventDetail {
+  int64 recommend_fc                    = 1;  // 推荐战力
+  repeated corepb.Item player_rewards   = 2;  // 如果通过，遗留宝箱奖励
+  bool can_raid                         = 3;  // 能否扫荡
+  int64 remain_hp                       = 4;  // 剩余血量
+  int64 total_hp                        = 5;  // 总血量
+  repeated BossEliteFightRecord records = 6;  // 战斗记录
+}
+
+// 遗留宝箱事件详情
+message RewardEventDetail {
+  bool received                       = 1;  // 是否已经领取
+  repeated corepb.Item player_rewards = 2;  // 奖励
+  bool available                      = 3;  // 是否能领取（可能在奖励掉落后加入同盟，则是不能领取的）
+}
+
+message EventDetailReply {
+  int64 energy_cost = 1;  // 事件消耗体力
+  oneof event_detail {
+    QuestionEventDetail question_event     = 5;   // 问题事件详情
+    CollectionEventDetail collection_event = 6;   // 采集事件详情
+    TaskEventDetail task_event             = 7;   // 任务事件详情
+    BuffEventDetail buff_event             = 8;   // Buff 事件详情
+    DonationEventDetail donation_event     = 9;   // 捐献事件详情
+    MonsterEventDetail monster_event       = 10;  // 小怪事件详情
+    EliteEventDetail elite_event           = 11;  // 精英事件详情
+    BossEventDetail boss_event             = 12;  // BOSS事件详情
+    RewardEventDetail reward_event         = 13;  // 遗留宝箱事件详情
+  };
+}
+
+enum EventType {
+  EVENT_TYPE_UNKNOWN = 0;  // 无
+  MONSTER            = 1;  // 小怪
+  ELITE              = 2;  // 精英
+  BOSS               = 3;  // BOSS
+  QUESTION_DIALOG    = 4;  // 题库与对话
+  COLLECTION         = 5;  // 采集
+  DONATION           = 6;  // 捐献
+  TASK               = 7;  // 任务
+  BUFF               = 8;  // 属性加成
+  REWARD_BOX         = 9;  // 遗留宝箱
+}
+
+message QuestionEvent {
+  map<int64, int64> answers = 1;  // 玩家回答(question id -> answer id)
+}
+
+message FinishEventRequest {
+  uint32 x       = 1;  // 坐标 X
+  uint32 y       = 2;  // 坐标 Y
+  int64 event_id = 3;  // 事件 ID
+  oneof payload {
+    QuestionEvent quesion_event = 4;  // 事件类型为 QUESTION_DIALOG 时，需要填写此字段
+  };
+}
+
+message FinishEventReply {
+  int64 current_energy        = 1;  // 当前的行动力
+  repeated corepb.Item awards = 2;  // 事件奖励
+}
+
+message PreFightRequest {
+  uint32 x       = 1;  // 坐标 X
+  uint32 y       = 2;  // 坐标 Y
+  int64 event_id = 3;  // 事件 ID
+}
+
+message PreFightReply {
+  corepb.GameStartMessage start_message = 1;  // 游戏开始消息
+}
+
+// 纯客户端副本战斗结束时客户端上报的通用信息，放到同一个message中吧
+message PVEReport {
+  int64 fight_time              = 1;   // 实际战斗时长，不包括暂停这些
+  int64 real_fight_time         = 2;   // 从加载成功到战斗结束经过的时长
+  bool is_auto_fight            = 3;   // 是否是自动战斗
+  int64 dead_times              = 4;   // 死亡次数
+  int64 revive_times            = 5;   // 复活次数
+  int64 dial_used_cnt           = 6;   // 空岛贝使用次数
+  int64 damage                  = 7;   // 总伤害
+  bool success                  = 8;   // 是否通关
+  int64 dungeon_id              = 9;   // 副本ID
+  clientpb.DungeonRecord record = 10;  // 对局数据
+  bytes dungeon_record_bytes    = 11;  // 对局数据，优先取这个
+}
+
+message PostFightRequest {
+  uint32 x         = 1;  // 坐标 X
+  uint32 y         = 2;  // 坐标 Y
+  int64 event_id   = 3;  // 事件 ID
+  PVEReport report = 4;  // 战斗详细信息
+}
+
+message PostFightReply {
+  int64 current_energy                = 1;  // 当前的行动力
+  corepb.GameOverMessage over_message = 2;  // 游戏结束消息
+  repeated corepb.Item guild_rewards  = 3;  // 关卡奖励
+}
+
+message RaidBattleRequest {
+  uint32 x       = 1;  // 坐标 X
+  uint32 y       = 2;  // 坐标 Y
+  int64 event_id = 3;  // 事件 ID
+}
+
+message RaidBattleReply {
+  repeated corepb.Item guild_rewards = 1;  // 关卡奖励
+  int64 current_energy               = 2;  // 当前的行动力
+  int64 damage                       = 3;  // 造成伤害
+  oneof event_detail {
+    MonsterEventDetail monster_event = 10;  // 小怪事件详情
+    EliteEventDetail elite_event     = 11;  // 精英事件详情
+    BossEventDetail boss_event       = 12;  // BOSS事件详情
+  };
+}
+
+// 地图变更时的 notify，客户端需要基于版本号决定是否应用，只会有产生变更的 points 和 player positions 信息
+message MapChangeNotify {
+  int64 version                             = 1;  // 地图版本号
+  repeated PointInfo changed_points         = 2;  // 此次变更的点列表
+  repeated PlayerPosition player_positions  = 3;  // 此次变更的玩家列表
+  map<int64, PlayerProfile> player_profiles = 4;  // 此次变更的玩家信息
+}
+
+// 强制玩家退出 notify
+message KickPlayerNotify {}
+
+// 同盟目标 notify
+message GuildTaskNotify {
+  repeated Task tasks = 1;  // 刚刚完成的任务列表
+}
+
+// 探索进度 notify
+message ExplorationNotify {
+  int64 exploration_progress                     = 1;                      // 当前探索进度
+  repeated ExplorationReward exploration_rewards = 2 [deprecated = true];  // 探索奖励列表（废弃）
+  bool has_new_done_exploration                  = 3;                      // 是否包含刚刚完成的探索奖励
+}
+
+// Buff notify
+message BuffNotify {
+  repeated int64 buff_list = 1;  // 当前 buff 列表
+}

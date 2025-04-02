@@ -1,0 +1,126 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.islandclashpb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/islandclashpb";
+
+import "corepb/common.proto";
+import "pkg/proto/guildpb/api.proto";
+
+// 岛屿激斗服务
+service IslandClashService {
+  // 查询主界面信息
+  rpc QueryMainInfo(QueryMainInfoRequest) returns (QueryMainInfoReply);
+  // 查询奖励信息
+  rpc QueryRewardInfo(QueryRewardInfoRequest) returns (QueryRewardInfoReply);
+  // 查询记录信息
+  rpc QueryRecordInfo(QueryRecordInfoRequest) returns (QueryRecordInfoReply);
+  // 领取奖励（批量）
+  rpc ClaimReward(ClaimRewardRequest) returns (ClaimRewardReply);
+  // 检查是否可以进入激斗
+  rpc CheckEnterClash(CheckEnterClashRequest) returns (CheckEnterClashReply);
+}
+
+message QueryMainInfoRequest {}
+
+// 赛季信息
+message SeasonInfo {
+  int64 year       = 1;  // 年份
+  int64 season     = 2;  // 赛季ID
+  int64 begin_time = 3;  // 开始时间
+  int64 end_time   = 4;  // 结束时间
+}
+
+// 周状态信息
+message WeekStateInfo {
+  int64 begin_time = 1;  // 开始时间
+  int64 end_time   = 2;  // 结束时间
+  int64 status     = 3;  // 状态 0-未开启玩法 1-未进行比赛 2-当前正在进行或下一次比赛 3-已进行比赛
+  int64 rank       = 4;  // 排名 （从1开始，第1名为冠军，第2名为亚军，第3~4名为四强，第5~8名为八强，其他不显示）
+}
+
+// 赛季积分排名信息
+message SeasonRankInfo {
+  int64 guild_id    = 1;  // 同盟的id
+  string guild_name = 2;  // 同盟的名字
+  int64 zone_id     = 3;  // 所在区
+  int64 flag        = 4;  // 同盟旗帜
+  int64 score       = 5;  // 分数
+  int64 fc          = 6;  // 战力
+  int64 rank        = 7;  // 排名 为0表示未上榜
+}
+
+message QueryMainInfoReply {
+  SeasonInfo season_info               = 1;  // 赛季信息
+  repeated SeasonRankInfo season_ranks = 2;  // 赛季排名
+  repeated WeekStateInfo week_states   = 3;  // 周赛程 至少8个，最多9个
+  string router_id                     = 4;  // 路由的ID (用于塞入metadata的x-warid里；不同于同屏可见的router_id)
+  string clash_id                      = 5;  // 岛屿激斗ID，用于填充局内协议的request
+  guildpb.BanquetBuff banquet_buff     = 6;  // 宴会buff
+  SeasonRankInfo my_season_rank        = 7;  // 我所在同盟的排名
+  WeekStateInfo current_week_state     = 8;  // 即将或者正在进行的赛程
+}
+
+message PersonalRewardInfo {
+  int64 id                   = 1;  // 奖励id
+  string desc                = 2;  // 描述
+  repeated corepb.Item items = 3;  // 奖励道具
+  int64 status               = 4;  // 0-未达成 1-可领奖 2-已领奖
+  int64 type                 = 5;  // 1-个人贡献奖励 2-战斗资产奖励
+  int64 progress             = 6;  // 当前进度
+  int64 max_progress         = 7;  // 最大进度
+}
+
+message RankRewardInfo {
+  string desc                = 1;  // 描述
+  repeated corepb.Item items = 2;  // 奖励道具
+}
+
+message QueryRewardInfoRequest {}
+message QueryRewardInfoReply {
+  repeated PersonalRewardInfo personal_rewards = 1;  // 个人奖励
+  repeated RankRewardInfo week_rank_rewards    = 2;  // 本服排名奖励（当周比赛）
+  repeated RankRewardInfo season_rank_rewards  = 3;  // 赛季排名奖励
+}
+
+message RecordInfo {
+  int64 timestamp = 1;  // 记录的时间
+  int64 status    = 2;  // 状态 0-未开启玩法 1-未进行比赛 2-比赛正在进行 3-已结束比赛（为该值时，已下字段有效）
+  bool cross_flag = 3;  // 是否跨服  true-跨服 false-本服
+  int64 rank      = 4;  // 同盟获得的名次，为0表示未获得名次
+  int64 score     = 5;  // 同盟获得的积分
+}
+
+message QueryRecordInfoRequest {}
+message QueryRecordInfoReply {
+  SeasonInfo season_info      = 1;  // 赛季信息
+  repeated RecordInfo records = 2;  // 赛季记录
+}
+
+message ClaimRewardRequest {
+  int64 id = 1;  // 选中领取的那个奖励
+}
+
+message ClaimRewardReply {
+  repeated PersonalRewardInfo rewards = 1;  // 变化的奖励列表详情
+  repeated corepb.Item award_items    = 2;  // 领取到的奖励详情（合并）
+}
+
+message SettleRankScore {
+  int64 rank  = 1;  // 排名
+  int64 score = 2;  // 积分
+}
+
+// 周结算通知
+message WeekSettleNotify {
+  int64 rank                        = 1;  // 【废弃】排名
+  int64 score                       = 2;  // 【废弃】积分
+  repeated corepb.Item items        = 3;  // 奖励
+  SettleRankScore season_rank_score = 4;  // 赛季排名积分
+  SettleRankScore guild_rank_score  = 5;  // 同盟排名积分
+  SettleRankScore player_rank_score = 6;  // 个人排名积分
+}
+
+message CheckEnterClashRequest {}
+message CheckEnterClashReply {}

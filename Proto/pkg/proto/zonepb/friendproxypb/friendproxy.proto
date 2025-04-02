@@ -1,0 +1,16 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.friendproxypb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/friendproxypb";
+
+// 好友代理服务
+service FriendProxyService {
+  // ClearGbotRedpoint 消除知几红点.
+  rpc ClearGbotRedpoint(ClearGbotRedpointRequest) returns (ClearGbotRedpointReply);
+}
+
+message ClearGbotRedpointRequest {}
+
+message ClearGbotRedpointReply {}

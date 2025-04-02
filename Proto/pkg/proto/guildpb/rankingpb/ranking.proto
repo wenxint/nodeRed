@@ -1,0 +1,57 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.rankingpb;
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/rankingpb";
+
+import "pkg/proto/guildpb/api.proto";
+
+// 排行榜查询服务
+service RankingService {
+  // Ranking 获取排行榜核心数据
+  rpc Ranking(RankingRequest) returns (RankingReply);
+  // GuildView 获取同盟展示类数据
+  rpc GuildView(GuildViewRequest) returns (GuildViewReply);
+}
+
+message RankID {
+  string rank_type = 1;  // 排行榜类型，定义在Rank配置里
+  string instance  = 2;  // 实例，由业务定义，如不需要可不填
+  int64 zone_id    = 3;  // 小区id
+}
+
+message RankData {
+  int64 guild_id   = 1;  // 同盟ID
+  int64 rank       = 2;  // 排行 0-未进排行榜  其他为具体的排名
+  int64 w1         = 3;  // 用于排行的分数1
+  int64 w2         = 4;  // 用于排行的分数2
+  int64 w3         = 5;  // 用于排行的分数3
+  int64 like_count = 6;  // 点赞数
+  bytes payload    = 7;  // 存储额外数据
+}
+
+message RankingRequest {
+  RankID rank_id   = 1;  // 排行榜ID
+  int64 rank_begin = 2;  // 指定开始的排名 从1开始。
+  int64 count      = 3;  // 指定的查询个数
+}
+
+message RankingReply {
+  repeated RankData rank_list = 1;  // 排行信息
+  RankData my_rank_info       = 2;  // 查询者自己的工会排名信息 不在榜上排名为0
+  int64 total_rank_count      = 3;  // 当前榜单总数
+}
+
+message GuildView {
+  guildpb.GuildBriefInfo basic_info = 1;  // 基础信息
+  guildpb.MemberInfo leader_info    = 2;  // 会长信息
+}
+
+message GuildViewRequest {
+  repeated int64 guild_ids = 1;  // 需要查询的同盟列表
+  string rank_type         = 2;  // 排行榜类型
+}
+
+message GuildViewReply {
+  map<int64, GuildView> views = 1;  // 查询到的玩家展示类数据(guild id -> view 数据)
+}

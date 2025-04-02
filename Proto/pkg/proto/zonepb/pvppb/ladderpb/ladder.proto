@@ -1,0 +1,209 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.pvppb.ladderpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pvppb/ladderpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/basic_info.proto";
+import "pkg/proto/zonepb/pvppb/ladderyearpb/ladderyear.proto";
+
+// 竞技场段位赛系统
+service LadderService {
+  // 获取排位信息
+  rpc GetLadderInfo(GetLadderInfoRequest) returns (GetLadderInfoReply);
+  // 设置是否启用段位保护卡
+  rpc SetUseProtectCard(SetUseProtectCardRequest) returns (SetUseProtectCardReply);
+  // 移除新赛季红点
+  rpc RemoveNewSeasonRedpoint(RemoveNewSeasonRedpointRequest) returns (RemoveNewSeasonRedpointReply);
+  // 奖励查询
+  rpc QueryLadderReward(QueryLadderRewardRequest) returns (QueryLadderRewardReply);
+  // 奖励领取
+  rpc DrawLadderReward(DrawLadderRewardRequest) returns (DrawLadderRewardReply);
+  // 批量奖励领取
+  rpc BatchDrawLadderReward(BatchDrawLadderRewardRequest) returns (BatchDrawLadderRewardReply);
+  // 名人堂-本服TOPN-指定赛季
+  rpc GetLadderSeasonRecord(GetLadderSeasonRecordRequest) returns (GetLadderSeasonRecordReply);
+  // 名人堂-个人记录-所有赛季
+  rpc GetLadderSeasonRecordPlayer(GetLadderSeasonRecordPlayerRequest) returns (GetLadderSeasonRecordPlayerReply);
+  // 荣誉排行信息
+  rpc GloryRankingInfo(GloryRankingInfoRequest) returns (GloryRankingInfoReply);
+  // 段位奖励与赛季奖励预览
+  rpc SeasonRewardsPreview(SeasonRewardsPreviewRequest) returns (SeasonRewardsPreviewReply);
+  // 删除S0赛季信息
+  rpc DeleteSeasonZeroInfo(DeleteSeasonZeroInfoRequest) returns (DeleteSeasonZeroInfoReply);
+  // 获取当前赛季，根据时间实时计算，无需系统开放
+  rpc GetCurrentSeason(GetCurrentSeasonRequest) returns (GetCurrentSeasonReply);
+}
+
+message GetLadderInfoRequest {
+  bool disable_refresh_season = 1;  // 是否刷新赛年信息
+}
+
+message ProtectInfo {
+  bool fail_lose_score_protect     = 1;  // 失败扣分保护是否生效
+  bool fail_lose_sub_grade_protect = 2;  // 失败掉小段保护是否生效
+  bool fail_lose_grade_protect     = 3;  // 失败掉大段保护是否生效
+  bool warrior_score_protect       = 4;  // 勇士积分保护是否生效
+  corepb.Item protect_card         = 5;  // 段位保护卡信息
+  bool protect_card_start          = 6;  // 段位保护卡功能是否开启
+  bool is_use_protect_card         = 7;  // 是否使用段位保护卡，功能开启可以不使用，客户端有复选框来勾选
+}
+
+message GetLadderInfoReply {
+  // FIXME: 此处协议和 scorepb.ScoreInfo 冗余定义，后续考虑直接使用 scorepb.ScoreInfo
+  int64 score              = 1;  // 显示分
+  int64 win_cnt            = 2;  // 赢场次
+  int64 deuce_cnt          = 3;  // 平级场次
+  int64 lose_cnt           = 4;  // 输场次
+  int64 rank               = 5;  // 排行
+  int64 perfect_win_cnt    = 6;  // 完胜场次
+  int64 successive_win_cnt = 7;  // 当前连胜次数
+  int64 season_id          = 8;  // 当前赛季ID
+  message SeasonInfo {
+    int64 season_id                   = 1;  // 赛季ID
+    int64 score                       = 2;  // 显示分
+    repeated corepb.Item awards       = 6;  // 赛季奖励列表
+    repeated corepb.Item phase_awards = 7;  // 赛季结算后补齐的段位奖励(该奖励是属于新赛季的，也就是当前赛季)
+  }
+  SeasonInfo last_season_info                                     = 9;   // 赛季信息（赛季重置后第1次请求时返回）
+  int64 warrior_score                                             = 10;  // 当前勇士值
+  int64 punish_end_ts                                             = 11;  // 战斗消极惩罚结束时间戳
+  int64 open_season_id                                            = 12;  // 起始赛季ID
+  zonepb.pvppb.ladderyearpb.LadderYearProfile ladder_year_profile = 13;  // 赛季简要信息
+  int64 highest_successive_win_cnt                                = 14;  // 本赛季最高连胜次数
+  ProtectInfo protect_info                                        = 15;  // 段位分保护信息
+  repeated BuddyWinning buddy_winnings                            = 16;  // 伙伴场次和胜场信息
+  bool new_season_redpoint                                        = 17;  // 是否存在新赛季标记
+  bool disable_cancel_match                                       = 18;  // 是否禁止取消匹配
+  bool is_super_captain                                           = 19;  // 是否超级船长
+}
+
+message SetUseProtectCardRequest {
+  bool flag = 1;  // 是否使用段位保护卡
+}
+
+message SetUseProtectCardReply {}
+
+message RemoveNewSeasonRedpointRequest {
+  int64 target_season_id = 1;  // 移除对应赛季ID的新赛季红点
+}
+
+message RemoveNewSeasonRedpointReply {}
+
+message QueryLadderRewardRequest {}
+
+message LadderRewardTask {
+  int64 id                    = 1;  // 奖励id
+  string desc                 = 2;  // 任务描述
+  int64 progress              = 3;  // 当前进度
+  int64 total_progress        = 4;  // 目标进度
+  int64 status                = 5;  // 任务状态 0-未领取 1-可领取 2-已领取
+  repeated corepb.Item awards = 6;  // 奖励列表
+}
+
+message QueryLadderRewardReply {
+  repeated LadderRewardTask tasks = 1;  // 任务列表
+}
+
+message DrawLadderRewardRequest {
+  int64 id = 1;  // 奖励的id
+}
+
+message DrawLadderRewardReply {
+  repeated LadderRewardTask tasks = 1;  // 任务列表
+  repeated corepb.Item awards     = 2;  // 领取的奖励
+}
+
+message BatchDrawLadderRewardRequest {
+  int64 id = 1;  // 玩家点击领取的条目
+}
+
+message BatchDrawLadderRewardReply {
+  repeated LadderRewardTask tasks = 1;  // 任务列表
+  repeated corepb.Item awards     = 2;  // 领取的奖励
+  repeated int64 awarded_ids      = 3;  // 本次领取的奖励的id列表
+}
+
+message BuddyWinning {
+  int64 buddy_id    = 1;  // 伙伴ID
+  int64 total_count = 2;  // 总出场次数
+  int64 win_count   = 3;  // 总胜场
+}
+
+message LadderSeasonRecord {
+  reserved 11;
+  int64 season_id = 1;
+  int64 gid       = 2;
+  string name     = 3;
+  int64 level     = 4;
+  string plat_pic = 5;
+  int64 zone_id   = 6;
+  int64 rank      = 7;   // 排名
+  int64 score     = 8;   // 积分
+  int64 fight_cnt = 9;   // 总场次
+  int64 win_cnt   = 10;  // 胜场次
+  // corepb.DressInfo dress_info          = 11;  // 装扮信息
+  int64 perfect_win_cnt                    = 12;  // 完胜次数
+  int64 highest_successive_win_cnt         = 13;  // 最高连胜次数
+  repeated BuddyWinning buddy_winnings     = 14;  // 伙伴场次和胜场信息
+  corepb.PersonalDisplayInfo personal_info = 15;  // 个人显示信息
+}
+
+message GetLadderSeasonRecordRequest {
+  int64 season_id = 1;
+}
+message GetLadderSeasonRecordReply {
+  repeated LadderSeasonRecord records = 1;
+}
+
+message GetLadderSeasonRecordPlayerRequest {}
+message GetLadderSeasonRecordPlayerReply {
+  repeated LadderSeasonRecord records   = 1;
+  LadderSeasonRecord season_zero_record = 2;  // S0的信息展示单独摘出来，纯显示用
+}
+
+message GloryRankingInfoRequest {
+  int64 season_id  = 1;  // 查询的赛季ID，若传入 0 则查询当前赛季
+  int64 begin_rank = 2;  // 查询的开始排名(从 1 开始计数)
+  int64 count      = 3;  // 查询的数量
+}
+
+message GloryRankingInfo {
+  int64 rank                  = 1;  // 排名
+  zonepb.BasicInfo basic_info = 2;  // 玩家基础信息
+  int64 ladder_score          = 3;  // 段位分
+  int64 win_count             = 4;  // 胜利次数
+  int64 total_count           = 5;  // 总场次
+}
+
+message GloryRankingInfoReply {
+  repeated GloryRankingInfo rank_infos = 1;  // 荣誉排行信息
+  GloryRankingInfo my_rank_info        = 2;  // 玩家自己的排行信息
+  int64 total_count                    = 3;  // 排行榜总条数
+}
+
+message SeasonRewardsPreviewRequest {}
+
+message SeasonRewardPreview {
+  string name                         = 1;  // 段位名称
+  int64 score                         = 2;  // 段位分要求
+  bool achieved                       = 3;  // 是否已达成
+  repeated corepb.Item phase_rewards  = 4;  // 升段奖励列表
+  repeated corepb.Item season_rewards = 5;  // 赛季结算奖励列表
+}
+
+message SeasonRewardsPreviewReply {
+  repeated SeasonRewardPreview season_rewards = 1;  // 赛季奖励预览
+}
+
+message DeleteSeasonZeroInfoRequest {}
+
+message DeleteSeasonZeroInfoReply {}
+
+message GetCurrentSeasonRequest {}
+
+message GetCurrentSeasonReply {
+  int64 season_id = 1;  // 当前赛季ID
+}

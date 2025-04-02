@@ -1,0 +1,523 @@
+// cs protocol
+syntax = "proto3";
+
+package raidpb;
+option go_package = "git.woa.com/red/raidsvr/pkg/proto/raidpb";
+
+
+import "corepb/common.proto";
+import "corepb/loadout_comm.proto";
+import "google/protobuf/any.proto";
+
+// 无状态服务类协议
+service StatelessService {
+  // 创建团本
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupReply) {}
+  // 匹配团本
+  rpc Match(MatchRequest) returns (MatchReply) {}
+  // 取消匹配
+  rpc CancelMatch(CancelMatchRequest) returns (CancelMatchReply) {}
+  // 查询团本列表
+  rpc QueryGroupList(QueryGroupListRequest) returns (QueryGroupListReply) {}
+  // 模糊搜索团本列表
+  rpc SearchGroup(SearchGroupRequest) returns (SearchGroupReply) {}
+  // QueryCurrentGroup 查询玩家当前所在团本，登录到主界面时客户端会主动调用，没有则返回0
+  rpc QueryCurrentGroup(QueryCurrentGroupRequest) returns (QueryCurrentGroupReply) {}
+}
+
+// Session型协议，这里的协议客户端请求需在metadata中使用x-group-id来指定房间id
+service GroupService {
+  // 加入团本
+  rpc JoinGroup(JoinGroupRequest) returns (JoinGroupReply) {}
+  // 当前玩家阵容信息
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);
+  // 设置阵容
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);
+  // 设置房间信息
+  rpc ApplyGroupInfo(ApplyGroupInfoRequest) returns (ApplyGroupInfoReply);
+  // 交换位置
+  rpc SwapPosition(SwapPositionRequest) returns (SwapPositionReply);
+  // 转让房主
+  rpc TransferOwner(TransferOwnerRequest) returns (TransferOwnerReply);
+  // 退出团本
+  rpc LeaveGroup(LeaveGroupRequest) returns (LeaveGroupReply);
+  // 踢出成员
+  rpc KickMember(KickMemberRequest) returns (KickMemberReply);
+  // 邀请加入团本
+  rpc Invite(InviteRequest) returns (InviteReply);
+  // 心跳
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);
+  // 准备
+  rpc Ready(ReadyRequest) returns (ReadyReply);
+  // 取消准备
+  rpc CancelReady(CancelReadyRequest) returns (CancelReadyReply);
+  // 开启团本
+  rpc StartRaid(StartRaidRequest) returns (StartRaidReply);
+  // 拒绝邀请
+  rpc RejectInvitation(RejectInvitationRequest) returns (RejectInvitationReply);
+  // 全量拉取团本信息
+  rpc DetailGroupInfo(DetailGroupInfoRequest) returns (DetailGroupInfoReply);
+  // 授权邀请权限
+  rpc AuthorizeInvite(AuthorizeInviteRequest) returns (AuthorizeInviteReply);
+  // 查询房间密码(只有房主可以查询)
+  rpc QueryPassword(QueryPasswordRequest) returns (QueryPasswordReply);
+
+  /*****
+   以下为团本阶段内的协议
+  *****/
+
+  // 队长请求开始战斗
+  rpc StartFight(StartFightRequest) returns (StartFightReply);
+  // 从战斗结算界面回到阶段界面时上报
+  rpc ReadyForFight(ReadyForFightRequest) returns (ReadyForFightReply);
+  // 进入下一个阶段（房主调用）
+  rpc ToNextStage(ToNextStageRequest) returns (ToNextStageReply);
+  // 翻牌协议（指定翻牌奖励的位置）
+  rpc FlipCard(FlipCardRequest) returns (FlipCardReply);
+  // 退出战斗(队长退出战斗要结束该场战斗)
+  rpc ExitFight(ExitFightRequest) returns (ExitFightReply);
+  // 阶段通关界面已展示
+  rpc StageCompleteShown(StageCompleteShownRequest) returns (StageCompleteShownReply);
+
+  /*****
+   以下为司法岛团本的协议
+  *****/
+  rpc LearnDorikiTalentInGroup(LearnDorikiTalentInGroupRequest) returns (LearnDorikiTalentInGroupReply);
+}
+
+message LearnDorikiTalentInGroupRequest {
+  int64 talent_id       = 1;  // 天赋id
+  int64 reset_talent_id = 2;  // 重置的天赋id(允许玩家在学习天赋的同时，重置之前学习的天赋)
+}
+
+message LearnDorikiTalentInGroupReply {
+  google.protobuf.Any custom_data = 1;  // zonepb.raidpb.EniesLobbyCustomData
+}
+
+// 一个团本的简要信息
+message BriefGroupInfo {
+  int64 type               = 1;   // 团本类型
+  int64 id                 = 2;   // 团本唯一ID
+  string name              = 3;   // 团本名字
+  string owner_name        = 4;   // 房主名字
+  bool need_passwd         = 5;   // 是否需要密码
+  int64 min_fc             = 6;   // 最低实力要求
+  int64 total_player_count = 7;   // 团本需要总人数
+  int64 cur_player_count   = 8;   // 当前人数
+  int64 motto_id           = 9;   // 房间宣言ID
+  int64 client_res_version = 10;  // 客户端资源版本
+}
+
+// 团本的详细信息
+message DetailGroupInfo {
+  // 房间基本信息
+  message BasicInfo {
+    int64 type               = 1;   // 团本类型
+    int64 id                 = 2;   // 团本唯一ID
+    string name              = 3;   // 团本名字
+    string owner_name        = 4;   // 房主名字
+    bool need_passwd         = 5;   // 是否需要密码
+    int64 min_fc             = 6;   // 最低实力要求
+    int64 total_player_count = 7;   // 团本需要总人数
+    bool is_public           = 8;   // 不确定客户端是否需要，先加上吧
+    int64 motto_id           = 9;   // 房间宣言ID
+    int64 status             = 10;  // 房间状态，0-准备中，1-团本进行中
+    int64 start_raid_timeout = 11;  // 开团超时时间(满足开团条件，团长未开团的话，会交换房主)
+    int64 start_ms           = 12;  // 团本开始时间戳（单位ms），status=1时有效
+  }
+
+  message Members {
+    message Member {
+      int64 gid                               = 1;  // 玩家gid
+      int64 pos                               = 2;  // 玩家位置，从0开始，交换位置时只需要修改双方pos即可
+      corepb.PersonalDisplayInfo display_info = 3;  // 玩家外显信息
+      corepb.Loadout loadout                  = 4;  // 玩家阵容
+      int64 title                             = 5;  // 职位（2:房主、1:小组长、0:普通成员）
+      bool is_ready                           = 6;  // 是否准备
+      bool can_invite                         = 7;  // 是否有邀请权限
+      int64 fc                                = 8;  // 战力
+      int64 doriki                            = 9;  // 道力
+    }
+    repeated Member member_list = 1;
+  }
+
+  BasicInfo basic_info = 1;  // 房间基本信息
+  Members members      = 2;  // 玩家列表
+  StageInfo stage_info = 3;  // 阶段信息
+}
+
+// 团本阶段信息
+message StageInfo {
+  int64 stage_id                         = 1;  // 阶段id
+  int64 stage_end_ts                     = 2;  // 阶段结束时间
+  int64 stage_status                     = 3;  // 阶段状态
+  repeated DungeonInfo dungeon_list      = 4;  // 本阶段所有副本信息
+  repeated MemberStageStatus member_list = 6;
+  int64 auto_enter_next_stage_ts         = 7;  // 自动进入下一阶段的时间
+}
+// 团本过程中的副本信息
+message DungeonInfo {
+  int64 dungeon_id                         = 1;  // 副本ID
+  repeated FightingTeamInfo fighting_teams = 2;  // 正在挑战该副本的队伍
+  bool is_win                              = 3;  // 是否已挑战成功，不可重复挑战的副本需要
+  bool is_open                             = 4;  // 有些副本有前置开启条件，达到条件了才能开启
+  int64 total_hp                           = 5;  // 总血量
+  int64 cur_hp                             = 6;  // 当前血量
+  int64 cd_end_ts                          = 7;  // cd结束时间，对部分重复挑战的关卡有效
+  // 一般要么是血量要么是怪物数量，下面两个字段和上面total_hp以及cur_hp这两个只会存在一组
+  int64 total_monster_count = 8;  // 总怪物数量
+  int64 cur_monster_count   = 9;  // 当前怪物数量
+}
+
+// 团本过程中的阶段玩家信息
+message MemberStageStatus {
+  int64 gid             = 1;  // 玩家gid
+  int64 last_active_ts  = 2;  // 最后活跃时间戳
+  int64 status          = 3;  // 玩家状态，0-空闲，1-开始战斗，2-战斗中，3-战斗结算中，4-阶段结算中
+  int64 status_start_ts = 4;  // 状态开始的时间，某些状态需要
+  int64 total_damage    = 5;  // 总伤害
+  bool is_offline       = 6;  // 是否离线
+}
+
+message FightingTeamInfo {
+  int64 team_id  = 1;  // 队伍ID
+  int64 start_ts = 2;  // 开始挑战时间
+}
+
+message QueryPasswordRequest {}
+
+message QueryPasswordReply {
+  string password = 1;  // 房间密码
+}
+
+message CreateGroupRequest {
+  int64 group_type = 1;  // 团本类型
+  int64 min_fc     = 2;  // 战力要求
+  bool is_public   = 3;  // 是否公开
+  string passwd    = 4;  // 密码，为空表示不需要密码
+  int64 motto_id   = 5;  // 房间宣言ID
+}
+message CreateGroupReply {
+  DetailGroupInfo group = 1;
+}
+
+message MatchRequest {
+  int64 group_type = 1;  // 团本类型
+}
+
+message MatchReply {}
+message CancelMatchRequest {}
+message CancelMatchReply {}
+
+message QueryGroupListRequest {
+  int64 group_type = 1;  // 团本类型
+}
+
+message QueryGroupListReply {
+  repeated BriefGroupInfo group_list = 1;
+  int64 punish_timestamp             = 2;  // 惩罚时间戳
+}
+
+message SearchGroupRequest {
+  int64 group_type   = 1;  // 团本类型
+  string search_word = 2;  // 搜索的关键词
+}
+message SearchGroupReply {
+  repeated BriefGroupInfo group_list = 1;
+}
+
+message QueryCurrentGroupRequest {}
+
+message QueryCurrentGroupReply {
+  int64 group_id   = 1;  // 当前所在团本的ID 没有则为0
+  int64 group_type = 2;  // 当前所在团本类型
+}
+
+// ----- 以下是GroupService的相关定义 ------
+message JoinGroupRequest {
+  string password   = 1;
+  bool from_invite  = 2;  // 是否是从邀请进入的
+  bool is_reconnect = 3;  // 是否是重连
+  bool is_confirm   = 4;  // 是否是确认加入(匹配成功的情况)
+}
+
+message JoinGroupReply {
+  DetailGroupInfo group = 1;
+}
+
+message ApplyLoadoutRequest {
+  string loadout_type    = 1;
+  corepb.Loadout loadout = 2;  // 阵容选择
+}
+
+message ApplyLoadoutReply {}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 暂时无用
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容选择
+  bool valid                    = 3;  // 当前阵容是否合法
+  bool adjusted                 = 4;  // 当前阵容检验时是否有过不合法的项目但已经被自动调整
+}
+
+message ApplyGroupInfoRequest {
+  int64 motto_id = 1;  // 房间宣言ID
+  int64 min_fc   = 2;  // 最低战力要求
+  bool is_public = 3;  // 是否公开
+  string passwd  = 4;  // 密码,为空表示没密码
+}
+
+message ApplyGroupInfoReply {}
+
+message StartRaidRequest {
+  bool check_only = 1;  // 是否只是检查是否可以开团(房主要显示无奖励弹框之前才checkOnly调用)
+}
+
+message StartRaidReply {}
+
+message SwapPositionRequest {
+  int64 pos_a = 1;  // 目标A的位置
+  int64 pos_b = 2;  // 目标B的位置
+}
+
+message SwapPositionReply {}
+
+message TransferOwnerRequest {
+  int64 target_gid = 1;  // 目标玩家gid
+}
+
+message TransferOwnerReply {}
+
+message LeaveGroupRequest {}
+
+message LeaveGroupReply {}
+
+message KickMemberRequest {
+  int64 target_gid = 1;  // 目标玩家gid
+}
+
+message KickMemberReply {}
+
+message StageCompleteShownRequest {
+  int64 stage_id = 1;
+}
+
+message StageCompleteShownReply {}
+
+message InviteRequest {
+  int64 target_gid = 1;  // 目标玩家gid
+  bool is_offline  = 2;  // 是否离线邀请
+}
+
+message InviteReply {}
+
+message HeartbeatRequest {
+  bool is_in_dungeon = 1;  // 是否在副本中
+}
+
+message HeartbeatReply {}
+
+message ReadyRequest {}
+
+message ReadyReply {}
+
+message CancelReadyRequest {}
+
+message CancelReadyReply {}
+
+message StartFightRequest {
+  int64 dungeon_id = 1;  // 要开战的副本ID
+}
+message StartFightReply {}
+
+message ReadyForFightRequest {}
+message ReadyForFightReply {}
+
+message RejectInvitationRequest {}
+message RejectInvitationReply {}
+
+message DetailGroupInfoRequest {}
+message DetailGroupInfoReply {
+  DetailGroupInfo group = 1;
+}
+
+message AuthorizeInviteRequest {
+  int64 target_gid = 1;  // 目标玩家gid
+}
+
+message AuthorizeInviteReply {}
+
+// ----- 以下是notify的定义 ------
+
+// 匹配结果的通知
+message MatchResultNtf {
+  int64 result   = 1;  // 结果，0-成功，1-超时
+  int64 group_id = 3;  // 匹配到的团本ID
+}
+
+// 团本信息通知
+message GroupNtf {
+  DetailGroupInfo group                                     = 1;
+  GroupNtfType ntf_type                                     = 2;  // 通知类型
+  StageRewardInfo stage_reward_info                         = 3;  // 阶段奖励信息
+  map<int64, GroupFinalRewardInfo> group_final_reward_infos = 4;  // card position -> GroupFinalRewardInfo
+  PersonalFinalRewardInfo personal_final_reward_info        = 5;  // 个人最终奖励信息
+  RaidSuccessDetail raid_success_detail                     = 6;  // 团本成功详情
+  int64 duration_ms                                         = 7;  // 团本持续时间, ntf_type=ENTER_FLIP_CARD之后的ntf才有
+}
+
+message RaidSuccessDetail {
+  int64 duration               = 1;  // 团本持续时间,单位ms
+  repeated corepb.Item rewards = 2;  // 团本中获得的所有奖励
+}
+
+message GroupFinalRewardInfo {
+  corepb.Item show_final_rewards = 1;  // 最终奖励（显示用）
+  int64 gid                      = 2;  // 玩家gid
+}
+
+message PersonalFinalRewardInfo {
+  StageRewardStatus status           = 1;  // 状态
+  int64 before_point                 = 2;  // 之前的积分
+  int64 after_point                  = 3;  // 当前积分
+  int64 guaranteed_threshold         = 4;  // 保底阈值
+  repeated corepb.Item final_rewards = 5;  // 最终奖励
+  int64 flip_card_end_ts             = 6;  // 翻牌结束时间
+}
+
+message StageRewardInfo {
+  repeated corepb.Item stage_rewards = 1;  // 阶段奖励
+  StageRewardStatus status           = 2;  // 状态
+  int64 stage_id                     = 3;  // 阶段id
+}
+
+enum StageRewardStatus {
+  STATUS_UNKNOWN    = 0;  // 未知错误
+  SUCCESS           = 1;  // 成功
+  STAGE_REWARDED    = 2;  // 阶段已经领取过奖励（需要等待刷新
+  NO_REWARD_TICKETS = 3;  // 没有奖励门票道具
+  NO_REWARD         = 4;  // 没有奖励
+}
+
+enum GroupNtfType {
+  TYPE_UNKNOWN                = 0;   // 无
+  ENTER_NEW_STAGE             = 1;   // 进入新阶段
+  MEMBER_READY                = 2;   // 玩家准备
+  MEMBER_CANCEL_READY         = 3;   // 玩家取消准备
+  MEMBER_JOIN                 = 4;   // 玩家加入
+  MEMBER_LEAVE                = 5;   // 玩家退出
+  KICK_MEMBER                 = 6;   // 踢出玩家
+  TRANSFER_OWNER              = 7;   // 转让房主
+  SWAP_POSITION               = 8;   // 交换位置
+  APPLY_GROUP_INFO            = 9;   // 修改房间信息
+  APPLY_LOADOUT               = 10;  // 修改阵容
+  COMPLETE_DUNGEON            = 11;  // 完成关卡
+  STAGE_SETTLING              = 12;  // 阶段结算中
+  STAGE_MEMBER_FIGHT_STARTING = 13;  // 等待开战阶段，房主点了开始战斗，但是还没收到战斗开始的ntf
+  STAGE_MEMBER_FIGHT_START    = 14;  // 进入战斗
+  STAGE_MEMBER_FIGHT_OVER     = 15;  // 战斗结算中，客户端收到战斗结束ntf，还没有发ReadyForFight
+  STAGE_MEMBER_TO_READY       = 16;  // 玩家发了ReadyForFight，可以进入战斗了
+  ENTER_FLIP_CARD             = 17;  // 进入翻牌阶段
+  FLIP_CARD_RESULT            = 18;  // 翻牌结果
+  RAID_SUCCESS                = 19;  // 团本成功
+  RAID_FAILED                 = 20;  // 团本失败
+  // DISSOLVE                    = 21;  // 解散
+  AUTHORIZE_INVITE = 22;  // 授权邀请权限
+  NORMAL_NTF       = 23;  // 普通的通知，不像没有具体的通知类型
+  PUSH_PREPARE     = 24;  // 催促准备
+}
+
+message DissovleRemindNtf {
+  int64 dissolve_ts = 1;  // 解散时间
+}
+
+// 拒绝邀请通知
+message RejectInvitationNtf {
+  int64 gid   = 1;  // 被拒绝的玩家gid
+  string name = 2;  // 被拒绝的玩家名字
+}
+
+// 邀请通知
+message InvitationNtf {
+  int64 from_gid                                = 1;  // 邀请者gid
+  corepb.PersonalDisplayInfo from_personal_info = 2;  // 邀请人显示信息
+  string group_id                               = 3;  // 邀请的房间id
+  int64 group_type                              = 4;  // 邀请的团本类型
+}
+
+// 被踢出通知
+message KickedNtf {
+  bool is_kicked_by_owner = 1;  // 是否是房主踢出
+}
+
+// act34活动关闭
+message Act34CloseNtf {}
+
+// act34非游玩时间
+message Act34NotPlayTimeNtf {}
+
+message ToNextStageRequest {}
+
+message ToNextStageReply {}
+
+// GameEndNotify 游戏对局
+
+// 通过阶段notify
+
+// 阶段结算协议
+
+message FlipCardRequest {
+  int64 position = 1;  // 翻牌位置
+}
+
+message FlipCardReply {}  // 回包为空，具体奖励内容在ntf里体现
+
+message ExitFightRequest {}
+
+message ExitFightReply {}
+
+message GameOverCustomData {
+  // 下面两个boss血量的字段需要boss血量继承的关卡才需要
+  int64 total_boss_hp = 1;  // boss总血量
+  int64 cur_boss_hp   = 2;  // boss当前血量
+
+  bool is_final_win = 3;  // 团本已通关（如果为true则客户端不需要显示副本结算界面，直接进入翻牌）
+}
+
+message BossHpChangeNtfInfo {
+  int64 dungeon_id = 1;  // 副本ID
+  int64 total_hp   = 2;  // 总血量
+  int64 cur_hp     = 3;  // 当前血量
+  // 一般要么是血量要么是怪物数量，下面两个字段和上面这两个只会存在一组
+  int64 total_monster_count = 4;  // 总怪物数量
+  int64 cur_monster_count   = 5;  // 当前怪物数量
+}
+
+// 共享Boss血量的阶段Boss血量变化通知，Boss血量变化时才会有，最多2s一次
+message BossHpChangeNtf {
+  repeated BossHpChangeNtfInfo info_list = 1;
+}
+
+// 下发给客户端展示的tips
+message TipsMessageNtf {
+  TipsType type  = 1;  // 消息类型
+  string content = 2;  // 消息内容
+}
+
+enum TipsType {
+  TIPS_TYPE_UNKNOWN      = 0;
+  TIPS_TYPE_PASS_DUNGEON = 1;  // 副本通关
+}
+
+message PassThroughData {
+  int64 team_id  = 1;  // 队伍ID
+  int64 stage_id = 2;  // 阶段ID
+}
+
+// 房间有N人退出后，后面的人退出不在惩罚的通知
+message NoPunishNtf {
+  int64 no_punish_leave_member_count = 1;  // 不再惩罚的成员数量
+}

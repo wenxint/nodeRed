@@ -1,0 +1,26 @@
+// cs protocol
+syntax = "proto3";
+
+package diagnosepb;
+option go_package = "git.code.oa.com/red/diagnose/pkg/proto/diagnosepb";
+
+// 命令类型
+enum PushType {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  DO_STRING = 0;  // 命令
+  PUSH_FILE = 1;  // 下发文件
+  DEBUG     = 2;  // 调试
+}
+
+message File {
+  string name = 1;  // 文件名，如果url存在，该项会被修改为临时名字
+  bytes data  = 2;  // 文件数据
+  string url  = 3;  // 如果下发文件过大，此项不为空，且会修改传入的文件名
+}
+
+// 下发结构
+message PushMessage {
+  PushType typ   = 1;
+  string content = 2;  // 客户端根据不同命令，此处填写内容不同
+  File file      = 3;  // 命令为下发文件时，此处为文件内容
+}

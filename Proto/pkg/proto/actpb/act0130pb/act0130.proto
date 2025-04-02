@@ -1,0 +1,24 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0130pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0130pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0130Service {
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task task_list = 2;
+  int64 continue_login_days              = 3;
+  message TaskQuality {
+    int32 id      = 1;
+    int64 quality = 2;
+  }
+  repeated TaskQuality task_quality = 4;
+}

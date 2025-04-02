@@ -1,0 +1,746 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/guildpb/notify.proto";
+
+enum NTFTYPE {
+  NFTTYPE_UNKNOWN = 0;
+  BEKICKED        = 1;  // 被踢
+  DISSOLVE        = 2;  // 解散同盟
+  TRANSFER        = 3;  // 转移会长
+  APPLY           = 4;  // 被审批通过
+  MAKE_APPLY      = 5;  // 有人发起加入请求，待审批
+  SET_ROLE        = 6;  // 设置职务（除会长外）
+}
+
+message GuildNtf {
+  NTFTYPE type = 1;
+}
+
+message IDIPOption {
+  int64 punish_option = 1;
+  int64 punish_time   = 2;
+  string reason       = 3;
+}
+
+// 同盟基础服务
+service GuildBasicService {
+  // 查询同盟简略信息列表，支持分页查询/名字检索
+  rpc QueryBriefInfo(QueryBriefInfoRequest) returns (QueryBriefInfoReply);
+  // 查询同盟详细信息
+  rpc Query(QueryRequest) returns (QueryReply);
+  // 查询玩家详细信息
+  rpc QueryPlayer(QueryPlayerRequest) returns (QueryPlayerReply);
+  // 查询同盟申请者名单
+  rpc QueryApplyers(QueryApplyersRequest) returns (QueryApplyersReply);
+  // 查询同盟动态
+  rpc QueryMoments(QueryMomentsRequest) returns (QueryMomentsReply);
+  // 创建同盟
+  rpc Create(CreateRequest) returns (CreateReply);
+  // 申请加入同盟
+  rpc Join(JoinRequest) returns (JoinReply);
+  // 取消申请加入同盟
+  rpc CancelJoin(CancelJoinRequest) returns (CancelJoinReply);
+  // 审批同盟申请
+  rpc Approval(ApprovalRequest) returns (ApprovalReply);
+  // 踢出成员
+  rpc Kick(KickRequest) returns (KickReply);
+  // 离开同盟
+  rpc Leave(LeaveRequest) returns (LeaveReply);
+  // 解散同盟
+  rpc Dissolve(DissolveRequest) returns (DissolveReply);
+  // 更改同盟设置（加入免审批、最小战力要求等）
+  rpc Setting(SettingRequest) returns (SettingReply);
+  // 转让 leader
+  rpc Transfer(TransferRequest) returns (TransferReply);
+  // 设置同盟信息（名字、宣言、标签等）
+  // 后续会拆分成多个接口，逐步迁移
+  rpc SetGuildInfo(SetGuildInfoRequest) returns (SetGuildInfoReply);
+  // 设置职务
+  rpc SetGuildRole(SetGuildRoleRequest) returns (SetGuildRoleReply);
+  // 批量申请加入
+  rpc BatchJoin(BatchJoinRequest) returns (BatchJoinReply);
+  // 发起召集
+  rpc Recruit(RecruitRequest) returns (RecruitReply);
+  // 获取旗帜信息
+  rpc FlagSystemInfo(FlagSystemInfoRequest) returns (FlagSystemInfoReply);
+  // 设置同盟旗帜
+  rpc SetGuildFlag(SetGuildFlagRequest) returns (SetGuildFlagReply);
+  // 移除旗帜「新」标记
+  rpc RemoveNewFlagTag(RemoveNewFlagTagRequest) returns (RemoveNewFlagTagReply);
+  // 同盟活动详情
+  rpc GuildActDetail(GuildActDetailRequest) returns (GuildActDetailReply);
+  // Deprecated:同盟排行榜查询协议，已经废弃，请使用 rankingpb.RankingService
+  rpc QueryGuildRankN(QueryGuildRankNRequest) returns (QueryGuildRankNResponse);
+  // 确认 change notify 已经处理
+  rpc ConfirmChangeNotify(ConfirmChangeNotifyRequest) returns (ConfirmChangeNotifyReply);
+  // 上报同盟群相关
+  rpc ReportGroupAbout(ReportGroupAboutRequest) returns (ReportGroupAboutReply);
+  // 同盟征程相关
+  rpc QueryJourneyInfo(QueryJourneyInfoRequest) returns (QueryJourneyInfoReply);        // 查询同盟征程
+  rpc ClaimJourneyReward(ClaimJourneyRewardRequest) returns (ClaimJourneyRewardReply);  // 领取同盟征程奖励（批量领奖）
+  // 批量查询同盟简略信息
+  rpc BatchQueryBriefInfo(BatchQueryBriefInfoRequest) returns (BatchQueryBriefInfoReply);
+  // 查询海图
+  rpc QuerySeaChart(QuerySeaChartRequest) returns (QuerySeaChartReply);
+  // 查询赛事成绩
+  rpc QueryGameResult(QueryGameResultRequest) returns (QueryGameResultReply);
+  // 赛季奖励排行榜
+  rpc SeasonRewardRanking(SeasonRewardRankingRequest) returns (SeasonRewardRankingReply);
+  // 查询积分详情
+  rpc QueryGloryScoreDetail(QueryGloryScoreDetailRequest) returns (QueryGloryScoreDetailReply);
+  // 荣耀回顾
+  rpc QueryGloryScoreRankHistory(QueryGloryScoreRankHistoryRequest) returns (QueryGloryScoreRankHistoryReply);
+  // 赛事日历
+  rpc QueryGameCalendar(QueryGameCalendarRequest) returns (QueryGameCalendarReply);
+}
+
+enum ApplyStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NOT_APPLY   = 0;  // 未申清
+  APPLIED     = 1;  // 已申请
+  AUTO_ACCEPT = 2;  // 自动审核，无需申请
+}
+
+message GuildBriefInfo {
+  int64 guild_id                      = 1;   // 同盟id
+  int64 level                         = 2;   // 同盟等级
+  int64 guild_flag                    = 3;   // 同盟旗帜
+  int64 guild_fc                      = 4;   // 同盟实力
+  int64 cur_count                     = 5;   // 当前人数
+  int64 max_count                     = 6;   // 最大人数
+  string guild_name                   = 7;   // 同盟名称
+  string leader_name                  = 8;   // 团长名称
+  int64 leader_gid                    = 9;   // 会长gid和名字
+  string declaration                  = 10;  // 同盟宣言
+  int64 status                        = 11;  // 同盟申请状态(ApplyStatus)
+  int64 min_join_fc                   = 12;  // 自动加入的最小战斗力
+  bool join_check                     = 13;  // 是否开启加入审核
+  int64 bless_num                     = 14;  // 当前祝福(签到)的总人数
+  string proclamation                 = 15;  // 同盟公告
+  map<string, IDIPOption> idip_option = 16;  // idip注入的信息
+  int64 experience                    = 17;  // 当前经验值
+  repeated int64 labels               = 18;  // 标签列表
+  int64 fc_rank                       = 19;  // 实力值排名
+  int64 daily_recruit_count           = 20;  // 已经召集（招募）的次数，最大次数见Guild/Settings表
+  PharmacyInfo pharmacy               = 21;  // 同盟药房天赋等级和天赋提供的战斗属性
+  corepb.FightAttr total_attr         = 22;  // 同盟所有系统的总属性
+  bool is_recommend                   = 23;  // 是否为推荐同盟
+  GuildGroupInfo group_info           = 24;  // 同盟群信息
+  string leader_openid                = 25;  // 会长openid
+  int64 last_week_bless_num           = 26;  // 上周祝福(签到)的总人数
+  int64 cur_week_bless_num            = 27;  // 本周祝福(签到)的总人数
+  bool is_apply_full                  = 28;  // 是否申请已满员
+  int64 zone                          = 29;  // 小区id
+}
+
+// 同盟药房天赋等级和天赋提供的战斗属性
+message PharmacyInfo {
+  int64 talent_level          = 1;  // 天赋等级
+  corepb.FightAttr fight_attr = 2;  // 战斗属性
+}
+
+message QueryBriefInfoRequest {
+  int64 index   = 1;  // 分页查询，在 search 为空时有效
+  int64 count   = 2;  // 分页查询，在 search 为空时有效
+  string search = 3;  // 若该值不为空，则为搜索
+}
+
+message QueryBriefInfoReply {
+  repeated GuildBriefInfo brief_infos = 1;
+}
+
+message BatchQueryBriefInfoRequest {
+  repeated int64 guild_ids = 1;  // 要查询的同盟id列表
+}
+
+message BatchQueryBriefInfoReply {
+  repeated GuildBriefInfo brief_infos = 1;  // 查询结果
+}
+
+message Flag {
+  int64 id               = 1;  // 旗帜id
+  bool unlocked          = 2;  // 是否解锁
+  bool new               = 4;  // 是否新
+  int64 expire_at        = 5;  // 过期时间(unix second)，若为0则表示不会过期
+  corepb.FightAttr attrs = 6;  // 旗帜属性
+}
+
+message FlagSystemInfo {
+  repeated Flag flags    = 1;  // 旗帜列表
+  int64 current_flag     = 2;  // 当前使用的旗帜id
+  int64 fc               = 3;  // 当前旗帜的战力
+  corepb.FightAttr attrs = 4;  // 当前旗帜的属性
+}
+
+message GuildInfo {
+  GuildBriefInfo basic_info         = 1;  // 基本信息
+  repeated MemberInfo member_info   = 2;  // 成员信息
+  repeated ApplyerInfo apply_info   = 3;  // 申请信息
+  repeated MomentsInfo moments_info = 4;  // 动态信息
+}
+
+enum Role {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  MEMBER       = 0;  // 普通成员
+  LEADER       = 1;  // 同盟会长
+  VICE_LEADER  = 2;  // 副会长
+  SQUAD_LEADER = 3;  // 小队长
+}
+
+message MemberInfo {
+  reserved 17;
+  int64 gid                   = 1;   // 玩家 gid
+  bytes name                  = 2;   // 玩家名称
+  int64 fc                    = 3;   // 玩家实力值
+  int64 last_login_ts         = 4;   // 上次登录时间戳
+  bool is_online              = 5;   // 是否在线
+  int64 role                  = 6;   // 职务
+  int64 activity              = 7;   // 周活
+  int64 level                 = 8;   // 等级
+  string plat_pic             = 9;   // 头像
+  bytes plat_name             = 10;  // 平台昵称
+  repeated int64 open_systems = 11;  // 系统开启信息
+  int64 contribution          = 12;  // 累计贡献
+  int64 join_time             = 13;  // 加入同盟时间
+  string openid               = 14;  // openid
+  int64 zone                  = 15;  // 小区id 根据客户端要求增加
+  int64 pvp_score             = 16;  // 竞技场积分 用于计算竞技场段位
+  // corepb.DressInfo dress_info              = 17;  // 装扮信息
+  MemberGroupInfo group_info                 = 18;  // 同盟群信息
+  int64 quit_times_p7d                       = 19;  // 过去7天退出同盟次数，点退出同盟提示的退出次数此基础上+1
+  corepb.PersonalDisplayInfo personal_info   = 20;  // 个人显示信息
+  bool is_ranking_anonymous                  = 21;  // 在排行榜上是否匿名
+  BanquetBuff banquet_buff                   = 22;  // 宴会buff，如果有的话
+  int64 last_leave_time                      = 23;  // 最近一次离开同盟时间
+  repeated corepb.OpenActInfo open_act_infos = 24;  // 活动开启列表
+}
+
+message ApplyerInfo {
+  int64 gid                                = 1;  // 申请成员gid
+  int64 apply_time                         = 2;  // 申请时间
+  int64 fc                                 = 3;
+  int64 last_login_ts                      = 4;   // 上次登录时间戳
+  bool is_online                           = 5;   // 是否在线
+  int64 level                              = 6;   // 等级
+  string plat_pic                          = 7;   // 头像
+  bytes name                               = 8;   // 名字
+  int64 zone                               = 9;   // 小区id 根据客户端要求增加
+  int64 pvp_score                          = 10;  // 竞技场积分
+  corepb.PersonalDisplayInfo personal_info = 11;  // 个人显示信息
+}
+
+message HuntingSeaSimpleInfo {  // 狩猎海王的简要信息, 客户端需要跟着 QueryRequest 请求返回
+  int64 time_stamp_begin = 1;   // 本次开始时间
+  int64 time_stamp_end   = 2;   // 本次结束时间
+  int64 boss_id          = 3;   // bossid
+}
+
+message MomentsInfo {
+  int64 time     = 1;  // 动态发生时间
+  string content = 2;  // 内容
+  int64 gid      = 3;
+}
+
+message QueryRequest {
+  bool full_info = 1;  // 是否全量信息(包含 member info)
+  int64 guild_id = 2;  // 若 guild_id 为空，则默认查询玩家自己的同盟信息
+}
+
+message FirstJoinReward {
+  bool flag                  = 1;  // 为true时，才弹出下面的奖励
+  repeated corepb.Item items = 2;  // 奖励列表
+}
+
+message BanquetBuff {
+  int64 effective_cuisine_id = 1;  // 生效的料理id
+  int64 cuisine_expired_time = 2;  // 生效结束时间
+}
+
+message QueryReply {
+  GuildInfo info                                          = 1;
+  HuntingSeaSimpleInfo huntingsea_simple                  = 2;  // 狩猎海王简要信息
+  repeated guildpb.GuildChangeNotify unprocessed_notifies = 3;  // 未处理的同盟变更通知
+  FirstJoinReward first_join_reward                       = 4;  // 首次加入的奖励
+  BanquetBuff banquet_buff                                = 5;  // 宴会buff，如果有的话
+  QQWXGuildGroupInfo group_info                           = 6;  // QQ或者微信群信息
+}
+
+message QQWXGuildGroupInfo {
+  int64 area_id         = 1;  // 拉QQ群时的 AreaID 参数
+  string group_guild_id = 3;  // 建QQ或者微信群时用的guild_id (带特殊前缀)
+}
+
+message QueryPlayerRequest {
+  int64 gid = 1;  // 如果gid==0，表示查玩家自己
+}
+
+message QueryPlayerReply {
+  int64 guild_id         = 1;  // 玩家所加入的同盟ID，如果为0表示未加入同盟
+  string guild_name      = 2;  // 玩家所加入同盟的名字， 未加入同盟则为""
+  int64 guild_level      = 3;  // 玩家所加入同盟的等级， 未加入同盟则为0
+  MemberInfo member_info = 4;  // 玩家的成员信息，未加入同盟则为空
+}
+
+message QueryApplyersRequest {}
+
+message QueryApplyersReply {
+  repeated ApplyerInfo apply_info = 1;  // 申请信息
+}
+
+message QueryMomentsRequest {}
+
+message QueryMomentsReply {
+  repeated MomentsInfo moments_info = 1;  // 动态信息
+}
+
+message CreateRequest {
+  string name           = 1;
+  string declaration    = 2;
+  bool join_check       = 3;
+  int64 flag            = 4;
+  repeated int64 labels = 5;
+}
+
+message CreateReply {
+  GuildInfo info                    = 1;
+  FirstJoinReward first_join_reward = 2;  // 首次加入的奖励
+}
+
+message JoinRequest {
+  int64 id = 1;
+}
+
+message JoinReply {
+  GuildInfo info                    = 1;  // 如果自动加入成功会下发同盟数据
+  FirstJoinReward first_join_reward = 2;  // 首次加入的奖励
+}
+
+message CancelJoinRequest {
+  int64 guild_id = 1;
+}
+
+message CancelJoinReply {}
+
+message ApprovalRequest {
+  enum ApproveType {
+    APPROVE_TYPE_UNKNOWN = 0;
+    SINGLE               = 1;
+    ALL                  = 2;
+    REJECT               = 3;
+    CLEAR                = 4;
+  }
+  int64 type = 1;  // 1:通过单个  2：通过全部 3：拒绝单个 4：清空列表
+  int64 gid  = 2;  // 针对单个的gid
+}
+
+message ApprovalReply {
+  repeated ApplyerInfo apply_info = 1;  // 更新后的申请信息
+  bool member_full                = 2;  // 更新后同盟是否满员
+}
+
+message KickRequest {
+  int64 gid       = 1;
+  bool no_confirm = 2;  // false: 当活动快开始时进行二次确认  true: 当活动快开始不进行二次确认（或者已经进行了二次确认）
+}
+
+message KickReply {}
+
+message LeaveRequest {
+  bool no_confirm = 1;  // false: 当活动快开始时进行二次确认  true: 当活动快开始不进行二次确认（或者已经进行了二次确认）
+}
+
+message LeaveReply {}
+
+message DissolveRequest {}
+
+message DissolveReply {}
+
+message SettingRequest {
+  int64 min_join_fc = 1;
+  bool join_check   = 2;
+}
+
+message SettingReply {}
+
+message TransferRequest {
+  int64 gid = 1;
+}
+
+message TransferReply {}
+
+message SetGuildInfoRequest {
+  // key 的可能值:
+  // name：名称
+  // proclamation：公告
+  // declaration：宣言
+  // flag：旗帜 [DEPRECATED]
+  // label: 标签(value: 1;2;3)
+  map<string, string> info_map = 1;
+}
+
+message SetGuildInfoReply {}
+
+message SetGuildRoleRequest {
+  int64 gid  = 1;
+  int64 role = 2;
+}
+
+message SetGuildRoleReply {}
+
+message BatchJoinRequest {
+  repeated int64 guild_ids = 1;
+}
+
+message BatchJoinReply {
+  GuildInfo info                    = 1;  // 如果自动加入成功会下发同盟数据
+  FirstJoinReward first_join_reward = 2;  // 首次加入的奖励
+  repeated int64 applied_guild_ids  = 3;  // 如果未申请成功，返回已申请的同盟列表
+}
+
+message RecruitRequest {
+  string message = 1;  // 召集信息
+}
+
+message RecruitReply {
+  GuildInfo info = 1;  // 返回整个同盟信息
+}
+
+message FlagSystemInfoRequest {}
+
+message FlagSystemInfoReply {
+  FlagSystemInfo flag_info = 1;  // 旗帜系统信息
+}
+
+message SetGuildFlagRequest {
+  int64 flag_id = 1;  // 要设置的旗帜id
+}
+
+message SetGuildFlagReply {
+  FlagSystemInfo flag_info = 1;  // 更新后的旗帜信息
+}
+
+message RemoveNewFlagTagRequest {
+  repeated int64 flag_ids = 1;  // 要移除「新」标记的旗帜id
+}
+
+message RemoveNewFlagTagReply {
+  FlagSystemInfo flag_info = 1;  // 更新后的旗帜信息
+}
+
+message GuildActDetailRequest {}
+
+enum GuildActStatus {
+  STATUS_UNKNOWN = 0;
+  LOCKED         = 1;  // 未开放
+  UNLOCKED       = 2;  // 已开放
+}
+
+message GuildAct {
+  int64 sys_id                         = 1;  // 活动系统 ID
+  GuildActStatus status                = 2;  // 活动状态
+  int64 button_state                   = 3;  // 按钮的状态，灵活定义  争霸赛：0-前往参与/加 1-前往查看 2-前往报名 同盟宴会：0-未解锁 1-未开启 2-已开启
+  repeated corepb.Item display_rewards = 4;  // 展示的奖励
+}
+
+message GuildActDetailReply {
+  repeated GuildAct guild_acts = 1;  // 同盟活动列表
+}
+
+message QueryGuildRankNRequest {}
+
+message QueryGuildRankNResponse {}
+
+message ConfirmChangeNotifyRequest {
+  repeated int64 notify_ids = 1;  // 要确认的通知id
+}
+
+message ConfirmChangeNotifyReply {}
+
+message GuildGroupInfo {
+  bool is_group_created = 1;  // 是否已创建同盟群
+}
+
+message MemberGroupInfo {
+  bool is_group_joined     = 1;  // 是否已加入当前同盟群
+  bool ever_joined         = 2;  // 曾经创建或加过群
+  int64 group_create_times = 3;  // 玩家(自己)创建过的群次数
+}
+
+enum GroupOpType {
+  OP_TYPE_UNKNOWN = 0;
+  CREATE          = 1;  // 创建群
+  UNBIND          = 2;  // 解绑群
+  JOIN            = 3;  // 加入群
+  EXIT            = 4;  // 退出群
+}
+
+message ReportGroupAboutRequest {
+  GroupOpType op_type = 1;  // 群组操作类型
+}
+
+message ReportGroupAboutReply {}
+
+message QueryJourneyInfoRequest {}
+
+message LevelWelfareInfo {
+  int64 guild_level            = 1;   // 同盟等级
+  int64 next_guild_level_exp   = 2;   // 升到下以及需要的经验
+  int64 member_limit           = 3;   // 同盟人数总上限（包括团长）
+  int64 leader_limit           = 4;   // 团长人数总上限
+  int64 vice_leader_limit      = 5;   // 副团长人数总上限
+  int64 squad_leader_limit     = 6;   // 精英人数总上限
+  int64 unlocked_system_id     = 7;   // 解锁的系统ID
+  int64 unlocked_flag_id       = 8;   // 解锁的旗帜ID（虚拟）
+  int64 unlocked_item_id       = 9;   // 解锁的物资ID
+  repeated corepb.Item rewards = 10;  // 等级奖励
+  int64 status                 = 11;  // 状态 0-未达成 1-可领奖 2-已领奖
+}
+
+message QueryJourneyInfoReply {
+  repeated LevelWelfareInfo welfares = 1;  // 等级福利
+  int64 guild_level                  = 2;  // 当前同盟等级
+  int64 guild_exp                    = 3;  // 当前同盟经验
+}
+
+message ClaimJourneyRewardRequest {
+  int64 guild_level = 1;  // 对应LevelWelfareInfo中的guild_level
+}
+
+message ClaimJourneyRewardReply {
+  repeated corepb.Item rewards       = 1;  // 领取到的奖励（合并后）
+  repeated LevelWelfareInfo welfares = 2;  // 等级福利
+  int64 guild_level                  = 3;  // 当前同盟等级
+  int64 guild_exp                    = 4;  // 当前同盟经验
+}
+
+// 废弃了，请使用 GuildActTimeNotify
+message GuildTipsNotify {
+  int64 system_id = 1;  // 如果是同盟就是2401
+  string detail   = 2;  // 信息
+}
+
+// 这个协议是增量发送，当字段为0或者nil时，表示字段没变化，客户端不要覆盖本地缓存
+message GuildActTimeNotify {
+  // reserved 1, 2, 3, 4;
+  message IslandStageInfo {
+    int32 stage      = 1;  // 阶段类型 参见StageType
+    int64 start_time = 2;  // 开始时间
+    int64 end_time   = 3;  // 结束时间
+  }
+  repeated IslandStageInfo island_stage_info = 5;  // 海岛争夺战阶段信息
+  message GuildWarPhaseInfo {
+    int64 phase      = 1;  // 参考 corepb.GuildWarPhase中的定义
+    int64 begin_time = 2;  // 开始时间 当前时间小于这个时间表示即将开始
+    int64 end_time   = 3;  // 结束时间 当前时间大于begin_time小于end_time，表示正在进行；当前时间大于这个时间，则冒泡失效
+  }
+  GuildWarPhaseInfo guildwar_phase_info = 6;  // 争霸赛当前阶段信息
+  message BanquetInfo {
+    int64 begin_time = 1;  // 开始时间
+    int64 end_time   = 2;  // 结束时间
+    int64 state      = 3;  // 0-筹备阶段 1-举办失败 2-举办阶段
+    bool no_reward   = 4;  // 举办结算是否已经无奖励了， state==2时有效
+  }
+  BanquetInfo banquet_info = 7;
+  message IslandClashInfo {
+    int64 week       = 1;  // 从0开始
+    int64 begin_time = 2;  // 开始时间
+    int64 end_time   = 3;  // 结束时间
+  }
+  IslandClashInfo island_clash_info = 8;  // 岛屿激斗当周赛程信息
+  message GuidSeaWarInfo {
+    int64 begin_time = 1;  // 开始时间
+    int64 end_time   = 2;  // 结束时间
+  }
+  GuidSeaWarInfo guid_sea_war_info = 9;  // 同盟海战信息
+}
+
+// 海图：状态枚举
+enum SeaChartStatus {
+  SEA_CHART_STATUS_UNKNOWN     = 0;  // 无 （未开放）
+  SEA_CHART_STATUS_NOT_STARTED = 1;  // 未开赛 （如果有报名时间显示报名时间）
+  SEA_CHART_STATUS_SIGN_UP     = 2;  // 报名中
+  SEA_CHART_STATUS_PLAY_BEFORE = 3;  // 比赛前 （显示日期）
+  SEA_CHART_STATUS_PLAYING     = 4;  // 比赛中
+  SEA_CHART_STATUS_FINISHED    = 5;  // 比赛结束 (显示排名)
+  SEA_CHART_STATUS_NOT_PLAYED  = 6;  // 未参与
+}
+
+// 海图：通用信息
+message SeaChartInfo {
+  int64 id                = 1;  // 活动ID 对应Guild.xlsx/SeaChart表里的id
+  SeaChartStatus status   = 2;  // 状态
+  int64 rank              = 3;  // 0表示未上榜/未参与 非0表示具体的排名，注意转化成xx强）
+  bool cross_flag         = 4;  // 针对排名的情况 true-表示跨服比赛的排名 false-表示本服比赛的排名
+  int64 time              = 5;  // 日期读这个字段
+  int64 guild_level_limit = 6;  // 开启活动需要的同盟等级
+}
+
+message GloryScoreRankUnit {
+  int64 guild_id    = 1;  // 同盟ID
+  string guild_name = 2;  // 同盟名称
+  int64 glory_score = 3;  // 荣誉积分
+  int64 rank        = 4;  // 排名
+}
+
+message GloryScoreRanking {
+  repeated GloryScoreRankUnit inner_ranks = 1;  // 本服排名
+  repeated GloryScoreRankUnit cross_ranks = 2;  // 跨服排名
+  int64 inner_self_rank                   = 3;  // 本服排名 为0表示未上榜
+  int64 cross_self_rank                   = 4;  // 跨服排名 为-1表示未开启 为0表示未上榜
+  int64 glory_score                       = 5;  // 荣誉积分
+}
+
+message QuerySeaChartRequest {}
+message QuerySeaChartReply {
+  int64 year                            = 1;  // 年份
+  int64 season                          = 2;  // 赛季
+  repeated SeaChartInfo charts          = 3;  // 海图信息 （注意同盟海战有两个）
+  GloryScoreRanking glory_score_ranking = 4;  // 荣誉积分榜
+  int64 begin_time                      = 5;  // 赛季开始时间
+  int64 end_time                        = 6;  // 赛季结束时间
+}
+
+enum GameResultStatus {
+  GAME_RESULT_STATUS_UNKNOWN     = 0;  // 无 (或者未参赛)
+  GAME_RESULT_STATUS_NOT_STARTED = 1;  // 未开赛 （或者未开始）
+  GAME_RESULT_STATUS_PLAYING     = 2;  // 比赛中
+  GAME_RESULT_STATUS_FINISHED    = 3;  // 比赛结束
+}
+
+message GameResultInfo {
+  int64 id                = 1;  // 活动ID 对应Guild.xlsx/SeaChart表里的id
+  int64 result_time       = 2;  // 出结果的时间
+  GameResultStatus status = 3;  // 参考GameResultStatus
+  int64 rank              = 4;  // 排名
+  bool cross_flag         = 5;  // 【废弃】针对rank的情况 true-表示跨服比赛的排名 false-表示本服比赛的排名
+  int64 glory_score       = 6;  // 荣誉积分
+}
+
+message QueryGameResultRequest {
+  int64 id = 1;  // 活动ID 对应Guild.xlsx/SeaChart表里的id
+}
+
+// 岛屿激斗结果
+message IslandClashResult {
+  repeated GameResultInfo infos = 1;  // 赛事成绩
+  int64 glory_score             = 2;  // 荣誉积分
+}
+
+// 同盟争霸结果
+message GuildWarReslut {
+  message GuildWarPhase {
+    int64 phase             = 1;  // 0-十六进八 1-八进四 2-半决赛 3-决赛
+    int64 fight_time        = 2;  // 战斗时间
+    GameResultStatus status = 3;  // 战斗状态
+    bool pass               = 4;  // 是否晋级 true-晋级 false-淘汰
+  }
+  int64 sign_up_begin_time            = 1;  // 报名开始时间
+  int64 sign_up_end_time              = 2;  // 报名结束时间
+  int64 inner_rank                    = 3;  // 本服排名 0-未排名 1-冠军 2-亚军 4-四强 8-八强 16-16强
+  int64 inner_glory_score             = 4;  // 本服荣誉积分
+  repeated GuildWarPhase inner_phases = 5;  // 本服比赛阶段
+  int64 cross_rank                    = 6;  // 跨服排名 -1-未开启跨服比赛 0-未排名 1-冠军 2-亚军 4-四强 8-八强 16-16强
+  int64 cross_glory_score             = 7;  // 跨服荣誉积分
+  repeated GuildWarPhase cross_phases = 8;  // 跨服比赛阶段
+}
+
+// 同盟海战结果
+message GuildSeawarResult {
+  message GuildSeawarPhase {
+    int64 fight_time        = 1;  // 战斗时间
+    GameResultStatus status = 2;  // 战斗状态
+    int64 glory_score       = 3;  // 荣誉积分
+    int64 rank              = 4;  // 排名
+  }
+  int64 month                  = 1;  // 月份
+  int64 sign_up_begin_time     = 2;  // 报名开始时间
+  int64 sign_up_end_time       = 3;  // 报名结束时间
+  GuildSeawarPhase inner_phase = 4;  // 本服比赛阶段
+  GuildSeawarPhase cross_phase = 5;  // 跨服比赛阶段
+}
+
+message QueryGameResultReply {
+  repeated GameResultInfo results                 = 1;  // 【废弃】赛事成绩
+  IslandClashResult island_clash_result           = 2;  // 岛屿激斗结果 [根据请求包的字段填值]
+  GuildWarReslut guild_war_result                 = 3;  // 同盟争霸赛结果 [根据请求包的字段填值]
+  repeated GuildSeawarResult guild_seawar_results = 4;  // 同盟海战结果 [根据请求包的字段填值]
+}
+
+message SeasonRewardRankUnit {
+  GuildBriefInfo basic_info = 1;  // 基本信息
+  int64 glory_score         = 2;  // 荣誉积分
+  int64 rank                = 3;  // 排名
+  repeated int64 flags      = 4;  // 奖励
+}
+
+message SeasonRewardRankingRequest {
+  bool warzone_flag = 1;  // true-拉战区排行榜 false-拉本服排行榜
+}
+
+message SeasonRewardRankingReply {
+  repeated SeasonRewardRankUnit ranks = 1;  // 排行
+  SeasonRewardRankUnit my_rank_info   = 2;  // 我的排名
+}
+
+message QueryGloryScoreDetailRequest {
+  int64 guild_id = 1;  // 同盟ID
+}
+
+message GloryScoreDetail {
+  int64 got_time    = 1;  // 获得时间
+  int64 score       = 2;  // 获得荣誉积分
+  string act_name   = 3;  // 玩法名字
+  int64 rank        = 4;  // 排名
+  int64 seachart_id = 5;  // 海图的ID
+  bool cross_flag   = 6;  // true-跨服 false-本服
+}
+
+message QueryGloryScoreDetailReply {
+  GuildBriefInfo basic_info         = 1;  // 基本信息
+  int64 inner_rank                  = 2;  // 本服排名 0-未上榜
+  int64 cross_rank                  = 3;  // 战区排名 -1-未开放 0-未上榜
+  int64 glory_score                 = 4;  // 荣耀积分
+  repeated GloryScoreDetail details = 5;  // 荣耀积分获取细节 （为空表示未参与比赛）
+}
+
+message GloryScoreRankHistory {
+  int64 year                     = 1;  // 年份
+  int64 season                   = 2;  // 赛季
+  repeated GuildBriefInfo guilds = 3;  // 依次为冠亚季军（可能不满3个）
+}
+
+message QueryGloryScoreRankHistoryRequest {
+  bool warzone_flag = 1;  // true-拉战区排行榜 false-拉本服排行榜（默认）
+}
+
+message QueryGloryScoreRankHistoryReply {
+  repeated GloryScoreRankHistory histories = 1;  // 荣耀历史
+}
+
+message CalendarUnit {
+  int64 week              = 1;
+  int64 begin_time        = 2;  // 开始时间（岛屿激斗用）
+  int64 end_time          = 3;  // 结束时间（岛屿激斗用）
+  int64 show_time         = 4;  // 显示时间（报名或者战斗时间）
+  GameResultStatus status = 5;  // 0-未开赛 1-比赛进行中 2-比赛结束有排名
+  int64 rank              = 6;  // 排名
+  int64 glory_score       = 7;  // 荣誉积分
+}
+
+message QueryGameCalendarRequest {}
+message QueryGameCalendarReply {
+  int64 year                                        = 1;  // 年份
+  int64 season                                      = 2;  // 赛季
+  int64 begin_time                                  = 3;  // 开始时间
+  int64 end_time                                    = 4;  // 结束时间
+  repeated CalendarUnit island_clash_calendar_units = 5;  // 日程, 每个周对应一个单元
+  repeated CalendarUnit guild_war_calendar_units    = 6;  // 日程，0-对应报名单元 1-对应本服单元 2-对应战区单元
+  repeated CalendarUnit guild_seawar_calendar_units = 7;  // 日程，0-对应报名单元 1-对应本服单元 2-对应战区单元 4-对应报名单元 5-对应本服单元 6-对应战区单元 依次类推
+}

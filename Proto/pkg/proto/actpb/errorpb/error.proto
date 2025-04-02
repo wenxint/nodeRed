@@ -1,0 +1,173 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.errorpb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/errorpb";
+
+enum ActError {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  OK = 0;
+
+  // 00 通用错误
+  // SYSTEM_INTERNAL_ERROR = 1300001;  // 内部错误
+  // ACT_PLAYER_NOT_EXIST  = 1300002;  // 活动玩家数据不存在
+  ACT_ALREADY_CLOSE = 1300003;  // 活动已经关闭
+  // CONFIG_NOT_FOUND      = 1300004;  // 配置找不到
+  // PARAM_INVALID         = 1300005;  // 请求参数错误
+  REWARD_ALREADY_RECEIVED              = 1300006;  // 奖励已经被领取
+  REWARD_CANT_RECEIVED                 = 1300007;  // 未达到领取条件
+  ACT_DISABLE_BY_FEATO                 = 1300008;  // 活动被特性开关临时关闭
+  ACT_NOT_OPEN                         = 1300009;  // 该玩家尚未开启活动
+  QUEST_NOT_OPEN                       = 1300010;  // 关卡未开启
+  QUEST_NOT_FOUND                      = 1300011;  // 关卡不存在
+  PRE_QUEST_NOT_PASS                   = 1300012;  // 前置关卡未通关
+  QUEST_NOT_PASS                       = 1300013;  // 关卡未通关
+  FRIEND_DUEL_CLIENT_VERSION_NOT_MATCH = 1300014;  // 客户端版本不匹配
+  FRIEND_DUEL_INVITATION_CANCELED      = 1300015;  // 邀请已取消
+  FRIEND_DUEL_INVITE_TOO_FREQUENTLY    = 1300016;  // 邀请过于频繁
+  FRIEND_DUEL_INVITEE_NOT_ONLINE       = 1300017;  // 邀请对象不在线
+  FRIEND_DUEL_INVITEE_STATE_ERROR      = 1300018;  // 邀请对象状态错误
+  FRIEND_DUEL_INVITATION_EXPIRED       = 1300019;  // 邀请已过期
+
+  // 03 活动3-双周修行
+  ACT03_CHOOSE_DAY_ERROR = 1300301;  // 选中的日数不合法
+
+  // 04 活动4-无畏海战
+  ACT04_TASK_ALREADY_RECEIVED        = 1300401;  // 任务奖励已经被领取
+  ACT04_TASK_CANT_RECEIVED           = 1300402;  // 任务未达到领取条件
+  ACT04_FIGHT_INSUFFICIENT_CONDITION = 1300403;  // 开始战斗条件不足（不在有效时间内）
+
+  ACT08_UNREWARDED                    = 1300801;  // 请先领取后再续费月卡.
+  ACT08_DAYS_NO_USED_UP               = 1300802;  // 月卡剩余天数小于指定天数, 才可续费
+  ACT08_MONTHLYCARD_BEYOND_LIMIT      = 1300803;  // 月卡权益购买张数超过购买上限
+  ACT08_MONTHLYCARD_FORBIDDEN_RENEWAL = 1300804;  // 月卡禁止续费
+
+  // 09 活动9-时光赐福
+  ACT09_RETRIEVE_FAILED = 1300901;  // 时光赐福-追回失败
+
+  // 10 活动10-回流活动1
+  ACT10_BUFF_HAVENT_REWARD = 1301001;  // Buff 当前没有奖励可领取
+  ACT10_BUFF_INVALID       = 1301002;  // 无效的 Buff
+
+  // 11 活动10-回流活动2
+  ACT11_NO_TASK_AWARD     = 1301101;  // 该任务没有需要领取的奖励
+  ACT11_NO_PROGRESS_AWARD = 1301102;  // 没有进度奖励可领取
+  ACT11_ALREADY_BUY       = 1301103;  // 已经双倍了，无需再次购买
+
+  // 25 活动25-蜘蛛人咖啡屋
+  ACT25_COFFEE_GUEST_NOT_EXIST = 1302501;  // 顾客不存在
+  ACT25_COFFEE_TASK_NOT_EXIST  = 1302502;  // 任务不存在
+  ACT25_COFFEE_TASK_NOT_FINISH = 1302503;  // 任务未完成
+  ACT25_COFFEE_ALREADY_AWARD   = 1302504;  // 奖励已领取
+
+  // 26 活动26-撒谎布
+  ACT26_TREASUREBOX_LIMIT = 1302601;  // 关卡内宝箱领取已达到上限
+  ACT26_LEVEL_LOCKED      = 1302602;  // 关卡未解锁
+
+  // 27 30日登陆活动
+  ACT27_TASK_STAGE_CANNOT_AWARD = 1302701;  // 任务阶段奖励不可领取
+  ACT27_PROCESS_CANNOT_AWARD    = 1302702;  // 进度奖励不可领取
+  ACT27_BUY_COUNT_LIMIT         = 1302703;  // 购买次数已达上限
+
+  // 31 活动31-木头人竞速
+  ACT31_TASK_ALREADY_RECEIVED        = 1303101;  // 任务奖励已经被领取
+  ACT31_TASK_CANT_RECEIVED           = 1303102;  // 任务未达到领取条件
+  ACT31_FIGHT_INSUFFICIENT_CONDITION = 1303103;  // 不在活动匹配开启时间内
+  ACT31_FIGHT_BUDDY_FORBIDDEN        = 1303104;  // 伙伴不在可用池内
+  ACT31_TICKET_NOT_ENOUGH            = 1303105;  // 门票数量不足
+
+  // 33 活动33-贝壳屋
+  ACT33_PROCESS_ALREADY_RECEIVED = 1303301;  // 任务奖励已经被领取
+  ACT33_REFRESH_LEVEL_LIMIT      = 1303302;  // 刷新任务等级到达上限
+  ACT33_SLOT_ALREADY_OPENED      = 1303303;  // 任务槽位已经开启
+  ACT33_BUY_COUNT_LIMIT          = 1303304;  // 购买次数已达上限
+  ACT33_CANNOT_REFRESH_LEVEL     = 1303305;  // 不可刷新
+
+  // 34 活动34-司法岛之战
+  ACT34_STAGE_ALREADY_REWARDED = 1303401;  // 阶段奖励已领取
+
+  // 35 爆裂球赛
+  ACT35_TICKET_NOT_ENOUGH  = 1303501;  // 门票数量不足
+  ACT35_BUY_COUNT_LIMIT    = 1303502;  // 购买次数已达上限
+  ACT35_NOT_FIRST_WIN      = 1303503;  // 尚未首胜
+  ACT35_TASK_NOT_FOUND     = 1303504;  // 任务不存在
+  ACT35_TASK_NOT_FINISH    = 1303505;  // 任务未完成
+  ACT35_TASK_ALREADY_AWARD = 1303506;  // 任务已领奖
+
+  // 53 守护公主
+  ACT53_NOT_IN_MATCH_TIME          = 1305301;  // 不在匹配时间内
+  ACT53_TICKET_NOT_ENOUGH          = 1305302;  // 门票不足
+  ACT53_DAY_BUY_TICKET_LIMIT       = 1305303;  // 达到了每日购买上限
+  ACT53_BUY_TICKET_MAX_COUNT_LIMIT = 1305304;  // 达到了次数上限
+
+  // 59 护送薇薇
+  ACT59_NOT_IN_MATCH_TIME          = 1305901;  // 不在匹配时间内
+  ACT59_TICKET_NOT_ENOUGH          = 1305902;  // 门票不足
+  ACT59_DAY_BUY_TICKET_LIMIT       = 1305903;  // 达到了每日购买上限
+  ACT59_BUY_TICKET_MAX_COUNT_LIMIT = 1305904;  // 达到了次数上限
+
+  // 64 小冯变变变
+  ACT64_NOT_OPEN_YET        = 1306401;  // 活动尚未到开启日期
+  ACT64_PREV_LEVEL_NOT_PASS = 1306402;  // 前置关卡未通关
+
+  // 65 梦幻调色板
+  ACT65_PAINT_NOT_ENOUGH       = 1306501;  // 颜料数量不够，未达到赠送最小数量
+  ACT65_GIVE_TIMES_NOT_ENOUGH  = 1306502;  // 每日可赠送次数已达上限
+  ACT65_GIVEN_TIMES_NOT_ENOUGH = 1306503;  // 每日被赠送次数已达上限
+  ACT65_GIVEN_PLYAER_NOT_OPEN  = 1306504;  // 赠送对象活动暂未开启
+  ACT65_TODAY_ALREADY_GIVE     = 1306505;  // 当日已给该玩家赠送过
+  ACT65_FILL_PAINT_FULL        = 1306506;  // 填色进度已满
+
+  // 77 节日赠礼
+  ACT77_MAP_NOT_EXIST       = 1307701;  // 地图不存在
+  ACT77_FIELD_NOT_EXIST     = 1307702;  // 地图区域不存在
+  ACT77_FIELD_ALREADY_AWARD = 1307703;  // 区域奖励已领取
+  ACT77_BUY_COUNT_LIMIT     = 1307704;  // 购买次数已达上限
+
+  // 84 邀请活动
+  ACT84_INVITEE_NOT_EXIST = 1308401;  // 被邀请玩家不存在
+
+  // 87 智能挑战
+  ACT87_QUEST_NOT_OPEN     = 1308701;  // 关卡未开启
+  ACT87_INVALID_LOADOUT    = 1308702;  // 阵容不合法
+  ACT87_NOT_FIRST_WIN      = 1308703;  // 尚未首胜
+  ACT87_TASK_NOT_FOUND     = 1308704;  // 任务不存在
+  ACT87_TASK_NOT_FINISH    = 1308705;  // 任务未完成
+  ACT87_TASK_ALREADY_AWARD = 1308706;  // 任务已领奖
+
+  // 70 大版本更新
+  ACT70_SHARED_ALREADY_AWARD = 1307001;  // 分享奖励已领取
+
+  // 58 草帽团送礼
+  ACT58_NO_CLAIM_DAY_INDEX = 1305801;  // 没有可以领取的day_index
+
+  // 45 和平主义者
+  ACT45_ACT_IS_CLOSED              = 1304501;  // 活动已关闭
+  ACT45_QUEST_NOT_FOUND            = 1304502;  // 关卡不存在
+  ACT45_QUEST_NOT_OPEN             = 1304503;  // 关卡未到开启时间
+  ACT45_PRE_LEVEL_NOT_PASS         = 1304504;  // 前置关卡未通关
+  ACT45_INVALID_GAME_START_MESSAGE = 1304505;  // 游戏开始战斗异常
+  ACT45_LEVEL_NOT_PASS             = 1304506;  // 关卡未通关
+
+  // 42 燃烧的回忆
+  ACT42_SHOP_NOT_OPEN = 130421;  // 活动道具商店未开启
+
+  // 90 新年翻翻乐
+  ACT90_NOT_HAVE_FLIP_COUNT   = 1309001;  // 没有翻牌次数
+  ACT90_NOT_HAVE_CHANGE_COUNT = 1309002;  // 没有换牌
+
+  // 48 新春之旅
+  ACT48_NOT_HAVE_GIFT                      = 1304801;  // 没有伴手礼
+  ACT48_ALREADY_CLAIM_SPRING_FESTIVAL_GIFT = 1304802;  // 已经领取过新年礼物
+  ACT48_NOT_IN_GUILD                       = 1304803;  // 没有加入同盟
+  ACT48_NOT_ENOUGH_GUILD_TIME              = 1304804;  // 加入同盟的时间不够
+  ACT48_NOT_MATCH_GUILD_ROLE               = 1304805;  // 玩家同盟角色不匹配
+  ACT48_NOT_UNLOCK_GUILD_DRESS             = 1304806;  // 不能解锁同盟装饰
+  ACT48_REACH_SPECIAL_END_TIME             = 1304807;  // 到达本活动特有的结束时间
+  
+  // 62 空岛可爱街大亨
+  ACT62_NO_BUILDING_UPGRADE = 1306201;  // 没有可升级的建筑
+
+  // 63 空岛南瓜田
+  ACT63_NO_TOOL_ITEM_USE = 1306301;  // 没有可使用的工具道具
+}

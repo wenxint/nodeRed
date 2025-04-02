@@ -1,0 +1,77 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0102pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0102pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+  bool is_need_not_passed_quest_rp   = 2;  // 是否需要显示未通关关卡红点
+  bool is_need_last_day_rp           = 3;  // 是否需要显示最后一天红点
+}
+
+service CSAct0102Service {
+
+  rpc GetQuestInfos(GetQuestInfosRequest) returns (GetQuestInfosReply);                                // 获取关卡信息
+  rpc SetAlreadyShownUnlockMV(SetAlreadyShownUnlockMVRequest) returns (SetAlreadyShownUnlockMVReply);  // 设置已播放过关卡解锁动效
+
+  rpc GameStart(GameStartRequest) returns (GameStartReply);                          // 游戏开始
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);                                // 游戏结束
+  rpc ReportScoreInGame(ReportScoreInGameRequest) returns (ReportScoreInGameReply);  // 游戏内上报得分（用于无尽模式中每次得分后实时上报）
+}
+
+message GetQuestInfosRequest {}
+message GetQuestInfosReply {
+  message QuestInfo {
+    int64 quest_id   = 1;  // 关卡 ID
+    bool is_unlocked = 2;  // 是否已解锁
+    bool is_new      = 3;  // "新" tag
+
+    bool is_passed         = 4;  // 是否已通过(通过后变成 无尽模式)
+    int64 star_count       = 5;  // 获得的星星数量纪录(通关后显示)
+    int64 need_star_count  = 6;  // 通关需要达到的星星数量
+    int64 unlock_time_unix = 7;  // 解锁时间
+    bool is_shown_mv       = 8;  // 是否已播放新关卡解锁动效
+  }
+
+  repeated QuestInfo quest_infos = 1;  // 关卡信息
+}
+
+message SetAlreadyShownUnlockMVRequest {
+  int64 quest_id = 1;
+}
+message SetAlreadyShownUnlockMVReply {}
+
+// 游戏开始
+message GameStartRequest {
+  int64 quest_id  = 1;  // 关卡 ID
+  bool is_endless = 2;  // 是否无尽模式
+}
+message GameStartReply {
+  int64 last_star_count = 1;  // 最大获得的星星数量
+}
+
+// 游戏结束
+message GameEndRequest {
+  int64 quest_id   = 1;  // 关卡 ID
+  bool is_endless  = 2;  // 是否无尽模式
+  int64 star_count = 3;  // 获得的星星数量
+}
+message GameEndReply {
+  bool is_passed        = 1;  // 是否通关
+  int64 star_count      = 2;  // 获得的星星数量
+  int64 need_star_count = 3;  // 通关需要达到的星星数量
+  int64 last_star_count = 4;  // 最大获得的星星数量
+}
+
+// 游戏内上报得分（仅无尽模式）
+message ReportScoreInGameRequest {
+  int64 quest_id   = 1;  // 关卡 ID
+  int64 star_count = 2;  // 获得的星星数量
+}
+message ReportScoreInGameReply {}

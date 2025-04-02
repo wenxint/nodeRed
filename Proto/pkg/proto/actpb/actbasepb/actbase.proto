@@ -1,0 +1,98 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.actbasepb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/actbasepb";
+
+
+import "corepb/common.proto";
+import "google/protobuf/any.proto";
+
+service CSActService {
+  // ActEntranceDetail 获取活动入口内已开启活动的详细信息
+  rpc ActEntranceDetail(ActEntranceDetailRequest) returns (ActEntranceDetailReply);
+  // ActGetOpenedIDs 获取已开放的活动ID列表.
+  rpc ActGetOpenedIDs(ActGetOpenedIDsRequest) returns (ActGetOpenedIDsReply);
+  // 获取活动详细信息
+  rpc ActGetDetail(ActGetDetailRequest) returns (ActGetDetailReply);
+  // 领取活动奖励
+  rpc ActDeliverReward(ActDeliverRewardRequest) returns (ActDeliverRewardReply);
+}
+
+message ActEntranceDetailRequest {
+  repeated int64 act_entrance_ids = 1;  // 活动入口列表，不填默认所有活动入口
+}
+
+message ActEntranceDetailReply {
+  repeated ActEntrance act_entrance_detail = 1;  // 每一个活动入口的详细信息
+}
+
+message ActEntrance {
+  int64 act_entrance_id         = 1;  // 活动入口 ID
+  repeated ActDetail act_detial = 2;  // 已开启活动的详细信息
+}
+
+message ActGetOpenedIDsRequest {
+  repeated int64 act_ids = 1;  // 活动 ID 列表.
+}
+
+message ActGetOpenedIDsReply {
+  repeated int64 act_ids = 1;  // 进行中的活动 ID 列表.
+}
+
+message LimitedTimeNotice {
+  string notice_content   = 1;  // 限时通知内容
+  int64 expired_timestamp = 2;  // 限时通知过期时间戳
+}
+
+message ActDetail {
+  int64 id                          = 1;   // 活动id
+  string name                       = 2;   // 活动名称
+  int64 order                       = 3;   // 显示顺序
+  string resource                   = 4;   // 客户端资源
+  int64 time_begin                  = 5;   // 活动开启时间
+  int64 time_end                    = 6;   // 活动结束时间
+  string act_desc                   = 7;   // 活动描述
+  string time_desc                  = 8;   // 时间描述
+  int64 tips_id                     = 9;   // 说明 tips ID，配置表 DescriptionTips 中的编号
+  google.protobuf.Any custom_detail = 10;  // 活动入口自定义额外信息
+  LimitedTimeNotice notice          = 11;  // 限时通知
+  bool is_hide_tab                  = 12;  // 是否隐藏页签
+  repeated int64 pak_ids            = 13;  // 扩展包依赖
+}
+
+// 活动自定义活动入口额外信息 Notify
+message ActCustomDetailNotify {
+  int64 act_id                          = 1;  // 活动 ID
+  google.protobuf.Any act_custom_detail = 2;  // 活动自定义额外信息
+}
+
+enum TriggerMethod {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  ACT_HALL            = 0;  // 从活动大厅进入活动页面触发
+  BEHAVIOR_WITHIN_ACT = 1;  // 活动内业务行为触发
+}
+
+message ActGetDetailRequest {
+  int64 act_id                   = 1;  // 活动 ID
+  TriggerMethod trigger_method   = 2;  // 触发方式
+  google.protobuf.Any custom_req = 3;  // 活动自定义请求
+}
+
+message ActGetDetailReply {
+  google.protobuf.Any custom_reply = 1;  // 活动自定义返回
+}
+
+message ActDeliverRewardRequest {
+  int64 act_id                                        = 1;  // 活动 ID
+  int64 reward_type                                   = 2;  // 奖励类型，各个活动自定义
+  int64 reward_id                                     = 3;  // 奖励 ID
+  repeated int64 reward_param                         = 4;  // 奖励参数
+  repeated corepb.GiftSelectedItem gift_selected_item = 5;  // 可选礼包选中道具信息
+}
+
+message ActDeliverRewardReply {
+  repeated corepb.Item rewards     = 1;  // 领取到的奖励
+  repeated int64 reward_ids        = 2;  // 领取到的奖励 ID 列表
+  google.protobuf.Any custom_reply = 3;  // 活动自定义返回
+}

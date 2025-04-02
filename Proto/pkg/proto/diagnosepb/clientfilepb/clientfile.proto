@@ -1,0 +1,31 @@
+// cs protocol
+syntax = "proto3";
+
+package diagnosepb.clientfilepb;
+option go_package = "git.code.oa.com/red/diagnose/pkg/proto/diagnosepb/clientfilepb";
+
+service ClientFileService {
+  // 根据Http请求获得COS签名
+  rpc PutFile(PutFileRequest) returns (PutFileReply);
+  // 推送企微信息
+  rpc SendWechat(SendWechatRequest) returns (SendWechatReply);
+}
+
+message PutFileRequest {
+  string http_method = 1;
+  string http_uri    = 2;
+}
+
+message PutFileReply {
+  string authorization = 1;
+}
+
+message SendWechatRequest {
+  int64 id        = 1;
+  string chat_id  = 2;
+  string msgtype  = 3;
+  string content  = 4;
+  string media_id = 5;
+}
+
+message SendWechatReply {}

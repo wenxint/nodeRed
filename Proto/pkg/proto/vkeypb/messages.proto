@@ -1,0 +1,151 @@
+// cs protocol
+syntax = "proto3";
+
+package vkeypb;
+option go_package = "git.woa.com/red/fightsvr/pkg/proto/vkeypb";
+
+// 这里定义 vkey 对应的 protobuf message
+
+message WinResultDetail {
+  uint64 role_idx    = 1;  // 玩家的 index
+  uint32 win_team_id = 2;  // 该玩家上报的获胜teamid
+}
+
+// 回合结束消息
+// vkey: ROUND_END(2003)
+message RoundEnd {
+  uint32 win_team_id                  = 1;  // 胜利方的teamID
+  repeated WinResultDetail win_detail = 2;  // 每个玩家上报的回合获胜teamid
+  bool is_full_hp                     = 3;  // 是否满血
+}
+
+// 战斗结束消息
+// vkey: BATTLE_END(2004)
+message BattleEnd {
+  uint32 win_team_id                    = 1;  // 胜利方的teamID
+  uint32 end_reason                     = 2;  // 结束原因，参考 GameEndReason
+  repeated VKeyTimeout timeout_role_idx = 3;  // 超时的玩家
+}
+
+message VKeyTimeout {
+  uint32 vkey                      = 1;  // 超时的 vkey
+  repeated uint32 timeout_role_idx = 3;  // 超时的玩家
+}
+
+// 客户端 auth 信息上报
+// vkey: AUTH(2005)
+message Auth {
+  uint32 secret_num = 1;  // 开战协议下发的秘密数字，
+  // 此前是 uint16，但是 protobuf 不支持 uint16，而且 protobuf 数字为变长，故此处使用 uint32，仍然填写开战协议下发数据即可
+}
+
+// 延迟上报，会广播给所有玩家
+// vkey: PING_BROADCAST(2023)
+message PingBroadcast {
+  uint32 latency       = 1;  // 延迟(ms)
+  uint32 network_type  = 2;  // 网络类型，在客户端侧有枚举定义，后台暂不关心
+  int32 double_channel = 3;  // 是否启用双通道 0 -否 1-是
+}
+
+// 玩家状态改变通知
+// vkey: PLAYER_STATUS_CHANGE(2031)
+message PlayerStatusChange {
+  enum Status {
+    STATUS_UNKNOWN = 0;
+    STATUS_LEAVE   = 1;  // 主动离开
+    STATUS_LOSE    = 2;  // 掉线
+  }
+  Status status = 1;  // 玩家状态
+}
+
+// hash上报
+// vkey: GAME_HASH(2040)
+message GameHashReport {
+  uint64 hash         = 1;  // 客户端上报的hash值
+  int32 svr_frame_id  = 2;  //
+  int32 svr_frame_id2 = 3;  // 实际要用的帧id
+  uint64 frame_hash   = 4;  // 客户端上报的收到的帧数据的hash值
+}
+
+// 服务端发现客户端 hash 不一致，通知客户端
+// vkey: GAME_HASH_ERR(2041)
+message GameHashError {
+  uint32 error_frame_id = 1;  // 不一致的帧ID
+}
+
+// 伤害信息上报
+// vkey: REPORT_DAMAGE_VALUE(2120)
+message DamageValueReport {
+  uint32 role_idx    = 1;  // 上报的是谁的伤害
+  uint64 damage      = 2;  // 总伤害值，即单局累计伤害，而非某次伤害
+  bool to_foundation = 3;  // 伤害目标是否为敌方基地(海战)
+}
+
+// 莫利亚得分和分组上报
+// vkey: REPORT_SCORE_GROUP (2126)
+message ScoreAndGroupReport {
+  uint32 role_idx = 1;  // 玩家序号
+  uint64 score    = 2;  // 总得分
+  uint32 group    = 3;  // 阵营
+}
+
+// PVE 积分上报
+// vkey: REPORT_PVE_SCORE(2121)
+message PVEScoreReport {
+  uint32 score    = 1;  // 积分
+  uint32 role_idx = 2;  // 上报的是谁的积分
+  uint32 time     = 3;  // 上报积分时间
+  string key      = 4;  // 用于区分不同玩法的自定义的值
+}
+
+// 击杀上报
+// vkey: REPORT_KILL(2122)
+message KillReport {
+  uint32 killer_role_idx = 1;  // 击杀者
+  uint32 killed_role_idx = 2;  // 被击杀者
+}
+
+// 地图破坏总数上报
+// vkey: REPORT_DESTRUCTION(2123)
+message DestructionReport {
+  uint32 total = 1;  // 当局破坏总数
+}
+
+// 回合信息上报
+// vkey: REPORT_ROUND_PLAYER_INFO(2400)
+message RoundPlayerInfoReport {}
+
+// vkey上报用的整形数组
+// PVPVkey_PING_SERVER_LATENCY  PVPVkey = 2024 // 剔除RTT的实际延迟
+message IntArrayArg {
+  repeated int32 args = 1;  // 整数数组 前台兼容用
+}
+
+// 帧率上报
+// PVPVkey_REPORT_FPS           PVPVkey = 2026 // 客户端FPS统计上报
+message FPSMsg {
+  int32 client_fps = 1;  // 客户端帧率
+  int32 server_fps = 2;  // 服务器驱动帧率
+}
+
+// PVPVkey_REPORT_FIGHT_EXPERIENCE   PVPVkey = 2027 玩家战斗体验，对局结束上报，0-100的数值，代表玩家在本次战斗中的综合体验
+message FightExperience {
+  int32 experience     = 1;  // 战斗体验
+  int32 double_channel = 2;  // 是否启用双通道 0 -否 1-是
+  int32 logic_fps      = 3;  // 逻辑帧率
+}
+
+// 关联战斗上报内容
+message RelatedGamesAction {
+  int32 key   = 1;  // 内部key值
+  int32 index = 2;  // 不同玩家去重使用，在一个对局里客户端保证唯一
+  int64 value = 3;
+}
+
+// 宝石信息上报
+// vkey: REPORT_GEM_VALUE(2125)
+message GemValueReport {
+  uint32 role_idx       = 1;  // 上报的是谁的宝石
+  uint64 gem_value      = 2;  // 总宝石数量，即单局累计的总宝石量
+  uint64 pick_gem_value = 3;  // 宝石拾取总量，不包含掉落，只计算拾取
+}

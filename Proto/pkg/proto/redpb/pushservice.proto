@@ -1,0 +1,15 @@
+// cs protocol
+syntax = "proto3";
+
+package redpb;
+option go_package = "git.woa.com/red/gatesvr/pkg/proto/redpb";
+
+service PushService {
+  // Ack
+  rpc Ack(AckRequest) returns (AckRespone);
+}
+
+// 客户端确认svr_seq
+message AckRequest {}
+message AckRespone {}
+

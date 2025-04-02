@@ -1,0 +1,85 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0026pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0026pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0026Service {
+  // 单个任务奖励
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+
+  // 批量领取活动奖励
+  rpc BatchDeliverActReward(BatchDeliverActRewardRequest) returns (BatchDeliverActRewardReply);
+
+  // 结算： 关卡id + 当前获取的星星数
+  rpc FinishLevel(FinishLevelRequest) returns (FinishLevelReply);
+
+  // 获得局内宝箱
+  rpc TreasureBox(TreasureBoxRequest) returns (TreasureBoxReply);
+
+  // 消除每日关卡解锁的红点
+  rpc RemoveRedPoint(RemoveRedPointRequest) returns (RemoveRedPointReply);
+}
+
+message ActGetDetailRequest {}
+
+message LevelInfo {
+  int64 level_id           = 1;  // 关卡id
+  int64 stars              = 2;  // 该关卡获得的星星数
+  int64 unlocked_timestamp = 3;  // 关卡解锁时间戳（0 表示已经解锁）
+  bool has_redpoint        = 4;  // 是否新解锁有红点
+}
+
+// 活动详情
+message ActGetDetailReply {
+  int64 total_stars                  = 1;  // 当前总星星数
+  repeated LevelInfo level_star      = 2;  // 每个关卡的星星数
+  repeated actpb.commonpb.Task tasks = 3;  // 所有任务详细信息
+}
+
+// 单个领取
+message DeliverActRewardRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message DeliverActRewardReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+}
+
+// 批量领取
+message BatchDeliverActRewardRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message BatchDeliverActRewardReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+}
+
+// 打完关卡结算
+message FinishLevelRequest {
+  int64 level_id  = 1;  // 关卡id
+  int64 stars     = 2;  // 该关卡获得的星星数
+  int64 cost_time = 3;  // 消耗时间（秒）
+}
+
+message FinishLevelReply {}
+
+// 打中宝箱
+message TreasureBoxRequest {
+  int64 level_id = 1;  // 关卡id
+}
+
+message TreasureBoxReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+}
+
+// 清除红点
+message RemoveRedPointRequest {
+  int64 level_id = 1;  // 关卡id
+}
+
+message RemoveRedPointReply {}

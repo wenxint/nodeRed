@@ -1,0 +1,417 @@
+// cs protocol
+syntax = "proto3";
+
+package corepb;
+option go_package = "git.woa.com/red/game-proto/corepb";
+
+import "google/protobuf/any.proto";
+import "corepb/platform.proto";
+
+message OssInfo {
+  string client_version    = 1;                       // 客户端版本号
+  string res_version       = 2;                       // 资源版本号
+  string sys_software      = 3;                       // 操作系统版本
+  string sys_hardware      = 4;                       // 客户端机型
+  string telecom_oper      = 5;                       // 运营商
+  string network           = 6;                       // 2g / 3g / wifi
+  int32 screen_width       = 7;                       // 屏幕宽度
+  int32 screen_height      = 8;                       // 屏幕高度
+  float density            = 9;                       // 像素密度
+  int32 reg_channel        = 10 [deprecated = true];  // 注册渠道（废弃）
+  string cpu               = 11;                      // cpu类型|频率|核数
+  int32 memory             = 12;                      // 内存大小  M为单位
+  string gl_render         = 13;                      // opengl  render信息
+  string gl_version        = 14;                      // opengl 版本信息
+  string device_id         = 15;                      // 安卓上报IMEI,IOS上报IDFA
+  string android_OAID      = 16;                      // 匿名设备标识符,安卓上报
+  string ios_CAID          = 17;                      // 匿名设备标识符,IOS上报
+  string gpu               = 18;                      // gpu型号
+  int32 os_type            = 19;                      // 操作系统类型(OSType 0:iOS 1:android)
+  int32 platform_type      = 20;                      // 渠道类型(PlatformType 0:UnKnowType 1:WX 2:QQ 3:GUEST)
+  string tag               = 21;                      // 类似于子渠道号的功能，客户端上报，记录在login tlog的reserve4字段
+  bool is_simulator        = 22;                      // 是否是模拟器
+  string ipv6              = 23;                      // 玩家的ipv6地址
+  string old_CAID          = 24;                      // 旧版CAID
+  string user_agent        = 25;                      // 用户浏览器代理信息
+  string channel           = 26;                      // 客户端渠道
+  bool is_gamematrix       = 27;                      // 是否为先锋云游戏
+  string first_reg_channel = 28;  // 首次注册渠道 该openid首次注册的渠道，不区分角色id【重要：目前只用于qq游戏中心成就上报，其它地方谨慎使用】
+
+  AsaInfo asa_info = 40;  // ASA信息
+}
+
+// ASA（Apple Search Ads）
+message AsaInfo {
+  string attribution       = 1;   // 是否归因，0 (false) or 1 (true)
+  string org_id            = 2;   // 广告系列组ID
+  string org_name          = 3;   // 广告系列组名称
+  string campaign_id       = 4;   // 广告系列ID
+  string campaign_name     = 5;   // 广告系列名称
+  string adgroup_id        = 6;   // 广告组ID
+  string adgroup_name      = 7;   // 广告组名称
+  string keyword_id        = 8;   // 关键词ID
+  string keyword           = 9;   // 关键词
+  string keyword_matchtype = 10;  // 关键词匹配类型
+  string ad_id             = 11;  // 广告ID
+  string creativeset_name  = 12;  // Creative Set 名称
+  string click_date        = 13;  // 广告点击时间
+  string purchase_date     = 14;  // 用户首次下载时间
+  string conversion_date   = 15;  // 用户下载时间
+  string conversion_type   = 16;  // 用户类型
+  string country_or_region = 17;  // 用户所属国家或地区
+}
+
+message PayInfo {
+  string access_token = 1;
+  string pay_token    = 2;  // 只有QQ才需要
+  string pf           = 3;
+  string pfkey        = 4;
+}
+
+message SourceItem {
+  int64 ID    = 1;
+  int64 Count = 2;
+}
+
+// 道具预览
+message ItemPreview {
+  int64 id          = 1;  // 道具 ID
+  int64 lower_count = 2;  // 道具预览下限
+  int64 upper_count = 3;  // 道具预览上限
+  int64 expire_time = 4;  // 过期时间戳
+}
+
+message GiftItem {
+  string gift_unique_id         = 1;  // 可选礼包唯一 ID，给每一个可选礼包提供一个全局唯一标识
+  repeated SItem selected_items = 2;  // 可选礼包选中的道具列表
+}
+
+message Item {
+  uint32 id                  = 1;  // 物品id
+  int64 count                = 2;  // 物品数量
+  int64 expire_time          = 3;  // 过期时间戳
+  int64 final_count          = 4;  // 同步给客户端变更后的数量
+  SourceItem source          = 5;  // 如果发生物品转换，同步给客户端的转换的来源信息
+  GiftItem gift              = 6;  // 如果是可选礼包，则包含可选礼包信息
+  google.protobuf.Any detail = 7;  // 物品详情，如果通用道具的展示不满足要求，在这里展示传递的详情信息
+}
+
+enum ItemId {
+  NONE = 0;
+
+  DIAL_SKILL_EXP = 30001;  // 空岛贝系统中的技艺经验
+
+  // deprecated
+  // DIAMOND                       = 10001;  // 钻石
+  GOLD                          = 10002;  // 金币
+  BELLY                         = 10003;  // 贝里
+  SHELL                         = 10004;  // 贝壳
+  JOINT_BATTLE_AWARD_COUNT      = 10005;  // 同盟协战奖励次数道具
+  VIP_POINTS                    = 10010;  // VIP积分
+  COMPREHENSION                 = 10011;  // 领悟点
+  SECRETFIELD_SWEEP_COUPON      = 10013;  // 秘境扫荡券
+  JOINTBATTLE_SWEEP_COUPON      = 10014;  // 小队扫荡券
+  GUILD_EXP                     = 10026;  // 同盟经验
+  GUILD_BASIC_CURRENCY          = 10029;  // 同盟基础货币
+  FATIGUE                       = 10030;  // 体力
+  SEAGULL_COIN                  = 10009;  // 海鸥币
+  LADDER_YEAR_COIN              = 10041;  // 赛年货币
+  SAILING_POWER                 = 10047;  // 航行力
+  VOYAGE_EXPLORE_MOVE_COUPON    = 10048;  // 海域探险免费移动券
+  VOYAGE_EXPLORE_FIGHT_COUPON   = 10049;  // 海域探险战斗扫荡券
+  VOYAGE_EXPLORE_FISHING_COUPON = 10050;  // 海域探险钓鱼扫荡券
+  PRAYHOUSE_DONATE_TOKEN        = 10051;  // 同盟互助令牌，用于祈愿屋捐献
+  PRAYHOUSE_CALL_FOR_HELP_TOKEN = 10052;  // 同盟征集信物，用于祈愿屋征集
+  DIAMOND_RECHARGE_CARD         = 10104;  // 钻石充值卡
+  DIAMOND_RECHARGE_POINT        = 10111;  // 充值积分
+  DIRECTBUY_POINT               = 10112;  // 直购积分
+  DIAMOND                       = 19999;  // 钻石
+
+  INTELARCHIVE_EXP = 30051;  // 情报档案: 情报值
+
+  RESEARCH_POINT = 30102;  // 研究点(满级后获得角色经验时获得)
+
+  EXP            = 40001;  // 角色经验
+  STAMINA        = 40002;  // 体力值
+  REPUTATION_EXP = 40017;  // 声望经验
+  DAILY_SCORE    = 40022;  // 活跃度
+}
+
+/* 对象出现的一些条件枚举 */
+enum ConditionType {
+  CT_NONE                = 0;   // 无
+  PRE_TASK               = 1;   // 前置任务
+  PLAYER_LEVEL           = 2;   // 玩家等级
+  REPUTATION_LEVEL       = 3;   // 声望等级
+  DUNGEON_PROGRESS       = 4;   // 副本进度
+  OWN_ITEM               = 5;   // 获得道具
+  ADVENTURE_VALUE        = 6;   // 冒险心属性
+  FC_VALUE               = 7;   // 实力值
+  USE_BUDDY_ADVENTURE    = 8;   // 主线冒险使用伙伴
+  USE_SHIP               = 9;   // 上阵船只
+  WEATHER                = 10;  // 天气
+  FAME_PROMOTION_TRIGGER = 11;  // 名望晋级触发
+  ALLIANCE_LEVEL         = 12;  // 同盟等级
+  TIME_RANGE             = 13;  // 时间范围
+  DAY_TIME_RANGE         = 14;  // 每天时间范围
+  WEEKDAY_TIME_RANGE     = 15;  // 每周每天时间范围
+  SYSTEM_OPEN            = 16;  // 功能开启
+  CT_SEA_FISHING         = 17;  // 海钓
+  GUILD_EVENT            = 18;  // 同盟事件
+}
+
+/* 属性ID修改: 以客户端为准 */
+enum AttributeId {
+  NONEATTR                 = 0;
+  ATTACK                   = 111;  // 攻击
+  DEFENSE                  = 114;  // 防御
+  MAXHP                    = 109;  // 生命
+  CRIT                     = 120;  // 暴击
+  CRITDAMAGE               = 241;  // 暴伤
+  WALK_V                   = 243;  // 移速
+  STRENGTH                 = 134;  // 力量
+  AGILITY                  = 135;  // 灵巧
+  LUCK                     = 136;  // 运气
+  ADVENTURE                = 140;  // 冒险心
+  CURIOSITY                = 141;  // 好奇心
+  FASHION                  = 142;  // 时髦
+  FIXED_FC                 = 143;  // 固定战力
+  WALK_V_SCALE             = 235;  // 行走速度缩放
+  RUN_V_SCALE              = 236;  // 跑步速度缩放
+  SUPPRESS_CRITICAL_DAMAGE = 271;  // 抗爆伤
+  DEFEND_PENETRATE         = 272;  // 防御穿透
+  SKILL_AB_CD_RATE         = 273;  // 技能冷却
+  SKILL_DIAL_CD_RATE       = 274;  // 空岛贝冷却
+  SKILL_RESCUE_CD_RATE     = 275;  // 援护冷却
+  SKILL_SUBSTITUTE_CD_RATE = 276;  // 替身冷却
+  SKILL_ATTACK_DMG_INC     = 277;  // 强化普攻伤害
+  SKILL_ATTACK_DMG_DEC     = 278;  // 普攻伤害抵抗
+  SKILL_AB_DMG_INC         = 279;  // 强化技能伤害
+  SKILL_AB_DMG_DEC         = 280;  // 技能伤害抵抗
+  SKILL_AOYI_DMG_INC       = 281;  // 强化奥义伤害
+  SKILL_AOYI_DMG_DEC       = 282;  // 奥义伤害抵抗
+  SKILL_DIAL_DMG_INC       = 283;  // 强化空岛贝伤害
+  SKILL_DIAL_DMG_DEC       = 284;  // 空岛贝伤害抵抗
+  SKILL_RESCUE_DMG_INC     = 285;  // 强化援护伤害
+  SKILL_RESCUE_DMG_DEC     = 286;  // 援护伤害抵抗
+  SKILL_EXECUTION_DMG_INC  = 287;  // 强化处决伤害
+  SKILL_EXECUTION_DMG_DEC  = 288;  // 处决伤害抵抗
+  ENHANCEMENT_LEVEL        = 343;  // 增强等级
+
+  MONSTER_SUPPRESSION       = 500;  // 怪物压制
+  MONSTER_RESISTANCE        = 501;  // 怪物抵抗
+  ELITE_MONSTER_SUPPRESSION = 502;  // 精英怪物压制
+  ELITE_MONSTER_RESISTANCE  = 503;  // 精英怪物抵抗
+  BOSS_MONSTER_SUPPRESSION  = 504;  // 首领怪物压制
+  BOSS_MONSTER_RESISTANCE   = 505;  // 首领怪物抵抗
+
+  SAID_HP_STEAL           = 611;  // [海战]生命窃取
+  SAID_DAMAGE_PER         = 612;  // [海战]伤害
+  SAID_BOMB               = 613;  // [海战]炮弹伤害
+  SAID_BLAST              = 614;  // [海战]爆炸伤害
+  SAID_ELEMENT            = 615;  // [海战]元素伤害
+  SAID_ARMER              = 616;  // [海战]护甲
+  SAID_DODEG              = 617;  // [海战]闪避
+  SAID_DODEG_MAX          = 618;  // [海战]闪避上限
+  SAID_CRIT               = 619;  // [海战]暴击率
+  SAID_ATTACK_SPEED       = 620;  // [海战]攻击速度
+  SAID_HP_HEAL            = 621;  // [海战]生命回复
+  SAID_ATTACK_RANGE       = 622;  // [海战]攻击范围
+  SAID_WEAPON_MAX         = 623;  // [海战]武器槽数
+  SAID_VOYAGE             = 625;  // [海战]航海学
+  SAID_REBOUND_TIMES      = 626;  // [海战]弹射次数
+  SAID_REBOUND_RATIO      = 627;  // [海战]弹射衰减
+  SAID_REBOUND_RANGE      = 628;  // [海战]弹射范围
+  SAID_PENETRAT_TIMES     = 629;  // [海战]穿透数量
+  SAID_PENETRAT_RATIO     = 630;  // [海战]穿透衰减
+  SAID_HURT_BACK          = 631;  // [海战]击退距离
+  SAID_REWARD             = 632;  // [海战]收获
+  SAID_DAMAGE_GOLD_PER    = 633;  // [海战]金币伤害加成百分比
+  SAID_REPLY_PROP_COUNT   = 636;  // [海战]回血恢复量
+  SAID_DIRECT_PICKUP_RATE = 637;  // [海战]直接拾取率
+  SAID_PROP_RANGE         = 638;  // [海战]道具拾取范围
+  SAID_COM_DGM            = 639;  // [海战]连发伤害
+
+  ATTACK_PERC     = 5111;  // 攻击万分比
+  DEFENSE_PERC    = 5114;  // 防御万分比
+  MAXHP_PERC      = 5109;  // 生命万分比
+  CRIT_PERC       = 5120;  // 暴击万分比
+  CRITDAMAGE_PERC = 5241;  // 爆伤万分比
+  STRENGTH_PERC   = 5134;  // 力量万分比
+  AGILITY_PERC    = 5135;  // 灵巧万分比
+  LUCK_PERC       = 5136;  // 运气万分比
+  ADVENTURE_PERC  = 5140;  // 冒险心万分比
+  CURIOSITY_PERC  = 5141;  // 好奇心万分比
+  FASHION_PERC    = 5142;  // 时髦万分比
+}
+
+message FightAttr {
+  map<int64, int64> attr_map = 12;  // [新]属性对
+
+  int64 init_hp          = 20;  // 初始生命
+  int64 crit_to_damage   = 21;  // 超出30%需要转换成爆伤的那部分暴击
+  int64 damage_from_crit = 22;  // 暴击转换成的爆伤
+
+  reserved 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11;
+  reserved 13;
+  reserved 35, 36;
+  reserved 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88;
+}
+
+// 技能属性类型枚举表，客户端定义
+enum SkillAttrType {
+  NONE_SKILL_ATTR_TYPE = 0;      // 无
+  CD_PERC              = 10017;  // CD的万分比修改
+  DAMAGE_PERCENT_PERC  = 10018;  // 伤害比率的万分比修改
+  DAMAGE_VALUE_PERC    = 10019;  // 伤害固定值的万分比修改
+  CD_VALUE             = 20017;  // CD的绝对值修改
+  DAMAGE_PERCENT_VALUE = 20018;  // 伤害比率的绝对值修改
+  DAMAGE_VALUE_VALUE   = 20019;  // 伤害固定值的绝对值修改
+}
+
+// 比Item简单的结构体
+message SItem {
+  uint32 id   = 1;  // 物品id
+  int64 count = 2;  // 道具数量
+}
+
+// 可选礼包选中道具信息
+message GiftSelectedItem {
+  int64 gift_id        = 1;  // 礼包id
+  int64 index          = 2;  // 备用
+  repeated SItem items = 3;  // 选中的道具
+}
+
+// 机器人匹配方式类型
+enum RobotMatchType {
+  NONE_TYPE         = 0;  // 无
+  FC_RANGE_TYPE     = 1;  // 实力值相近匹配
+  LADDER_RANGE_TYPE = 2;  // 段位相近匹配
+}
+
+// 匹配类型
+enum MatchClass {
+  MATCH_CLASS_UNKNOWN   = 0;  // 无
+  MATCH_CLASS_SAME_AREA = 1;  // 只匹配自己大区
+  MATCH_CLASS_ALL       = 2;  // 可匹配全部大区
+}
+
+// 性别
+enum Gender {
+  GENDER_UNKNOWN = 0;  // 无
+  GENDER_MALE    = 1;  // 男性
+  GENDER_FEMALE  = 2;  // 女性
+}
+
+// 装扮信息
+message DressInfo {
+  AvatarBoxInfo avatar_box_info = 1;
+  TitleInfo title_info          = 2;
+  StickerInfo sticker_info      = 3;  // 战局内表情信息
+  AvatarInfo avatar_info        = 4;
+}
+
+// 战局内表情信息
+message StickerInfo {
+  repeated StickerSetting manual_sticker_settings = 1;  // 玩家配置的手动表情信息配置
+  repeated StickerSetting auto_sticker_settings   = 2;  // 玩家配置的自动表情信息配置
+}
+
+message StickerSetting {
+  int64 slot_id    = 1;  // 槽位
+  int64 sticker_id = 2;  // 表情id
+}
+
+// 头像框信息
+message AvatarBoxInfo {
+  int64 avatar_box_id = 1;  // 头像框 id
+  int64 expired_time  = 2;  // 过期时间(Unix Second)
+}
+
+// 头像信息
+message AvatarInfo {
+  int64 avatar_id    = 1;  // 头像 id
+  int64 expired_time = 2;  // 过期时间(Unix Second)
+}
+
+// 称号信息
+message TitleInfo {
+  int64 title_id     = 1;  // 称号 id
+  int64 expired_time = 2;  // 过期时间(Unix Second)
+}
+
+// 个人显示信息
+message PersonalDisplayInfo {
+  string name                            = 1;  // 角色昵称
+  uint32 level                           = 2;  // 角色等级
+  int64 lobby_buddy_id                   = 3;  // 玩家主界面头像
+  bytes plat_name                        = 4;  // 平台名称
+  string plat_pic                        = 5;  // 玩家平台头像
+  DressInfo dress_info                   = 6;  // 装扮信息
+  int64 zone_id                          = 7;  // 玩家所在小区
+  int64 last_launch_from_gamecenter_time = 8;  // 上次从游戏中心启动的时间
+  Gender gender                          = 9;  // 性别
+}
+
+// 活动信息
+message OpenActInfo {
+  int64 act_id    = 1;
+  int64 open_time = 2;
+}
+
+message BasicInfo {
+  reserved 10, 12, 13, 15, 19, 37;
+  uint64 gid            = 1;  // 角色唯一ID
+  uint32 zone_id        = 2;  // 区服
+  string name           = 3;  // 角色昵称(ntf: reset)
+  int64 register_time   = 4;  // 角色注册时间
+  uint32 level          = 5;  // 角色等级(ntf: reset)
+  int64 exp             = 6;  // 角色经验值(ntf: incr)
+  int64 last_login_time = 7;  // 上次登陆时间
+  int64 last_hb_time    = 8;  // 上次心跳时间
+  string plat_pic       = 9;  // 玩家平台头像(ntf: reset)
+  // int64 stamina = 10; // 体力，一般为正，异常玩家可负(ntf: incr)
+  int64 fc = 11;  // 战斗力(ntf: reset)
+  // int64 comprehension = 12;        // 领悟力(ntf: incr)
+  // int64 restore_stamina_time = 13; // 下次恢复体力时间(ntf: reset)
+  int64 vip_points = 14;  // vip积分数量(ntf: incr)
+  // 目前代币托管在 Midas，不做缓存
+  // int64 diamond                = 15;  // 钻石数量(ntf: incr)
+  int64 gold  = 16;  // 金币数量(ntf: incr)
+  int64 belly = 17;  // 贝利数量(ntf: incr)
+  int64 shell = 18;  // 贝壳数量(ntf: incr)
+  // int64 save_amt               = 19;  // 充值总额
+  string openid                = 20;  // 把openid存起来,方便离线取openid
+  bytes plat_name              = 21;  // 平台名称
+  bool is_online               = 22;  // 是否在线
+  int64 last_offline_time      = 23;  // 上次掉线时间
+  string client_version        = 24;  // 客户端版本号 FIXME: 先放这里，未来可能挪到 runtime 数据？
+  int32 rename_cnt             = 25;  // 改名次数
+  int64 last_levelup_time      = 26;  // 上次升级时间
+  int64 chat_forbidden_time    = 27;  // 禁言截止时间
+  int64 last_check_plat_time   = 28;  // 上次检查玩家平台昵称/头像时间
+  int64 check_forceupdate_time = 29;  // 上次检查强制更新的时间 暂定每日5点检查一次
+  int64 register_channel       = 30;  // 注册渠道
+  int64 login_channel          = 31;  // 登录渠道
+  int64 day_online_time        = 32;  // 每日在线时间seconds
+  bool is_editor               = 33;  //是否是pc登陆
+  string client_app_ver        = 34;  // 客户端AppVersion
+  string client_res_ver        = 35;  // 客户端ResVersion
+  bool is_robot                = 36;  // 是否机器人
+  // DressInfo dress_info              = 37;  // 装扮信息
+  int64 total_login_days            = 38;  // 总登录天数
+  uint64 active_day_bits            = 39;  // 活跃天位图 第0位表示最后一次登录当天
+  int64 guild_id                    = 40;  // 公会 ID（-1 表示不在公会中）
+  corepb.OSType register_os_type    = 41;  // 注册时的操作系统类型
+  corepb.OSType current_os_type     = 42;  // 当前操作系统类型
+  int64 last_report_hope_ts         = 43;  // 上次上报中控时间
+  PersonalDisplayInfo personal_info = 44;  // 个人显示信息
+  bool has_dirty_plat_pic           = 45;  // 头像是否被处罚过
+  int64 hope_player_flag            = 46;  // 是否为未成年用户,1未成年，2成年，3未实名
+  int64 gold_total_consume          = 47;  // 金币总消费数量
+  int64 belly_total_consume         = 48;  // 贝利总消费数量
+  bool is_allow_observe             = 49;  // 是否允许观战pvp
+  bool is_ranking_anonymous         = 50;  // 是否排行榜匿名
+  int64 last_rename_time            = 51;  // 上次改名时间
+  int64 guild_level                 = 52;  // 同盟等级（-1表示清除本地同盟等级）
+}

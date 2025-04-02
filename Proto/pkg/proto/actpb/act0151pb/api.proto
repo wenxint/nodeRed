@@ -1,0 +1,62 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0151pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0151pb";
+
+import "corepb/common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0151Service {
+  // 开战
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  // 结算
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  // 获取阵容信息
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);
+  // 设置阵容
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);
+}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+}
+
+message GameStartRequest {}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  corepb.FightResultType result = 1;  // 战斗结果
+  int32 reason                  = 2;  // 结算原因:EGameResultReason
+  repeated corepb.Item awards   = 3;  // 掉落的奖励
+  int64 dungeon_id              = 4;  // 关卡ID
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 游戏结束消息
+  repeated corepb.Item awards         = 2;  // 奖励
+}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 阵容类型，目前直接传 "act0151_loadout"
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+}
+
+message ApplyLoadoutRequest {
+  corepb.Loadout loadout = 1;  // 阵容
+}
+
+message ApplyLoadoutReply {}

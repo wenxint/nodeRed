@@ -1,0 +1,129 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.blesspb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/blesspb";
+
+
+import "corepb/common.proto";
+
+// 同盟祈福服务
+service GuildBlessService {
+  rpc QueryBlessInfo(QueryBlessInfoRequest) returns (QueryBlessInfoReply);     // 查询签到信息
+  rpc QueryBlessLog(QueryBlessLogRequest) returns (QueryBlessLogReply);        // 查询签到日志
+  rpc Bless(BlessRequest) returns (BlessReply);                                // 签到
+  rpc AwardBox(AwardBoxRequest) returns (AwardBoxReply);                       // 领取宝箱奖励
+  rpc AwardRedPackage(AwardRedPackageRequest) returns (AwardRedPackageReply);  // 领取红包
+  rpc QueryRedPackage(QueryRedPackageRequest) returns (QueryRedPackageReply);  // 查询红包信息
+}
+
+enum AwardStatus {
+  AS_NONE    = 0;  // 不可领奖
+  AS_ACTIVE  = 1;  // 可领奖
+  AS_AWARDED = 2;  // 可领奖
+}
+
+message QueryBlessInfoRequest {}
+
+message BlessBasicInfo {
+  int64 bless_type                   = 1;  // 签到类型
+  repeated corepb.Item costs         = 3;  // 消耗
+  repeated corepb.Item awards        = 4;  // 奖励
+  int64 exp                          = 5;  // 增加的同盟经验
+  repeated corepb.Item random_awards = 6;  // 随机奖励列表，可以从中获得一个
+}
+
+message BlessBoxInfo {
+  int64 id                    = 1;  // 档位id
+  int64 bless_num             = 2;  // 需要的签到人数
+  int64 status                = 3;  // 领取状态 0-不可领取 1-可领取 2-已领取
+  repeated corepb.Item awards = 4;  // 奖励
+}
+
+message BlessRoleInfo {
+  int64 gid        = 1;
+  string name      = 2;
+  int64 bless_type = 3;  // 签到类型
+}
+
+message BlessInfo {
+  int64 bless_type                          = 1;  // 0-未签到 1-略表心意签到 2-虔诚祝福签到
+  int64 bless_num                           = 2;  // 当前签到人数
+  int64 red_package_status                  = 3;  // 红包状态 0-不可领取 1-可领取 2-已领取
+  repeated BlessBasicInfo bless_basic_info  = 4;
+  repeated BlessBoxInfo bless_box_info      = 5;
+  repeated BlessRoleInfo bless_role_info    = 6;   // 玩家签到信息
+  int64 red_package_award_hour              = 7;   // 第二天红包可以领取的时间（小时）
+  int64 total_red_package_coin              = 8;   // 总的红包金币（昨天已获得的）
+  int64 current_cumulative_red_package_coin = 9;   // 今天累计的金币数量
+  int64 awarded_red_package_num             = 10;  // 已领取的红包个数
+  int64 guild_level                         = 11;  // 当前同盟的等级
+  int64 current_guild_exp                   = 12;  // 当前同盟的经验
+  int64 next_guild_level_exp                = 13;  // 达到这个经验值就可以升级了，为0表示已经满级了
+  bool is_luck_sailing                      = 14;  // 幸运出航日是否开启
+}
+
+message QueryBlessInfoReply {
+  BlessInfo bless_info = 1;
+}
+
+message BlessLogInfo {
+  int64 gid             = 1;
+  string name           = 2;
+  int64 contribution    = 3;  // 贡献
+  int64 last_bless_time = 4;  // 上次祝福时间（前台不管）
+}
+
+message QueryBlessLogRequest {}
+
+message QueryBlessLogReply {
+  repeated BlessLogInfo logs = 1;  // 日志信息
+}
+
+message BlessRequest {
+  int64 bless_type      = 1;  // 签到类型 1-略表心意 2-虔诚祈福
+  bool is_super_captain = 2;  // 是否为超级船长
+}
+
+message BlessReply {
+  repeated corepb.Item awards = 1;  // 领取的奖励 (包括随机掉落的奖励)
+  BlessInfo bless_info        = 2;  // 重新刷一下签到信息
+  int64 drop_index            = 3;  // 随机奖励掉落的序号 即 BlessBasicInfo.random_awards的数组索引（从0开始）
+}
+
+message AwardBoxRequest {
+  int64 box_id = 1;
+}
+
+message AwardBoxReply {
+  repeated corepb.Item awards = 1;  // 领取的奖励
+  BlessInfo bless_info        = 2;  // 重新刷一下签到信息
+}
+
+message AwardRedPackageRequest {}
+
+message RedPackageRole {
+  int64 gid   = 1;
+  string name = 2;
+  int64 coin  = 3;  // 领取金币的数量
+}
+
+message RedPackageInfo {
+  int64 awarded_coin                    = 1;  // 已领取的红包金币总额
+  int64 total_coin                      = 2;  // 红包的总金额
+  int64 total_red_package_num           = 3;  // 总的红包数量
+  repeated RedPackageRole awarded_roles = 4;  // 已领取的红包及其详细信息
+}
+
+message AwardRedPackageReply {
+  repeated corepb.Item awards     = 1;  // 领取的奖励
+  BlessInfo bless_info            = 2;  // 重新刷一下签到信息
+  RedPackageInfo red_package_info = 3;  // 红包领取信息
+}
+
+message QueryRedPackageRequest {}
+
+message QueryRedPackageReply {
+  RedPackageInfo red_package_info = 1;  // 红包领取信息
+}

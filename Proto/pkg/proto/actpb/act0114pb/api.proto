@@ -1,0 +1,37 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0114pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0114pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  reserved 4;
+  int64 start_time            = 1;  // 活动开启时间
+  int64 end_time              = 2;  // 活动结束时间
+  Rookie rookie_total_welfare = 3;  // 新人总福利信息
+  Month month_welfare         = 5;  // 月度福利信息
+  actpb.commonpb.Share share  = 6;  // 分享信息
+}
+
+message Rookie {
+  string desc                 = 1;  // 新人总福利描述
+  repeated corepb.Item awards = 2;  // 奖励信息
+}
+
+message Month {
+  repeated Module welfares = 1;  // 福利信息
+}
+message Module {
+  string title                = 1;  // 模块标题
+  int64 achiway_id            = 2;  // 前往途径
+  repeated corepb.Item awards = 3;  // 奖励信息
+}
+
+message ActDeliverRewardRequest {}
+
+message ActDeliverRewardReply {}

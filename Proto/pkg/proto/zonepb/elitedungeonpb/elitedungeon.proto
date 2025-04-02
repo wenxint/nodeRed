@@ -1,0 +1,71 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.elitedungeonpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/elitedungeonpb";
+
+import "pkg/proto/zonepb/basic_info.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/common.proto";
+
+service Service {
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);                                // 获取阵容信息
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);                             // 设置阵容
+  rpc QueryEliteDungeonInfo(QueryEliteDungeonInfoRequest) returns (QueryEliteDungeonInfoReply);  // 副本信息
+}
+
+enum QuestStatus {
+  STATUS_UNKNOWN = 0;  // 未知状态
+  LOCKED         = 1;  // 锁定中
+  UNLOCKED       = 2;  // 已解锁
+  NEW            = 3;  // 新解锁
+  COMPLETE       = 4;  // 已通关
+}
+
+message QueryEliteDungeonInfoRequest {}
+
+message EliteDungeonQuestInfo {
+  int64 quest_id     = 1;  // 关卡ID
+  QuestStatus status = 2;  // 关卡状态
+}
+
+message QueryEliteDungeonInfoReply {
+  repeated EliteDungeonQuestInfo elite_dungeon_infos = 1;  // 副本信息
+  corepb.Loadout loadout                             = 2;  // 阵容
+}
+
+message GameStartReqCustomData {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message GameEndReqCustomData {
+  repeated QuestCompleteTime quest_complete_times = 1;  // 关卡完成时间
+  string record_file_name                         = 2;  // 对局数据文件名
+  repeated bytes dungeon_record_bytes             = 3;  // 对局数据
+}
+
+message QuestCompleteTime {
+  int64 quest_id         = 1;  // 关卡ID
+  int64 complete_time_ms = 2;  // 完成时间(毫秒)
+  int64 game_trace_id    = 3;  // game_trace_id(校验用)
+}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 阵容类型。具体有哪些值由玩法系统确定
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+  bool valid                    = 3;  // 当前阵容是否合法
+  bool adjusted                 = 4;  // 当前阵容检验时是否有过不合法的项目但已经被自动调整
+}
+
+message ApplyLoadoutRequest {
+  string loadout_type    = 1;  // 阵容类型。具体有哪些值由玩法系统确定
+  corepb.Loadout loadout = 2;  // 阵容
+}
+
+message ApplyLoadoutReply {
+  // 若要设置的阵容不合法，会通过 rpc 错误告知。
+}

@@ -1,0 +1,66 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0118pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0118pb";
+
+import "corepb/common.proto";
+
+service CSAct0118Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);     // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);           // 结算
+  rpc UnlockShow(UnlockShowRequest) returns (UnlockShowReply);  // 设置关卡解锁动画为已播放状态
+}
+
+enum QuestStatus {
+  STATUS_QUEST_UNKNOWN = 0;  // 默认值 无使用
+  STATUS_QUEST_LOCK    = 1;  // 关卡未解锁
+  STATUS_QUEST_UNLOCK  = 2;  // 关卡已解锁
+  STATUS_QUEST_DONE    = 3;  // 已完成(再次挑战)
+}
+
+enum LockReason {
+  REASON_UNKNOWN            = 0;  // 默认值 无使用
+  REASON_ITEM_NOT_ENOUGH    = 1;  // 道具不足
+  REASON_PRE_QUEST_NOT_PASS = 2;  // 前置关卡未通过
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated QuestInfo quests = 1;  // 关卡信息，按关卡顺序
+  corepb.Item help_item     = 2;  // 乌索普帮助通关道具信息
+}
+
+message QuestInfo {
+  int64 quest_id               = 1;  // 关卡id
+  QuestStatus status           = 2;  // 关卡状态
+  LockReason lock_reason       = 3;  // 关卡锁定原因 未解锁的关卡才需要显示
+  bool is_unlock_show          = 4;  // 关卡解锁动画是否播放
+  corepb.Item unlock_item      = 5;  // 解锁关卡需要的道具信息
+  repeated corepb.Item rewards = 6;  // 奖励信息
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {}
+
+message GameEndRequest {
+  int64 quest_id = 1;  // 关卡 ID
+  bool is_pass   = 2;  // 是否通过当前关卡
+  bool need_help = 3;  // 是否需要使用乌索普帮助通关
+}
+
+message GameEndReply {
+  repeated corepb.Item rewards = 1;  // 对应的奖励信息
+  repeated QuestInfo quests    = 2;  // 关卡信息，按关卡顺序
+  corepb.Item help_item        = 3;  // 乌索普帮助通关道具信息 只有使用了帮助通关道具才会返回此字段 返回的是扣除道具之后的值
+}
+
+message UnlockShowRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message UnlockShowReply {}

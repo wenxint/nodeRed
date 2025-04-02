@@ -1,0 +1,58 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0109pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0109pb";
+
+import "corepb/common.proto";
+
+service CSAct0109Service {
+}
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated ActBoardDetail act_board_detail              = 1;
+  repeated RecruitBoardDetail recruit_board_detail      = 2;
+  repeated GoldBoardDetail gold_board_detail            = 3;
+  repeated ActRewardBoardDetail act_reward_board_detail = 4;
+  repeated ShopDisplayDetail shop_display_detail        = 5;
+}
+
+message ActBaseInfo {
+  string title      = 1;  // 标题
+  string desc       = 2;  // 描述
+  int64 open_time   = 3;  // 开启时间
+  int64 open_status = 4;  // 1为未开启，2为开启中，3为已结束
+  int64 config_id   = 5;  // 配置ID
+  int64 show_weight = 6;  // 显示权重
+}
+
+message ActBoardDetail {  //活动系列面板
+  ActBaseInfo act_base_info = 1;
+  int64 act_id              = 2;  //前往的活动ID
+  int64 open_level          = 3;  //开启等级
+}
+
+message RecruitBoardDetail {  // 招募面板
+  ActBaseInfo act_base_info = 1;
+  int64 recruit_pool_id     = 2;  // 招募池ID
+  int64 recruit_partner_id  = 3;  // 限定伙伴ID
+}
+
+message GoldBoardDetail {  // 金币面板
+  int64 total_gold_count    = 1;
+  int64 get_gold_count      = 2;
+  int64 act_id              = 3;  //前往的活动ID
+  ActBaseInfo act_base_info = 4;
+}
+
+message ActRewardBoardDetail {      // 奖励面板
+  repeated corepb.Item awards = 1;  // 奖励
+  bool is_received            = 2;  // 是否已领取奖励
+  ActBaseInfo act_base_info   = 3;
+}
+
+message ShopDisplayDetail {
+  ActBaseInfo act_base_info = 1;
+  int64 achieved_way        = 2;  // 跳转地址
+}

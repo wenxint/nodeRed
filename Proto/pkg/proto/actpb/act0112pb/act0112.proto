@@ -1,0 +1,37 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0112pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0112pb";
+
+import "corepb/common.proto";
+
+service CSAct0112Service {}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  int64 total_recharge            = 1;  // 内测累计充值金额
+  repeated RebateType rebate_type = 2;  // 返利类型 (0充值返利 1月卡返利 2头像框)
+  RoleInfo role_info              = 3;  // 角色信息
+  bool is_already_claim_reward    = 4;  // 是否已经领取了奖励
+  bool is_today_first_query       = 5;  // 是否今日首次访问
+}
+
+// RebateType 返利类型
+message RebateType {
+  int64 id                     = 1;  // 返利类型ID (0充值返利 1月卡返利 2头像框)
+  repeated corepb.Item rewards = 2;  // 奖励列表
+}
+
+message RoleInfo {
+  int64 zoneid = 1;  // 大区 ID
+  string name  = 2;  // 角色名称
+  int64 level  = 3;  // 角色等级
+}
+
+message ActClaimRewardInfo {
+  bool is_already_claim_reward = 1;  // 是否已经领取了奖励
+}

@@ -1,0 +1,27 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0019pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0019pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0019Service {
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  BindInfo bind_info                          = 1;  // 绑定账号信息
+  repeated actpb.commonpb.Task daily_tasks    = 2;  // 每日任务列表
+  repeated actpb.commonpb.Task progress_tasks = 3;  // 进度任务列表
+  int64 score                                 = 4;  // 当前积分
+}
+
+message BindInfo {
+  int64 uid     = 1;  // uid
+  int64 zone_id = 2;  // 区服id
+  int64 level   = 3;  // 等级
+  string name   = 4;  // 角色名
+}

@@ -1,0 +1,254 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb";
+
+import "corepb/fight_common.proto";
+import "corepb/common.proto";
+import "pkg/proto/zonepb/pvppb/scorepb/score.proto";
+
+message GameStartNtf {
+  int32 ret_code                        = 1;  // 战斗是否成功开始。0表示成功, 其它为异常
+  corepb.GameStartMessage start_message = 2;  // 通用战斗开始包
+  BusinessGameStartMsg business_msg     = 3;
+}
+
+message BusinessGameStartMsg {
+  oneof msg {
+    HuntingSeaGameStartMsg hunting_sea = 1;
+  }
+}
+
+message HuntingSeaGameStartMsg {
+  int64 damage_sum = 1;
+}
+
+// 通用战斗结束下行包
+// 大区上不适合和pvpsvr混用同一个 PVPGameOverNtf 协议，不同玩法会产生不同的下发数据需求，因此 ZoneGameOverNtf 包含一个business_msg字段用来下发个性化战斗结束数据
+message GameOverNtf {
+  int32 ret_code                      = 1;  // 战斗是否成功开始。0表示成功, 其它为异常
+  corepb.GameOverMessage over_message = 2;  // 通用战斗结束包
+  BusinessGameOverMsg business_msg    = 3;
+}
+
+message BusinessGameOverMsg {
+  oneof msg {
+    PvPLadderGameOverMsg pvp_ladder         = 1;
+    JointBattleSettleReward joint_battle    = 2;
+    MirrorGameOverMsg mirror                = 3;
+    PseudoPvpGameOverMsg pseudo_pvp_battle  = 4;
+    SecretFieldGameOverMsg secret_field     = 5;
+    HuntingSeaGameOverMsg hunting_sea       = 6;
+    IslandSiegeGameOverMsg island_siege     = 7;
+    PvpCasualGameOverMsg pvp_casual         = 8;
+    ProtectViviGameOverMsg protect_vivi     = 9;
+    SkypieaGoldrushOverMsg skypiea_goldrush = 10;
+  }
+}
+
+// 通用战斗事件包
+message GameEventNtf {
+  int32 ret_code                        = 1;  // 战斗是否成功开始。0表示成功, 其它为异常
+  corepb.GameEventMessage event_message = 2;  // 通用战斗结束包
+}
+
+// FightExt 为 FightData 中非战斗数据部分(战斗数据放在PlayerFightData.fight_info中)，透传整条战斗链路
+message FightExt {
+  // 竞技场-娱乐赛
+  message Casual {
+    int64 common_hidden_score = 1;  // 竞技场通用隐藏积分
+    bool is_new_player        = 2;
+    bool is_fight_again       = 3;  // 是否再战功能开启的战斗
+  }
+  // 竞技场-段位赛
+  message Ladder {
+    int64 common_hidden_score          = 4;  // 竞技场通用隐藏积分
+    bool is_new_player                 = 5;
+    scorepb.LadderScoreInfo score_info = 6;
+    int64 season_id                    = 7;   // 赛季ID
+    int64 timestamp                    = 8;   // 开始时间(unix second)
+    int64 ladder_year_id               = 9;   // 赛年ID
+    bool is_fight_again                = 10;  // 是否再战功能开启的战斗
+  }
+  // 同盟协战
+  message JointBattle {
+    bool is_helper_buddy   = 1;  // 当 FightPlayerInfo.is_robot 为 true 时，查看是否为助战伙伴
+    int64 rainbow_level_id = 2;  // 彩虹关卡 ID
+    int64 set_id           = 3;  // 房间座次
+  }
+  // 秘境
+  message SecretField {
+    int64 sf_level                  = 1;  // 秘境层级
+    int64 set_id                    = 2;  // 房间座次
+    int64 boss_id                   = 3;  // boss id
+    int64 dungeon_id                = 4;  // 副本id
+    repeated int64 exclude_boss_ids = 5;  // 希望排除的bossID列表
+  }
+  // 伪pvp
+  message PseudoPvpBattle {
+    int64 system_id = 2;  // 伪pvp系统用来检查此战斗由哪个系统调起
+    int64 task_id   = 3;  // 对应系统的任务ID
+  }
+
+  oneof msg {
+    Casual casual                     = 1;
+    Ladder ladder                     = 2;
+    JointBattle joint_battle          = 3;
+    SecretField secret_field          = 4;
+    PseudoPvpBattle pseudo_pvp_battle = 5;
+  }
+}
+
+enum LadderProtectType {
+  LADDER_PROTECT_TYPE_UNKNOWN = 0;  // 未触发保护
+  SYSTEM                      = 1;  // 触发系统掉分保护
+  RANK                        = 2;  // 触发段位保护
+  WARRIOR                     = 3;  // 触发勇士值保护
+  CARD                        = 4;  // 触发段位保护卡保护
+}
+
+message PvPLadderGameOverMsg {
+  int64 score         = 1;  // 个人当前分数(战斗后)
+  int64 changed_score = 2;  // 这次分数增减
+  message LadderTeamInfo {
+    int64 score                    = 1;
+    int64 changed_score            = 2;
+    LadderProtectType protect_type = 3;  // 掉段保护的类型
+    corepb.Item protect_card       = 4;  // 保护卡信息
+  }
+  repeated LadderTeamInfo team_info          = 3;   // 双方分数信息，次序与 CommonGameOverMsg 的队伍对应
+  bool is_show_phase_upgrade                 = 4;   // 是否展示升段
+  repeated corepb.Item phase_upgrade_rewards = 6;   // 升段奖励列表
+  int64 warrior_score                        = 7;   // 个人当前勇士积分
+  int64 warrior_score_change                 = 8;   // 这次勇士积分增减
+  LadderProtectType protect_type             = 9;   // 掉段保护的类型
+  bool can_fight_again                       = 10;  // 是否可以发起再战邀请
+  bool is_same_loadout                       = 11;  // 是否使用相同阵容
+  int64 invitable_before_unix_second         = 12;  // 如果可以再战，可邀请的到期时间(unix seconds)
+}
+
+message PvpCasualGameOverMsg {
+  bool can_fight_again               = 1;  // 是否可以发起再战邀请
+  bool is_same_loadout               = 2;  // 是否使用相同阵容
+  int64 invitable_before_unix_second = 3;  // 如果可以再战，可邀请的到期时间(unix seconds)
+}
+
+message RainbowLevelPackReward {
+  repeated corepb.Item pack_items = 1;  // 彩虹关一个宝箱包含的奖励
+}
+
+message JointBattleSettleReward {
+  repeated corepb.Item items                = 1;  // 基础奖励
+  repeated corepb.Item mvp_items            = 2;  // MVP 额外奖励
+  repeated RainbowLevelPackReward rbl_items = 3;  // 彩虹关奖励
+  int64 available_chests                    = 4;  // 剩余可以开启的宝箱数量
+  bool can_raid_battle                      = 5;  // 是否可以扫荡
+  bool is_multi_reward                      = 6;  // 是否是多倍奖励
+  int64 platform_privilege_id               = 7;  // 平台特权ID， 大于0生效
+  bool can_supercaptain_sweep               = 8;  // 是否可以特权扫荡
+}
+
+message HuntingSeaGameOverMsg {
+  int64 damage_this                 = 1;  // 本次伤害
+  int64 damage_sum                  = 2;  // 累计伤害
+  repeated corepb.Item reward_items = 3;  // 奖励物品列表
+  int64 rank_index_old              = 4;  // 个人排名(旧)
+  int64 rank_index_new              = 5;  // 个人排名(新)
+  bool is_first                     = 6;
+}
+
+message IslandSiegeGameOverMsg {
+  int64 add_score = 1;  // 本次增加的积分
+  message TaskInfo {
+    int64 id             = 1;  // 任务ID
+    int32 progress       = 2;  // 任务进度
+    int32 total_progress = 3;  // 任务总进度
+    int64 add_score      = 4;  // 增加积分
+  }
+  repeated TaskInfo change_tasks = 2;  // 任务变更列表
+  int64 total_score_before       = 3;  // 本次战斗前的总积分
+}
+
+enum AwardStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  AS_NONE    = 0;  // 不可领奖
+  AS_DONE    = 1;  // 可领奖
+  AS_AWARDED = 2;  // 已领奖
+}
+
+// 爬塔结算信息
+message MirrorGameOverMsg {}
+
+// 伪pvp战斗结算信息
+message PseudoPvpGameOverMsg {}
+
+// 秘境赌宝箱(翻牌)
+message GambleBoxInfo {
+  int64 max_gamble_cnt              = 1;
+  repeated corepb.Item gamble_cost  = 2;  // 每次翻牌对应的消耗
+  repeated corepb.Item extra_awards = 3;  // 单次翻牌的额外奖励
+  repeated corepb.Item prob_awards  = 4;  // 翻牌可概率获得的奖励（给客户端展示用）
+}
+
+// 秘境战斗结算信息
+message SecretFieldGameOverMsg {
+  repeated corepb.Item base_items  = 1;  // 基础掉落（右上角飘的奖励）
+  repeated corepb.Item equip_items = 2;  // 装备
+  int64 cur_level                  = 3;
+  int64 role_level                 = 4;
+  repeated corepb.Item mvp_items   = 5;  // [Deprecated] mvp奖励
+  bool is_mvp                      = 6;  // 是否mvp
+  string room_id                   = 7;  // roomid
+  GambleBoxInfo equip_gamble_info  = 8;  // 装备翻牌信息
+  // GambleBoxInfo runes_gamble_info = 9;   // [Deprecated] 符石付费宝箱信息
+  int64 pay_rewards_count = 10;  // 奖励之中，氪金奖励的数量
+  bool is_fight_abnormal  = 11;  // 是否战斗异常，战斗异常时即使战斗胜利也不给奖励
+}
+
+// 守护公主结算信息
+message ProtectViviGameOverMsg {
+  map<int64, int64> star_scores = 1;  // 星数（1、2、3）与分数的对应关系
+  repeated corepb.Item rewards  = 2;  // 本次挑战获得的奖励
+  int64 star                    = 3;  // 本次挑获得的星数
+  int64 score                   = 4;  // 本次挑战的评分
+  bool record_shattering        = 5;  // 是否新记录
+  int64 rank                    = 6;  // 玩家的排名
+  int64 forward_rank            = 7;  // 前进的名次，如果为0则表示没有前进
+}
+
+// 彩虹关卡信息
+message RainbowLevelInfo {
+  int64 id          = 1;  // 彩虹关卡的唯一 ID
+  int64 expire_time = 2;  // 当前彩虹关卡的过期时间
+  string hash_val   = 3;  // 彩虹关卡 Hash 值
+}
+
+enum FightClassification {
+  TYPE_UNKNOWN    = 0;  // NONE
+  TYPE_SINGLE     = 1;  // 单机
+  TYPE_FRAME_SYNC = 2;  // 帧同步
+}
+
+// 纯客户端副本战斗结束时客户端上报的通用信息，放到同一个message中吧
+message PveCommonInfoReport {
+  int64 fight_time                            = 1;   // 实际战斗时长，不包括暂停这些
+  int64 real_fight_time                       = 2;   // 从加载成功到战斗结束经过的时长
+  bool is_auto_fight                          = 3;   // 是否是自动战斗
+  int64 dead_times                            = 4;   // 死亡次数
+  int64 revive_times                          = 5;   // 复活次数
+  int64 dial_used_cnt                         = 6;   // 空岛贝使用次数
+  int64 damage_sum                            = 7;   // 伤害总量
+  int64 client_time                           = 8;   // 客户端时间
+  int64 round_exit                            = 9;   // 战斗中退出:0没有发生，1点击退出按钮，2可能是杀进程
+  int64 on_hook_time                          = 10;  // 挂机时长
+  corepb.PlayerFightActDetail fight_detail    = 11;  // 战斗详情
+  corepb.MonsterFightActDetail monster_detail = 12;  // 怪物详情
+}
+
+message SkypieaGoldrushOverMsg {
+  int64 digg_gold_times  = 1;  // 挖掘黄金的次数
+  int64 digg_gold_num    = 2;  // 挖掘的黄金数
+  int64 daily_gold_limit = 3;  // 每日的黄金上限
+  int64 cur_day_gold_num = 4;  // 当前天已经挖掘的黄金数
+}

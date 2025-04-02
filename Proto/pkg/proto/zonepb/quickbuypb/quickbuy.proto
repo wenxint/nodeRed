@@ -1,0 +1,34 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.quickbuypb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/quickbuypb";
+
+import "corepb/common.proto";
+
+service RecruitService {
+  // 查询状态及配置, 一次会返回多种招募的信息及状态
+  rpc GetPrice(GetPriceRequest) returns (GetPriceReply);
+
+  // 快捷购买，适用于一些无购买限制的道具，具体见 QuickBuy.xlsx 配置表，与招募完全无关
+  rpc QuickBuy(QuickBuyRequest) returns (QuickBuyReply);
+}
+
+message GetPriceRequest {
+  int64 prop_id = 1;
+  int64 num     = 2;  // 购买的数量
+}
+
+message GetPriceReply {
+  repeated corepb.Item cost = 2;  // 购买道具消耗
+}
+
+message QuickBuyRequest {
+  int64 prop_id = 1;
+  int64 num     = 2;  // 购买的数量
+}
+
+// 购买成功
+message QuickBuyReply {
+  repeated corepb.Item rewards = 1;  // 实际获得的物品
+}

@@ -1,0 +1,149 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.gdelegatepb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/gdelegatepb";
+
+import "corepb/fight_common.proto";
+
+// 同盟派遣服务
+service GuildDelegateService {
+  rpc QueryPlayerInfo(PlayerInfoRequest) returns (PlayerInfoReply);                    // 委托首页信息
+  rpc QueryGuildReward(GuildRewardRequest) returns (GuildRewardReply);                 // 工会奖励详情
+  rpc QueryPopularityDetail(PopularityDetailRequest) returns (PopularityDetailReply);  // 累计人气buff详情
+  rpc QueryGuildDelegates(GuildDelegateRequest) returns (GuildDelegateReply);          // 工会分享委托详情
+
+  rpc RefreshDelegate(RefreshDelegateRequest) returns (RefreshDelegateReply);                          // 获取或刷新委托
+  rpc AddShareDelegate(AddShareDelegateRequest) returns (AddShareDelegateReply);                       // 接取分享的委托
+  rpc ReceivePopularityReward(ReceivePopularityRewardRequest) returns (ReceivePopularityRewardReply);  // 领取周累计奖励
+  rpc ReceiveShareReward(ReceiveShareRewardRequest) returns (ReceiveShareRewardReply);                 // 领取分享奖励
+}
+
+service GuildDelegateSSService {
+  // 处理战斗开始消息
+  rpc ProcessGameStart(corepb.GameStartMessage) returns (ProcessGameStartReply);
+
+  // 处理战斗结束消息
+  rpc ProcessGameOver(corepb.GameOverMessage) returns (ProcessGameOverReply);
+
+  // 获取委托详情
+  rpc QueryDungeonDetail(DungeonDetailRequest) returns (DungeonDetailReply);
+}
+
+message ProcessGameStartReply {}
+
+message ProcessGameOverReply {}
+
+message DungeonDetailRequest {}
+
+message DungeonDetailReply {
+  int64 dungeon_id       = 1;  // 副本id
+  int64 voyage_id        = 2;  // 前置航海任务id
+  bool has_finish_voyage = 3;  // 是否完成过航海游戏
+}
+
+message Delegate {
+  int64 id                            = 1;  // 委托ID
+  string flow_id                      = 2;  // 委托流水id
+  repeated ShareMessage share_message = 3;  // 分享信息
+  bool has_finished                   = 4;  // 是否完成过
+  int64 will_popularity               = 5;  //  预计人气
+}
+
+message ShareMessage {
+  int64 gid     = 1;  // gid
+  int64 status  = 2;  // 完成状态，枚举值core.DgStatus
+  string avatar = 3;  // 头像
+  string name   = 4;  // 名字
+}
+
+enum BuffType {
+  UNKNOW_BUFF_TYPE       = 0;  // 无
+  HIGH_QUALITY           = 1;  // 最高品质权重加成
+  FREE_REFRESH           = 2;  // 免费刷新次数
+  REDUCE_REFRESH_PERCENT = 3;  // 降低刷新费用的百分比，向下取整
+}
+
+message Popularity {
+  int64 id                    = 1;  // 奖励id
+  int64 accumulate_popularity = 2;  // 累计人气
+  BuffType buff_type          = 3;  // 奖励类型
+  int64 buff_num              = 4;  // 奖励数值
+  string description          = 5;  // 描述
+}
+
+message GuildDelegateDetail {
+  int64 week_count            = 1;  // 周任务完成数
+  int64 week_popularity       = 2;  // 周人气
+  int64 accumulate_count      = 3;  // 累计任务完成数
+  int64 accumulate_popularity = 4;  // 累计人气
+}
+
+message PlayerInfoRequest {}
+
+message PlayerInfoReply {
+  Delegate task            = 1;  // 委托详情
+  int64 finish_count       = 2;  // 本周已完成次数
+  int64 free_refresh_count = 3;  // 可使用的免费刷新次数
+  int64 refresh_cost       = 4;  // 下次刷新的耗费
+  int64 popularity         = 5;  // 人气
+  int64 total_count        = 6;  // 本周总任务数
+  int64 total_fresh_count  = 7;  // 本次委托总可免费刷新次数
+}
+
+message RefreshDelegateRequest {}
+
+message RefreshDelegateReply {
+  Delegate delegate = 1;  // 委托详情
+}
+
+message Reward {
+  int64 reward_id                 = 1;  // 奖励id
+  int64 demand_type               = 2;  // 要求的类型：1任务数，2人气值
+  int64 demand_num                = 3;  // 要求的数值
+  map<int64, int64> reward_detail = 4;  //奖励详情 类型:数值
+}
+
+message GuildRewardRequest {}
+
+message GuildRewardReply {
+  repeated int64 has_receive  = 1;  // 用户已领取过的奖励
+  map<int64, Reward> total    = 2;  // 所有奖励
+  GuildDelegateDetail details = 3;  // 同盟委托详情
+}
+
+message PopularityDetailRequest {}
+
+message PopularityDetailReply {
+  map<int64, Popularity> buff_details  = 1;  // 所有buff
+  GuildDelegateDetail delegate_details = 2;  // 同盟委托详情
+}
+
+message AddShareDelegateRequest {
+  string flow_id = 1;  // 流水id
+}
+
+message AddShareDelegateReply {}
+
+message ReceivePopularityRewardRequest {
+  int64 reward_id = 1;  // 奖励id
+}
+
+message ReceivePopularityRewardReply {
+  map<int64, int64> reward_detail = 1;  // 奖励详情
+}
+
+message ReceiveShareRewardRequest {
+  string flow_id = 1;  // 流水id
+}
+
+message ReceiveShareRewardReply {
+  map<int64, int64> reward_detail = 1;  // 奖励详情
+}
+
+message GuildDelegateRequest {}
+
+message GuildDelegateReply {
+  repeated Delegate tasks = 1;  // 工会可分享委托详情
+}

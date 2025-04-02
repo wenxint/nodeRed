@@ -1,0 +1,177 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0062pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0062pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0062Service {
+  // 摇骰子
+  rpc RollingDice(RollingDiceRequest) returns (RollingDiceReply);
+  // 操作建筑
+  rpc OperateBuilding(OperateBuildingRequest) returns (OperateBuildingReply);
+  // 收集建筑利润
+  rpc CollectProfit(CollectProfitRequest) returns (CollectProfitReply);
+  // 选择事件结果
+  rpc EventChoose(EventChooseRequest) returns (EventChooseReply);
+  // 任务详情
+  rpc TasksInfo(TasksInfoRequest) returns (TasksInfoReply);
+}
+
+message ActGetDetailRequest {}
+
+message PositionInfo {
+  int64 building_id   = 1;  // 建筑ID
+  int64 building_star = 2;  // 建筑星级
+  int64 profit        = 3;  // 未收集利润
+}
+
+message BuildingSummary {
+  repeated BuildingStarSummary building_star_summaries = 1;  // 建筑各星级信息
+}
+
+message BuildingStarSummary {
+  reserved 3;
+  int64 star         = 1;  // 建筑星级
+  int64 building_num = 2;  // 建筑数量
+}
+
+// entity.BuffInfo
+message BuffInfo {
+  int32 buff_type     = 1;  // config.EventResultType
+  repeated int64 args = 2;  // buff 参数，每种buff可能数量和含义不一样
+}
+
+message ActGetDetailReply {
+  int64 cur_pos                                  = 1;   // 当前位置
+  int64 money                                    = 2;   // 金钱余额
+  int64 max_money                                = 3;   // 最高资金
+  int64 random_dice                              = 4;   // 随机骰子
+  int64 universal_dice                           = 5;   // 通用骰子
+  repeated actpb.commonpb.Task money_level_tasks = 6;   // 等级任务状态
+  repeated actpb.commonpb.Task dice_tasks        = 7;   // 骰子任务状态
+  repeated actpb.commonpb.Task reward_tasks      = 8;   // 奖励任务状态
+  map<int64, PositionInfo> pos_infos             = 9;   // 棋盘位置信息
+  int64 current_event_id                         = 10;  // 当前触发的事件ID
+  BuildingSummary building_summaries             = 11;  // 建筑汇总信息
+  string rank_type                               = 12;  // 排行榜类型
+  string rank_instance                           = 13;  // 排行榜实例名
+  bool wait_building                             = 14;  // 等待建造
+  int64 next_profit_time                         = 15;  // 下次收取利润时间
+  repeated BuffInfo event_buff_infos             = 16;  // 事件buff一般有次数时间限制，区别于建筑星级获得的持续buff
+  int64 profit_interest_rate                     = 17;  // 计算店铺+事件结果的收益率提升值百分比。默认100
+}
+
+enum DiceType {
+  DICE_TYPE_UNKNOWN   = 0;
+  DICE_TYPE_RANDOM    = 1;
+  DICE_TYPE_UNIVERSAL = 2;
+}
+
+message RollingDiceRequest {
+  DiceType dice_type  = 1;
+  int64 universal_num = 2;
+}
+
+message RollingDiceReply {
+  // 摇骰子结果
+  int64 dice_num = 1;
+  // 新位置
+  int64 new_pos = 2;
+  // 触发事件
+  int64 event_id     = 3;
+  int64 money        = 4;  // 金钱余额
+  int64 max_money    = 5;  // 最高资金
+  bool wait_building = 6;  // 等待建造
+}
+
+enum OperateBuildingType {
+  BUILDING_OPERATE_UNKNOWN = 0;
+  BUILDING_OPERATE_NEW     = 1;
+  BUILDING_OPERATE_UPGRADE = 2;
+  BUILDING_OPERATE_REPLACE = 3;
+}
+
+message OperateBuildingRequest {
+  OperateBuildingType type = 1;
+  // 新建和替换时 building_id 才有意义
+  int64 building_id = 2;
+}
+
+message OperateBuildingReply {
+  PositionInfo pos_info      = 1;  // 更新后的棋盘位置信息
+  int64 profit_interest_rate = 2;  // 计算店铺+事件结果的收益率提升值百分比。默认100
+}
+
+message CollectProfitRequest {}
+
+message CollectProfitReply {
+  int64 money              = 1;  // 更新后的金钱
+  int64 profit             = 2;  // 收集到的收益
+  int64 max_money          = 3;  // 最高资金
+  int64 event_id           = 4;  // 触发事件
+  int64 add_random_dice    = 5;  // 增加的随机骰子
+  int64 add_universal_dice = 6;  // 增加的万能骰子
+  int64 next_profit_time   = 7;  // 下次收取利润时间
+}
+
+// by config.EventResultType
+enum EventResultType {
+  RESULT_UNKNOWN                   = 0;   // 默认值
+  RESULT_ADD_MONEY                 = 1;   // 获得资金
+  RESULT_PROFIT_BUFF_POS           = 2;   // 获得资金（步数）
+  RESULT_PROFIT_BUFF_MONEY_EVENT   = 3;   // 提升资金（次数）
+  RESULT_PROFIT_BUFF_TIME          = 4;   // 提升资金（秒数）
+  RESULT_UPGRADE_BUILDING_RAND     = 5;   // 店铺调整（随机）
+  RESULT_UPGRADE_BUILDING_MOST     = 6;   // 店铺调整（最多）
+  RESULT_UPGRADE_BUILDING_LEAST    = 7;   // 店铺调整（最少）
+  RESULT_DONE                      = 8;   // 完成
+  RESULT_EVENT                     = 9;   // 下一个事件
+  RESULT_GET_DICE                  = 10;  // 获得骰子道具
+  RESULT_GET_BUILDING_PROFIT_RAND  = 11;  // 获得一次X个随机建筑收益
+  RESULT_GET_BUILDING_PROFIT_MOST  = 12;  // 获得一次X个最多建筑收益
+  RESULT_GET_BUILDING_PROFIT_LEAST = 13;  // 获得一次X个最少建筑收益
+  RESULT_GET_MONEY_PERCENT         = 14;  // 获得当前资金X%资金
+}
+
+message EventChooseRequest {
+  int64 event_id = 1;
+  // 玩家选择的序号列表。对话和弹窗是每次选择都发一次协议，故只有0有值;码头游戏是多次选择后发一次协议，有多个值
+  repeated int64 option_indexs = 2;
+}
+
+// config.EventResult
+message EventResult {
+  EventResultType result_type = 1;  // 结果类型
+  repeated int64 result_args  = 2;  // 结果参数
+}
+
+message EventChooseReply {
+  reserved 1, 2;
+  // 弹窗事件摇骰子结果
+  int64 dice_num                                 = 3;
+  ActGetDetailReply detail                       = 4;  // 返回活动详情同样的数据，事件有太多数据变化可能的，整体刷新数据吧
+  repeated EventResult results                   = 5;  // 事件结果
+  repeated EventRandArgsResult args_rand_results = 6;  // 随机相关的结果
+}
+
+message EventRandArgsResult {
+  EventResultType result_type = 1;  // 结果类型
+  map<int64, int64> rand_args = 2;  // 随机结果，根据EventResultType含义不同
+}
+
+enum RewardType {
+  REWARD_TYPR_UNKNOWN     = 0;
+  REWARD_TYPR_LEVEL_TASK  = 1;  // 等级奖励
+  REWARD_TYPR_DICE_TASK   = 2;  // 骰子奖励
+  REWARD_TYPR_REWARD_TASK = 3;  // 任务奖励
+}
+
+message TasksInfoRequest {}
+
+message TasksInfoReply {
+  repeated actpb.commonpb.Task money_level_tasks = 1;  // 等级任务状态
+  repeated actpb.commonpb.Task dice_tasks        = 2;  // 骰子任务状态
+  repeated actpb.commonpb.Task reward_tasks      = 3;  // 奖励任务状态
+}

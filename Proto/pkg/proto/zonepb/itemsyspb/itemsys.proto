@@ -1,0 +1,40 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.itemsyspb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/itemsyspb";
+
+service ItemsysService {
+  // 玩家二次确认领取某次超限奖励
+  rpc ConfirmOverLimitProp(ConfirmOverLimitPropRequest) returns (ConfirmOverLimitPropReply);
+  // 拉取道具历史记录
+  rpc GetItemHistory(GetItemHistoryRequest) returns (GetItemHistoryReply);
+}
+
+message ConfirmOverLimitPropRequest {
+  int64 item_id              = 1;  // 超限道具ID
+  repeated int64 reward_args = 2;  // 本次奖励的标记参数 (长度为3)
+  bool is_cancel             = 3;  // 是否为取消本次领取 (客户端需要在玩家取消时发送一次)
+}
+
+message ConfirmOverLimitPropReply {}
+
+message GetItemHistoryRequest {
+  int64 page_index      = 1;  // 页码(从0开始)
+  int64 page_size       = 2;  // 每页大小(不允许超过50)
+  int64 query_timestamp = 3;  // 查询起始时间 (一次新的查询，需要时间戳的话，这个地方发0)
+}
+
+message ItemHistory {
+  string dtevent_time    = 1;  // 游戏事件的时间, 格式 YYYY-MM-DD HH:MM:SS
+  string item_name       = 2;  // 道具名称（对应抽取的道具id名称配置）
+  int64 item_count       = 3;  // 变动数量 正值为加道具 负值为扣道具
+  int64 item_final_count = 4;  // 道具剩余数量
+  string reason          = 5;  // 变动的原因
+}
+
+message GetItemHistoryReply {
+  repeated ItemHistory history = 1;
+  int64 query_timestamp        = 2;  // 查询起始时间 (如果是一次新的查询，这个地方会返回新的时间戳)
+  int64 total_size             = 3;  // 后台存储的总的数据条目数
+}

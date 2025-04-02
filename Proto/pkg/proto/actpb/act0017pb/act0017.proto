@@ -1,0 +1,22 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0017pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0017pb";
+
+import "corepb/common.proto";
+
+service CSAct0017Service {
+}
+
+message ActGetDetailRequest {}
+
+message Privilege {
+  int64 id                    = 1;  // 特权id
+  repeated corepb.Item awards = 2;  // 特权奖励
+  repeated int64 params       = 3;  // 特权参数
+}
+
+message ActGetDetailReply {
+  repeated Privilege privileges = 1;  // 特权列表
+}

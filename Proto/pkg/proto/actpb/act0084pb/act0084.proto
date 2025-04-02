@@ -1,0 +1,94 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0084pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0084pb";
+
+
+import "corepb/common.proto";
+
+enum TaskStatus {
+  STATUS_UNKNOWN  = 0;
+  NOTHING_RECEIVE = 1;  // 没有可领取
+  CAN_RECEIVE     = 2;  // 可领取
+  ALREADY_RECEIVE = 3;  // 已领取
+}
+
+service CSAct0084Service {
+  // 邀请详情
+  rpc InviteDetail(InviteDetailRequest) returns (InviteDetailReply);
+
+  // 领取积分
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+
+  // 清除红点
+  rpc RemoveRedPoint(RemoveRedPointRequest) returns (RemoveRedPointReply);
+
+  // 兑换金币
+  rpc ExchangeGold(ExchangeGoldRequest) returns (ExchangeGoldReply);
+}
+
+message ActGetDetailRequest {}
+
+message TaskInfo {
+  int64 task_id          = 1;  // 任务id
+  int64 integral_single  = 2;  // 单次积分
+  TaskStatus task_status = 3;  // 任务状态
+  int64 integral_current = 4;  // 当前积分
+  int64 integral_max     = 5;  // 积分上限
+  string task_desc       = 6;  // 任务描述
+}
+
+// 活动详情
+message ActGetDetailReply {
+  repeated TaskInfo tasks_info   = 1;  // 任务列表
+  string invite_url              = 2;  // 邀请链接
+  corepb.Item integral_item      = 3;  // 积分道具
+  int64 total_exchange_count     = 4;  // 总共能兑换几次金币
+  int64 history_exchange_count   = 5;  // 到现在一共兑换了几次
+  int64 today_exchange_count     = 6;  // 今天兑换了几次
+  int64 day_total_exchange_count = 7;  // 每天一共能兑换几次
+  corepb.Item exchange_cost_item = 8;  // 每次兑换需要的积分道具id和积分数
+  corepb.Item exchange_coin_item = 9;  // 每次能够兑换的金币道具id和金币数
+}
+
+// 邀请详情
+message InviteDetailRequest {}
+
+message InvitePlayerDetail {
+  string name          = 1;  // 玩家名字
+  string head          = 2;  // 玩家头像
+  int64 zone_id        = 3;  // 玩家区服id
+  string zone_name     = 4;  // 玩家区服名字
+  int64 active_days    = 5;  // 每日活跃度达标的天数
+  int64 fight_days     = 6;  // 每日对局达标的天数
+  int64 integral_total = 7;  // 总积分
+}
+
+message InviteDetailReply {
+  repeated InvitePlayerDetail invite_detail = 1;
+}
+
+// 领取
+message DeliverActRewardRequest {
+  int64 task_id = 1;  // 任务id
+}
+
+message DeliverActRewardReply {
+  corepb.Item awards = 1;  // 领取到的奖励
+}
+
+message RemoveRedPointRequest {}
+
+message RemoveRedPointReply {}
+
+// 兑换金币
+message ExchangeGoldRequest {}
+
+message ExchangeGoldReply {
+  int64 total_exchange     = 1;  // 总共能兑换几次金币
+  int64 history_exchange   = 2;  // 到现在一共兑换了几次
+  int64 today_exchange     = 3;  // 今天兑换了几次
+  int64 day_total_exchange = 4;  // 每天一共能兑换几次
+  corepb.Item exchange_coin_item = 5;  // 兑换的金币道具id和金币数
+}

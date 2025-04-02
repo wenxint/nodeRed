@@ -1,0 +1,73 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0012pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0012pb";
+
+
+import "corepb/common.proto";
+
+service CSAct0012Service {
+}
+
+enum GiftStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNDONE = 0;  // 不可领奖
+  REWARD = 1;  // 可领奖
+  FINISH = 2;  // 已领奖
+}
+
+message FreeGift {
+  int64 id                        = 1;  // 礼包 ID
+  int64 day                       = 2;  // 天数
+  GiftStatus gift_status          = 3;  // 礼包状态
+  repeated corepb.Item gift_items = 4;  // 礼包奖励内容
+  string desc                     = 5;  // 礼包描述
+}
+
+message GoldGift {
+  int64 id                        = 1;  // 礼包 ID
+  int64 day                       = 2;  // 天数
+  GiftStatus gift_status          = 3;  // 礼包状态
+  repeated corepb.Item gift_costs = 4;  // 礼包花费内容
+  repeated corepb.Item gift_items = 5;  // 礼包奖励内容
+  string desc                     = 6;  // 礼包描述
+}
+
+message DiamondGift {
+  int64 id                        = 1;  // 礼包 ID
+  int64 day                       = 2;  // 天数
+  GiftStatus gift_status          = 3;  // 礼包状态
+  repeated corepb.Item gift_costs = 4;  // 礼包花费内容
+  repeated corepb.Item gift_items = 5;  // 礼包奖励内容
+  string desc                     = 6;  // 礼包描述
+}
+
+message DirectBuyGift {
+  int64 id                        = 1;  // 礼包 ID
+  int64 day                       = 2;  // 天数
+  GiftStatus gift_status          = 3;  // 礼包状态
+  string product_id               = 4;  // 直购道具 ID
+  int64 display_price             = 5;  // 显示价格
+  int64 actual_price              = 6;  // 实际价格
+  repeated corepb.Item gift_items = 7;  // 礼包奖励内容
+  string desc                     = 8;  // 礼包描述
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 current_day                      = 1;  // 当前累计天数
+  repeated FreeGift free_gift            = 2;  // 免费礼包
+  repeated FreeGift free_gift_2          = 7;  // 免费礼包 2
+  repeated FreeGift free_gift_3          = 8;  // 免费礼包 3
+  repeated GoldGift gold_gift            = 3;  // 金币礼包
+  repeated DiamondGift diamond_gift      = 4;  // 钻石礼包
+  repeated DirectBuyGift direct_buy_gift = 5;  // 直购礼包
+  int64 act_lost_day                     = 6;  // 回流活动流失天数
+}
+
+message ActDeliverRewardReply {
+  repeated GoldGift gold_gift       = 1;  // 金币礼包
+  repeated DiamondGift diamond_gift = 2;  // 钻石礼包
+}

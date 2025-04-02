@@ -1,0 +1,86 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0127pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0127pb";
+
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/common.proto";
+
+enum QuestStatus {   // 通关情况
+  TYPE_UNKNOWN = 0;  // 占位
+  NOT_START    = 1;  // 未开启
+  NOT_COMPLET  = 2;  // 未通关
+  COMPLETED    = 3;  // 已通关
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Quest quests          = 1;  // 关卡信息
+  repeated ExtraAimConfig extras = 2;  //额外信息
+  int64 act_item_id              = 3;  // 活动道具ID
+}
+message ExtraAimConfig {
+  int64 id             = 1;  // 额外目标ID
+  string scenario_name = 2;  // 救出目标后的对白
+  string profile       = 3;  // 头像路径
+}
+message Quest {
+  int64 quest_id                              = 1;  // 关卡id
+  QuestStatus status                          = 2;  // 关卡情况
+  int64 open_at                               = 3;  // 开放时间（时间戳）
+  map<int64, actpb.commonpb.Task> reward_info = 4;  // 星数 -> 奖励状态
+  string quest_name                           = 5;  // 关卡名
+
+  repeated Pos start_pos        = 6;   // 初始化地块坐标
+  Pos usopp_start_pos           = 7;   // 撒谎布起始位置
+  Pos end_pos                   = 8;   // 终点位置
+  repeated int64 extra_aim      = 9;   // 局内额外目标ID
+  repeated Pos extra_aim_pos    = 10;  // 局内额外目标位置
+  repeated int64 monster_config = 11;  // 怪物配置
+  int64 star_condition1         = 12;  // 三星条件1
+  int64 star_condition_para1    = 13;  // 三星条件参数1
+  string star_text1             = 14;  // 三星文本1
+  repeated corepb.Item reward1  = 15;  // 三星奖励1
+  int64 star_condition2         = 16;  // 三星条件2
+  int64 star_condition_para2    = 17;  // 三星条件参数2
+  string star_text2             = 18;  // 三星文本2
+  repeated corepb.Item reward2  = 19;  // 三星奖励2
+  int64 star_condition3         = 20;  // 三星条件3
+  int64 star_condition_para3    = 21;  // 三星条件参数3
+  string star_text3             = 22;  // 三星文本3
+  repeated corepb.Item reward3  = 23;  // 三星奖励3
+  corepb.Item item_costs        = 24;  // 消耗道具
+  string scenario_name          = 25;  // 开局对话
+}
+
+service CSAct0127Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);  // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);        // 结算
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  bool is_beginner = 1;  // 是否有新手教程
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+  int64 cur_stars               = 4;  // 当前获取星数情况(按位存，三种情况，不大于7)
+}
+
+message GameEndReply {
+  repeated corepb.Item awards = 1;  // 获得奖励
+}
+
+message Pos {
+  uint32 row = 1;
+  uint32 col = 2;
+}

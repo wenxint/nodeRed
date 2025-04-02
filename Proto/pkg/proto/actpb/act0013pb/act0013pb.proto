@@ -1,0 +1,22 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0013pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0013pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0013Service {
+  // none method
+}
+
+message ActGetDetailRequest {}
+
+message RevisitDataDetail {
+  int64 id                           = 1;
+  repeated actpb.commonpb.Task tasks = 2;  // 任务列表信息
+}
+
+message ActGetDetailReply {
+  repeated RevisitDataDetail revisit_list = 1;  // 回顾列表
+}

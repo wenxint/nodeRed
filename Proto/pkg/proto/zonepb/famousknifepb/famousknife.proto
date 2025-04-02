@@ -1,0 +1,112 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.famousknifepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/famousknifepb";
+
+import "corepb/common.proto";
+
+service Service {
+  // 主界面查询（名刀列表等）
+  rpc GetFullInfo(GetFullInfoRequest) returns (GetFullInfoReply);
+
+  // 获取某把名刀的信息（TODO，这条协议似乎不太需要，先保留着，后面不用的话再删掉）
+  //   rpc GetKnifeInfo(GetKnifeInfoRequest) returns (GetKnifeInfoReply);
+
+  // 激活名刀
+  rpc Unlock(UnlockRequest) returns (UnlockReply);
+
+  // 淬炼（提高当前等级属性，属性全满后可烧刃）
+  rpc Refine(RefineRequest) returns (RefineReply);
+
+  // 接受淬炼的结果
+  rpc AcceptRefine(AcceptRefineRequest) returns (AcceptRefineReply);
+
+  // 锻造（名品名刀，提高当前等级属性，属性全满后可烧刃）
+  rpc Forge(ForgeRequest) returns (ForgeReply);
+
+  // 烧刃（等级提升，良品和名品名刀通用）
+  rpc Upgrade(UpgradeRequest) returns (UpgradeReply);
+}
+
+enum State {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCK     = 0;  // 未解锁且当前不可解锁
+  CAN_LOCK = 1;  // 可解锁
+  UNLOCK   = 2;  // 已解锁
+}
+// 名刀简要信息（只下发数据中存储的信息，其他信息需要客户端查表）
+message KnifeBrifeInfo {
+  int64 id                       = 1;
+  int64 state                    = 2;  // enum State
+  int64 level                    = 3;  // 当前等级
+  corepb.FightAttr base_attr     = 4;  // 基础属性
+  corepb.FightAttr addition_attr = 5;  // 加成属性
+
+  int64 exp         = 6;  // 仅名品名刀需要，当前经验值
+  int64 max_exp     = 7;  // 当前的最大经验，客户端展示进度用
+  int64 forge_times = 8;  // 名品名刀的当前等级已锻造次数，读配置用
+}
+message GetFullInfoRequest {}
+
+message GetFullInfoReply {
+  repeated KnifeBrifeInfo knife_list = 1;
+  int64 total_fc                     = 2;  // 总战力
+}
+
+// message GetKnifeInfoRequest { int64 id = 1; }
+
+// message GetKnifeInfoReply {}
+
+message UnlockRequest {
+  int64 id = 1;  // 要激活的名刀ID
+}
+
+message UnlockReply {
+  KnifeBrifeInfo knife_info = 1;  // 激活后的名刀信息
+  int64 total_fc            = 2;  // 总战力
+}
+
+message RefineRequest {
+  int64 id    = 1;
+  int64 times = 2;  //淬炼次数，目前仅支持填1或10
+}
+
+message RefineReply {
+  repeated corepb.FightAttr attr_list = 1;  // 淬炼获取到的属性列表
+}
+
+message AcceptRefineRequest {
+  int64 id                         = 1;  // 要接受淬炼的名刀ID
+  bool accept                      = 2;  // 接受or拒绝
+  repeated int64 accept_index_list = 3;  // 要接受的属性下标列表，从0开始
+}
+
+message AcceptRefineReply {
+  KnifeBrifeInfo knife_info = 1;  // 接受后名刀信息
+  corepb.FightAttr add_attr = 2;  // 本次新增的属性
+  int64 total_fc            = 3;  // 总战力
+}
+
+message ForgeRequest {
+  int64 id    = 1;
+  int64 times = 2;  // 锻造次数，1 or 10
+}
+
+message ForgeReply {
+  KnifeBrifeInfo knife_info = 1;  // 锻造后的名刀信息
+  corepb.FightAttr add_attr = 2;  // 本次锻造新增的属性
+  // 实际锻造的次数，有可能玩家选了10次，但是无需10次经验就满了
+  int64 real_times = 3;
+  int64 total_fc   = 4;  // 总战力
+}
+message UpgradeRequest {
+  int64 id = 1;  // 要升级的名刀ID
+}
+
+message UpgradeReply {
+  KnifeBrifeInfo knife_info = 1;  // 升级后名刀信息
+  // 如果这个id不为空，则为升级触发的新的可解锁名刀的ID
+  int64 unlock_knife_id = 2;
+  int64 total_fc        = 3;  // 总战力
+}

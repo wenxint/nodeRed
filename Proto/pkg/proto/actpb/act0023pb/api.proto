@@ -1,0 +1,75 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0023pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0023pb";
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 current_day                  = 1;  // 当前进行天数
+  map<int64, Quest> quests           = 2;  // 关卡信息：关卡 ID -> 信息
+  map<int64, Buff> buffs             = 3;  // 天赋信息：天赋 ID -> 信息
+  repeated actpb.commonpb.Task tasks = 4;  // 所有任务详细信息
+  bool daily_redpoint                = 5;  // 是否亮每日红点
+  bool unlock_challenge_first_time   = 6;  // 是否首次解锁挑战关卡
+  bool unlocked_challenge            = 7;  // 是否已经解锁挑战关卡
+}
+
+message Quest {
+  map<int64, bool> stars = 1;  // 第 N 颗星 -> 是否获得；N = 1, 2, 3
+}
+
+message Buff {
+  bool unlocked = 1;  // 是否已解锁
+}
+
+service CSAct0023Service {
+  rpc UnlockBuff(UnlockBuffRequest) returns (UnlockBuffReply);                                // 解锁天赋
+  rpc GameStart(GameStartRequest) returns (GameStartReply);                                   // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);                                         // 结算
+  rpc DismissDailyRedpoint(DismissDailyRedpointRequest) returns (DismissDailyRedpointReply);  // 消除每日红点
+  rpc UnlockedChallenge(UnlockedChallengeRequest) returns (UnlockedChallengeReply);           // 玩家解锁挑战关卡弹窗
+}
+
+message UnlockBuffRequest {
+  int64 buff_id = 1;  // 天赋 ID
+}
+
+message UnlockBuffReply {}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  map<int64, bool> stars        = 2;  // 客户端计算得到的星级，格式参考 message Quest 中的 stars
+  corepb.FightResultType result = 3;  // 战斗结果
+  int32 reason                  = 4;  // 结算原因:EGameResultReason
+  corepb.GameDropPackage drop   = 5;  // 掉落上报
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;
+  map<int64, bool> this_stars         = 2;  // 当次的星级，格式参考 message Quest 中的 stars
+  map<int64, bool> previous_stars     = 3;  // 之前的星级，格式参考 message Quest 中的 stars
+  int64 all_stars_count               = 4;  // 新的总星数
+  repeated corepb.Item rewards        = 5;  // 下发的奖励（只有藏品）
+}
+
+message DismissDailyRedpointRequest {}
+
+message DismissDailyRedpointReply {}
+
+message UnlockedChallengeRequest {}
+
+message UnlockedChallengeReply {}

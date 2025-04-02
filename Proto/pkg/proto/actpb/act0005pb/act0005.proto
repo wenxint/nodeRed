@@ -1,0 +1,41 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0005pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0005pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0005Service {
+  // 领取活动奖励
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+  // 批量领取活动奖励
+  rpc BatchDeliverActReward(BatchDeliverActRewardRequest) returns (BatchDeliverActRewardReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task task_list = 1;
+  int64 count                            = 2;  //已参加次数
+  string buy_text                        = 3;  //已参加次数文本显示
+  string redirect_text                   = 4;  //跳转文本显示
+}
+
+message DeliverActRewardRequest {
+  int64 task_id = 1;
+}
+
+message DeliverActRewardReply {
+  repeated corepb.Item awards = 1;
+}
+
+message BatchDeliverActRewardRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message BatchDeliverActRewardReply {
+  int64 count                 = 1;  // 任务完成进度信息
+  repeated corepb.Item awards = 2;  // 领取到的奖励
+}

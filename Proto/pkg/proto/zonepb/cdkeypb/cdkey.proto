@@ -1,0 +1,33 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.cdkeypb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/cdkeypb";
+
+import "corepb/common.proto";
+
+service CdkeyService {
+  // 检查CdKey有效
+  rpc CheckCdkey(CheckCdkeyRequest) returns (CheckCdkeyReply);
+}
+
+message CheckCdkeyRequest {
+  string cdkey_text = 1;  // Cdkey字符串
+}
+
+message CheckCdkeyReply {
+  bool valid                   = 1;  // 是否有效
+  InvalidReason invalid_reason = 2;  // 无效原因
+  repeated corepb.Item items   = 3;  // 本次领取的奖励
+}
+
+enum InvalidReason {
+  INVALID_REASON_UNKNOWN = 0;  // 无
+  INVALID_OS             = 1;  // 不是可以使用的手机系统
+  INVALID_PLAT           = 2;  // 不是可以使用的平台
+  INVALID_TIME           = 3;  // 不在时间范围内
+  INVALID_CHANNEL        = 4;  // 不是可以使用的渠道
+  INVALID_TEXT           = 5;  // 不是有效的cdkey
+  REPEAT_REWARD          = 6;  // 奖励被领取过了
+  VALID_CDKEY            = 7;  // 有效的cdkey
+}

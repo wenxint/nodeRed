@@ -1,0 +1,65 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0101pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0101pb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 left_reward_count                    = 1;  // 剩余奖励次数
+  int64 match_begin_hour                     = 2;  // 匹配开始的小时
+  int64 match_end_hour                       = 3;  // 匹配结束的小时(包含)
+  bool is_unlock_hard_mode                   = 4;  // 是否解锁了困难模式
+  repeated ChallengeReward challenge_rewards = 5;  // 挑战奖励
+  repeated RankReward rank_rewards           = 6;  // 排行奖励
+  string rank_instance                       = 7;  // 排行榜实例
+  corepb.FightType fight_type                = 8;  // 玩家上次选择的玩法类型
+  int64 min_pass_duration_hard               = 9;  // 困难模式最小通关时间
+}
+
+message ChallengeReward {
+  int64 star                 = 1;  // 星数
+  int64 duration             = 2;  // 通关时长
+  repeated corepb.Item items = 3;  // 奖励道具
+}
+
+message RankReward {
+  int64 begin_rank           = 1;  // 开始排名
+  int64 end_rank             = 2;  // 结束排名 （包含）
+  repeated corepb.Item items = 3;  // 奖励道具
+  string description         = 4;  //奖励描述
+}
+
+service CSAct0101Service {
+  rpc ApplyFightType(ApplyFightTypeRequest) returns (ApplyFightTypeReply);  // 设置玩法类型
+}
+
+// ApplyFightType
+message ApplyFightTypeRequest {
+  corepb.FightType fight_type = 1;  // 玩家选择的玩法类型
+}
+
+message ApplyFightTypeReply {
+  // 若要设置的玩法类型不合法，会通过 rpc 错误告知。
+}
+
+// 结算信息
+message GameOverMsgCustomData {
+  map<int64, int64> star_duration = 1;  // 星数（1、2、3）与通关时长的对应关系
+  repeated corepb.Item rewards    = 2;  // 本次挑战获得的奖励
+  int64 star                      = 3;  // 本次挑获得的星数
+  int64 duration                  = 4;  // 本次挑战的通关时长
+  bool record_shattering          = 5;  // 是否新记录
+  int64 rank                      = 6;  // 玩家的排名
+  int64 forward_rank              = 7;  // 前进的名次，如果为0则表示没有前进
+  int64 left_reward_count         = 8;  // 剩余奖励次数
+}
+
+message InvitationNTFGameplayInfo {
+  int64 left_reward_count = 1;  // 剩余奖励次数
+}

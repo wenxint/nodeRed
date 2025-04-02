@@ -1,0 +1,40 @@
+// cs protocol
+syntax = "proto3";
+
+import "corepb/common.proto";
+
+package zonepb.contestheadtoheadticketpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/contestheadtoheadticketpb";
+
+
+service ContestHeadToHeadTicketService {
+
+  // 获取购买信息
+  rpc ShopInfo(ShopInfoRequest) returns (ShopInfoReply);
+
+  // 购买
+  rpc Buy(BuyRequest) returns (BuyReply);
+}
+
+message ShopInfo {
+  int64 current_index            = 1;  // 当前购买次数，一次没买是 0
+  repeated corepb.Item cost_list = 2;  // 购买消耗完整列表，代表第几次购买的消耗
+}
+
+message ShopInfoRequest {
+  int64 ticket_item_id = 1;  // 券道具 ID
+}
+
+message ShopInfoReply {
+  ShopInfo shop_info = 1;
+}
+
+message BuyRequest {
+  int64 ticket_item_id = 1;  // 券道具 ID
+  int64 count          = 2;  // 购买几次
+}
+
+message BuyReply {
+  ShopInfo shop_info         = 1;  // 新购买信息
+  repeated corepb.Item items = 2;  // 购买得到的道具
+}

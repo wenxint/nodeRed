@@ -1,0 +1,29 @@
+// cs protocol
+syntax = "proto3";
+
+package paypb;
+option go_package = "git.woa.com/red/paysvr/pkg/proto/paypb";
+
+import "corepb/common.proto";
+
+service PayService {
+  // PlaceOrder 创建订单
+  rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderReply);
+}
+
+message PlaceOrderRequest {
+  repeated Product products = 1;
+  string resource_id        = 2;  // 米大师资源ID.
+}
+
+message PlaceOrderReply {
+  string token      = 1;  // token，本次交易的标识，后续流程使用
+  string url_params = 2;  // 购买物品的 URL 的参数，需传递给客户端
+}
+
+// Product 为普通物品信息
+message Product {
+  string product_id                                    = 1;  // 米大师平台的物品ID或者代币ID.
+  int64 quantity                                       = 2;  // 数量
+  repeated corepb.GiftSelectedItem gift_selected_items = 3;  // 自选礼包
+}

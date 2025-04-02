@@ -1,0 +1,230 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.intelsocietypb;
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/buddypb/buddy.proto";
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/intelsocietypb";
+
+// 情报会社系统服务
+service IntelSocietyService {
+  // == 玩法系统 ==
+  // 开始(初始化)战局, 返回需要表现用的相关参数, 扣门票
+  rpc StartGullGame(StartGullGameRequest) returns (StartGullGameReply);
+  // 缓存奖励
+  rpc SyncGullGame(SyncGullGameRequest) returns (SyncGullGameReply);
+  // 使用道具
+  rpc UseGullGameItem(UseGullGameItemRequest) returns (UseGullGameItemReply);
+  // 结束战局
+  rpc EndGullGame(EndGullGameRequest) returns (EndGullGameReply);
+  // == 门票系统 ==
+  // 获取门票信息
+  rpc TicketInfo(TicketInfoRequest) returns (TicketInfoReply);
+  // 购买门票
+  rpc BuyTicket(BuyTicketRequest) returns (BuyTicketReply);
+  // == 配置相关系统 ==
+  // 获取情报会社信息
+  rpc SocietyInfo(SocietyInfoRequest) returns (SocietyInfoReply);
+  // 提升情报会社等级
+  rpc UpgradeSocietyGrade(UpgradeSocietyGradeRequest) returns (UpgradeSocietyGradeReply);
+  // 请求情报墙角色情报碎片配置信息
+  rpc IntelWallInfos(IntelWallInfosRequest) returns (IntelWallInfosReply);
+  // 设置情报墙选择buddy信息
+  rpc UpdateSelectedBuddies(UpdateSelectedBuddiesRequest) returns (UpdateSelectedBuddiesReply);
+  // == 设施相关系统 ==
+  // 获取当前已解锁facility
+  rpc QueryUnlockedFacilities(QueryUnlockedFacilitiesRequest) returns (QueryUnlockedFacilitiesReply);
+  // 解锁某facility
+  rpc UnlockFacility(UnlockFacilityRequest) returns (UnlockFacilityReply);
+  // 获取FacilityUpgrade升级信息
+  rpc QueryFacilityUpgrade(QueryFacilityUpgradeRequest) returns (QueryFacilityUpgradeReply);
+  // 购买升级某个设施
+  rpc UpgradeFacility(UpgradeFacilityRequest) returns (UpgradeFacilityReply);
+  // 看过了情报墙伙伴
+  rpc VisitIntelWallBuddies(VisitIntelWallBuddiesRequest) returns (VisitIntelWallBuddiesReply);
+  // 看过了某个设施
+  rpc VisitFacilities(VisitFacilitiesRequest) returns (VisitFacilitiesReply);
+  // 看过了某个系统（红点用）
+  rpc VisitSystemRedPoint(VisitSystemRedPointRequest) returns (VisitSystemRedPointReply);
+}
+
+message VisitSystemRedPointRequest {
+  int64 system_id = 1;  // 红点对应的system id
+}
+
+message VisitSystemRedPointReply {}
+
+message VisitFacilitiesRequest {
+  repeated int64 facility_ids = 1;
+  bool is_all_facilities      = 2;
+}
+
+message ItemTransformedNotify {
+  int64 original_item_id       = 1;
+  int64 transformed_item_id    = 2;
+  int64 transformed_item_count = 3;
+}
+
+message VisitFacilitiesReply {}
+
+message VisitIntelWallBuddiesRequest {
+  repeated int64 buddy_ids = 1;
+  bool is_all_buddies      = 2;
+}
+
+message VisitIntelWallBuddiesReply {}
+
+message UpgradeItem {
+  int64 id            = 1;  // 设施id
+  int64 grade         = 2;  // 设施Grade
+  int64 cost_item_id  = 3;  // 购买货币ID
+  int64 cost_item_num = 4;  // 当前价格
+  bool is_max_grade   = 5;  // 是否是最高级
+}
+
+message UpgradeFacilityRequest {
+  int64 id    = 1;  // 设施ID
+  int64 level = 2;  // 想要升到的等级
+}
+
+message UpgradeFacilityReply {
+  int64 level = 1;  // 当前等级
+}
+
+message QueryFacilityUpgradeRequest {}
+
+message QueryFacilityUpgradeReply {
+  repeated UpgradeItem items = 1;  // 商品列表
+}
+
+message UnlockFacilityRequest {
+  int64 facility_id = 1;  // 想要解锁的设施id
+}
+
+message UnlockFacilityReply {
+  repeated int64 availiable_facility_ids = 1;  // 可用设施ids
+}
+
+message QueryUnlockedFacilitiesRequest {}
+
+message QueryUnlockedFacilitiesReply {
+  repeated int64 availiable_facility_ids = 1;  // 可用设施ids
+}
+
+message UpdateSelectedBuddiesRequest {
+  repeated int64 selected_buddy = 1;  // 情报墙玩家选择的伙伴
+}
+
+message UpdateSelectedBuddiesReply {}
+
+message StartGullGameRequest {}
+
+message StartGullGameReply {
+  int64 society_grade                    = 1;  // 情报会社等级
+  BuyableAttr attr                       = 2;  // 情报会社相关属性值
+  repeated NormalGull gulls              = 3;  // 100只海鸥
+  repeated LuckyGull luckygulls          = 4;  // 20只惊喜海鸥
+  repeated int64 availiable_facility_ids = 5;  // 可用设施ids
+  repeated int64 new_facility_ids        = 6;  // 新的设施ids
+  int64 load_max                         = 7;  // 最大夹子数量
+  bool is_beginner                       = 8;  // 是否是新手
+}
+
+message LuckyGull {
+  repeated FeedComponent gull_demands    = 1;  // 需要的报纸、食物、可乐的id
+  repeated corepb.Item luckygull_rewards = 2;  // 惊喜海鸥的奖励
+}
+
+message NormalGull {
+  repeated FeedComponent gull_demands = 1;  // 需要的报纸、食物、可乐的id
+}
+
+message BuyableAttr {
+  int64 gull_patience                         = 1;  // 海鸥的耐心值提高
+  int64 luckygull_cd                          = 2;  // 惊喜海鸥间隔冷却
+  int64 coke_refresh                          = 3;  // 可乐机刷新时长
+  int64 facility_coins_reward                 = 4;  // 设施硬币奖励倍率
+  map<int64, BuyablePropAttr> prop_attr_by_id = 5;  // 道具属性 (key:道具id，value:值)
+}
+
+message BuyablePropAttr {
+  map<int64, int64> attrs = 1;  // 属性 (key:参数id，value:值)
+}
+
+message EndGullGameRequest {
+  int64 score                      = 1;  // 当前局的分数
+  repeated int64 gull_indexes      = 2;  // 打死的普通海鸥的index
+  repeated int64 luckygull_indexes = 3;  // 打死的惊喜海鸥的index
+  bool is_beginner                 = 4;  // 是否是新手
+}
+
+message EndGullGameReply {
+  repeated corepb.Item items = 1;  // 本次领取的奖励
+}
+
+message SyncGullGameRequest {
+  int64 score                      = 1;  // 当前的分数
+  repeated int64 gull_indexes      = 2;  // 打死的普通海鸥的index
+  repeated int64 luckygull_indexes = 3;  // 打死的惊喜海鸥的index
+}
+
+message SyncGullGameReply {}
+
+message FeedComponent {
+  repeated int64 facility_ids = 1;  // 每捆内的具体设施id等等
+  int64 facility_type         = 2;  // 设施类型：报纸、食物、可乐等对应枚举ID
+}
+
+message UpgradeSocietyGradeRequest {}
+
+message UpgradeSocietyGradeReply {
+  int64 society_grade = 1;  // 最新情报会社等级
+}
+
+message IntelWallInfosRequest {}
+
+message IntelWallInfosReply {
+  repeated int64 selected_buddy_ids        = 1;  // 情报墙玩家选择的伙伴
+  repeated IntelWallBuddy unlocked_buddies = 2;  // 已经解锁的buddy的列表
+  repeated int64 new_buddy_ids             = 3;  // 新解锁的buddy的id
+}
+
+message IntelWallBuddy {
+  int64 buddy_id                 = 1;  // 伙伴ID
+  int64 star                     = 2;  // 当前星级
+  zonepb.buddypb.Quality quality = 3;  // 品质
+  int64 own_fragment_count       = 4;  // 当前拥有数量
+}
+
+message BuyTicketRequest {}
+
+message BuyTicketReply {
+  int64 current_ticket_count = 1;  // 购买后的玩法次数
+}
+
+message TicketInfoRequest {}
+
+message TicketInfoReply {
+  int64 ticket_count             = 1;  // 门票数量
+  int64 weekly_ticket_count_left = 2;  // 本周剩余可购买的次数
+  int64 ticket_price             = 3;  // 当前门票价格
+  int64 ticket_max               = 4;  // 最大存储门票
+  int64 weekly_ticket_count_max  = 5;  // 每周最大购买次数
+}
+
+message SocietyInfoRequest {}
+
+message SocietyInfoReply {
+  int64 grade        = 1;  // 情报会社等级
+  int64 ticket_count = 2;  // 门票数量
+  int64 ticket_max   = 3;  // 最大存储门票
+  bool is_beginner   = 4;  // 是否新手
+}
+
+message UseGullGameItemRequest {
+  int64 item_id = 1;  // 道具id
+}
+
+message UseGullGameItemReply {}

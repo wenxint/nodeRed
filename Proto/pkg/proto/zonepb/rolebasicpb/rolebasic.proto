@@ -1,0 +1,92 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.rolebasicpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/rolebasicpb";
+
+
+service RolebasicService {
+  rpc GetAllowObserve(GetAllowObserveRequest) returns (GetAllowObserveReply) {}              // Deprecated: 使用RoleSetting替代，待客户端改完后删除
+  rpc SetAllowObserve(SetAllowObserveRequest) returns (SetAllowObserveReply) {}              // Deprecated: 使用RoleSetting替代，待客户端改完后删除
+  rpc GetRankingAnonymous(GetRankingAnonymousRequest) returns (GetRankingAnonymousReply) {}  // Deprecated: 使用RoleSetting替代，待客户端改完后删除
+  rpc SetRankingAnonymous(SetRankingAnonymousRequest) returns (SetRankingAnonymousReply) {}  // Deprecated: 使用RoleSetting替代，待客户端改完后删除
+  rpc GetRoleSetting(GetRoleSettingRequest) returns (GetRoleSettingReply) {}                 // 获取角色设置
+  rpc SetRoleSetting(SetRoleSettingRequest) returns (SetRoleSettingReply) {}                 // 设置角色设置
+}
+
+enum RoleSettingType {
+  ROLE_SETTING_TYPE_UNKNOWN                  = 0;   // 无效
+  ROLE_SETTING_TYPE_ALLOW_OBSERVE            = 1;   // 是否允许观战pvp
+  ROLE_SETTING_TYPE_RANKING_ANONYMOUS        = 2;   // 是否排行榜匿名
+  ROLE_SETTING_TYPE_HIDE_GENDER              = 3;   // 是否隐藏性别
+  ROLE_SETTING_TYPE_DENY_FRIEND_INVITE       = 4;   // 是否屏蔽好友申请
+  ROLE_SETTING_TYPE_DENY_STRANGER_CHAT       = 5;   // 是否屏蔽陌生人聊天
+  ROLE_SETTING_TYPE_HIDE_BUDDY_COLLECTION    = 6;   // 是否隐藏伙伴收集
+  ROLE_SETTING_TYPE_HIDE_DRESS_COLLECTION    = 7;   // 是否隐藏装扮收集
+  ROLE_SETTING_TYPE_HIDE_DIAL_COLLECTION     = 8;   // 是否隐藏空岛贝收集
+  ROLE_SETTING_TYPE_HIDE_TREASURE_COLLECTION = 9;   // 是否隐藏料理收集
+  ROLE_SETTING_TYPE_HIDE_FACTORY_LEVEL       = 10;  // 是否隐藏工厂等级
+  ROLE_SETTING_TYPE_HIDE_SHIP_COLLECTION     = 11;  // 是否隐藏船只收集
+  ROLE_SETTING_TYPE_HIDE_CUISINE_COLLECTION  = 12;  // 是否隐藏料理收集
+  ROLE_SETTING_TYPE_HIDE_WILL_STAR           = 13;  // 是否隐藏意志星级
+  ROLE_SETTING_TYPE_HIDE_EQUIPMENT_SCORE     = 14;  // 隐藏装备评分
+  ROLE_SETTING_TYPE_PVP_MATCH_EXCLUDE_AI     = 15;  // 竞技场匹配是否排除机器人
+  ROLE_SETTING_TYPE_REDPOINT_STRENGTH        = 16;  // 红点强度
+  ROLE_SETTING_TYPE_RECRUIT_SKIP_DIAL        = 17;  // 是否跳过招募拨号
+}
+
+enum RedpointStrengthType {
+  REDPOINT_STRENGTH_TYPE_UNKNOWN = 0;  // 无效
+  REDPOINT_STRENGTH_TYPE_LOW     = 1;  // 弱
+  REDPOINT_STRENGTH_TYPE_REC     = 2;  // 推荐
+  REDPOINT_STRENGTH_TYPE_HIGH    = 3;  // 强
+}
+
+
+// 获取
+message GetRoleSettingRequest {}
+
+message GetRoleSettingReply {
+  // key 为 RoleSettingType
+  map<int32, bool> privacy_setting = 1;
+  // key 为 RoleSettingType，value 为 数值型的设置
+  map<int32, int64> privacy_setting_num = 2;
+}
+
+// 设置
+message SetRoleSettingRequest {
+  // key 为 RoleSettingType
+  map<int32, bool> privacy_setting = 1;
+  // key 为 RoleSettingType，value 为 数值型的设置
+  map<int32, int64> privacy_setting_num = 2;
+}
+
+message SetRoleSettingReply {}
+
+// 获取
+message GetAllowObserveRequest {}
+
+message GetAllowObserveReply {
+  bool is_allow_observe = 1;  // 是否允许观战pvp
+}
+
+// 设置
+message SetAllowObserveRequest {
+  bool is_allow_observe = 1;  // 是否允许观战pvp
+}
+
+message SetAllowObserveReply {}
+
+// 获取
+message GetRankingAnonymousRequest {}
+
+message GetRankingAnonymousReply {
+  bool is_ranking_anonymous = 1;  // 是否排行榜匿名
+}
+
+// 设置
+message SetRankingAnonymousRequest {
+  bool is_ranking_anonymous = 1;  // 是否排行榜匿名
+}
+
+message SetRankingAnonymousReply {}

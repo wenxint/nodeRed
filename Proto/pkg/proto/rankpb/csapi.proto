@@ -1,0 +1,51 @@
+// cs protocol
+syntax = "proto3";
+
+package rankpb;
+
+option go_package = "git.woa.com/red/ranksvr/pkg/proto/rankpb";
+
+// 排行榜服务(对外暴露)
+service CSRankService {
+  // OpenRankTypes 获取开放的排行榜类型列表
+  rpc OpenRankTypes(OpenRankTypesRequest) returns (OpenRankTypesReply);
+  // Rankings 查询排行榜某段范围的排名信息
+  rpc Rankings(RankingsRequest) returns (RankingsReply);
+}
+
+message RankID {
+  string rank_type             = 1;  // 排行榜类型，定义在Rank配置里
+  string instance              = 2;  // 实例，由业务定义(如段位赛排行榜的赛季可以作为instance)，如不需要区分实例可以使用rankutil.DefaultInstance
+  int64 zone_id                = 3;  // 区服id
+  bool use_zoneid_as_hash_tags = 4;  // 使用zoneid作为hash tags，保证该zoneid对应的所有instance都在redis的同一个slot（1.只对使用redis的大榜有效；2.目前只对小区榜生效）
+}
+
+message RankInfo {
+  int64 id          = 1;  // gid,guildID
+  int64 w1          = 2;  // 权重1
+  int64 w2          = 3;  // 权重2
+  int64 w3          = 4;  // 权重3
+  int64 modify_time = 5;  // 单位ms 更新时间，无需赋值，为了统一定义
+  bytes payload     = 6;  // 存储额外数据
+}
+
+message OpenRankTypesRequest {
+  int64 zone_id = 1;  // 区服ID
+}
+
+message OpenRankTypesReply {
+  repeated string rank_types = 1;  // 开放的排行榜类型列表
+}
+
+message RankingsRequest {
+  RankID rank_id   = 1;  // 排行榜ID
+  int64 self_id    = 2;  // 自己的ID(根据排行榜类型不同，可能是玩家ID，也可能是公会ID)
+  int64 begin_rank = 3;  // 起始排名(从 1 开始)
+  int64 count      = 4;  // 查询数量(需要小于等于 200)
+}
+
+message RankingsReply {
+  repeated RankInfo rank_infos = 1;  // 排名信息
+  RankInfo self_rank_info      = 2;  // 自己的排名信息
+  int64 self_rank              = 3;  // 自己的排名(从 1 开始计数，如果为 -1 表示未上榜)
+}

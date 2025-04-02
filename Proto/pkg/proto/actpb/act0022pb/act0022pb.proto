@@ -1,0 +1,104 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0022pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0022pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0022Service {
+  // 查询积分配置
+  rpc QueryScoreCfg(QueryScoreCfgRequest) returns (QueryScoreCfgReply);
+  // 查询活动伙伴
+  rpc QueryActBuddy(QueryActBuddyRequest) returns (QueryActBuddyReply);
+  // 批量领取任务奖励
+  rpc BatchGetTaskAward(BatchGetTaskAwardRequest) returns (BatchGetTaskAwardReply);
+  // 查询排名奖励信息
+  rpc QueryRankRewardInfo(QueryRankRewardInfoRequest) returns (QueryRankRewardInfoReply);
+}
+
+message ActGetDetailRequest {}
+
+message BasicConfig {
+  int64 score_item_id           = 1;  // 剑豪积分id
+  int64 inner_rank_win_cnt_need = 2;  // 本服排名胜场条件
+  int64 inner_rank_score_need   = 3;  // 本服排名积分件
+  int64 cross_rank_win_cnt_need = 4;  // 跨服排名胜场条件
+  int64 cross_rank_score_need   = 5;  // 跨服排名积分件
+}
+
+message TaskDetail {
+  int64 unlocked_timestamp = 1;  // 任务解锁时间戳（0 表示已经解锁）
+  actpb.commonpb.Task task = 2;  // 任务基本信息
+}
+
+message ActGetDetailReply {
+  int64 cur_score               = 1;  // 剑豪积分
+  repeated TaskDetail task_list = 2;  // 所有任务详细信息
+  string rank_instance          = 3;  // 排行榜实例
+  int64 win_cnt                 = 4;  // 胜场数
+  int64 fight_cnt               = 5;  // 参与次数
+  BasicConfig basic_cfg         = 6;  // 基础配置
+}
+
+message ActCustomDetail {
+  int64 today_fight_cnt = 1;  // 今日挑战次数
+  int64 last_fight_time = 2;  // 最近挑战时间
+  bool is_close         = 3;  // 活动是否结束
+}
+
+message QueryScoreCfgRequest {}
+
+message QueryScoreCfgReply {
+  repeated ScoreConfig score_cfg_list = 1;  // 积分配置列表
+}
+
+message ScoreConfig {
+  int64 lower_limit = 1;  // 分段上限
+  int64 upper_limit = 2;  // 分段下限
+  int64 win_score   = 3;  // 胜利时加分
+  int64 lose_score  = 4;  // 失败时加分
+}
+
+message QueryActBuddyRequest {}
+
+message ActBuddyInfo {
+  int64 buddy_id                   = 1;  // 伙伴id
+  int64 delta_score                = 2;  // 额外积分
+  repeated int64 limited_free_days = 3;  // 限时免费时间，活动的第几天开启限免
+}
+
+message QueryActBuddyReply {
+  repeated ActBuddyInfo buddy_list = 1;  // 伙伴列表
+}
+
+// 积分变化通知
+message ScoreChangeNotify {
+  int64 old_score = 1;
+  int64 new_score = 2;
+  bool win        = 3;
+}
+
+message BatchGetTaskAwardRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message BatchGetTaskAwardReply {
+  repeated int64 task_ids     = 1;  // 领取奖励的任务id列表
+  repeated corepb.Item awards = 2;  // 任务奖励
+}
+
+message QueryRankRewardInfoRequest {}
+
+message RankRewardInfo {
+  int64 rank_begin            = 1;  // 排名区间
+  int64 rank_end              = 2;  // 排名区间
+  repeated corepb.Item awards = 3;  // 排名奖励
+  string desc                 = 4;  // 排名描述
+}
+
+message QueryRankRewardInfoReply {
+  repeated RankRewardInfo reward_list = 1;  // 奖励列表
+  int64 cur_rank                      = 2;  // 当前排名
+}

@@ -1,0 +1,357 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.recruitpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/recruitpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/buddypb/buddy.proto";
+
+service RecruitService {
+  // 查询状态及配置, 一次会返回多种招募的信息及状态
+  rpc Query(QueryRequest) returns (QueryReply);
+
+  // 抽奖, 同时支持各种招募类型
+  rpc Draw(DrawRequest) returns (DrawReply);
+
+  // 快捷购买【请使用通用的快捷购买】
+  rpc BuyProps(BuyPropsRequest) returns (BuyPropsReply);
+
+  // 检测抽取条件
+  rpc Check(CheckRequest) returns (CheckReply);
+
+  // 打开招募详情（用于消除新标志）
+  rpc OpenRewardDetail(OpenRewardDetailRequest) returns (OpenRewardDetailReply);
+
+  // 拉取最近6个月的招募历史记录
+  rpc GetRecruitHistory(GetRecruitHistoryRequest) returns (GetRecruitHistoryReply);
+
+  // 拉取最近6个月的红色伙伴招募记录，包括最近已拨号计数
+  rpc QueryRedBuddy(QueryRedBuddyRequest) returns (QueryRedBuddyReply);
+
+  // BuyShopItem 使用道具购买商品红色伙伴碎片(必须限定池抽到红卡后。其他方式拥有不能下单.)
+  rpc BuyShopItem(BuyShopItemRequest) returns (BuyShopItemReply);
+
+  //  DeliverTaskRewarded 领取任务奖励.
+  rpc DeliverTaskRewarded(DeliverTaskRewardedRequest) returns (DeliverTaskRewardedReply);
+
+  // ClearShopRedpoint 清理商品一次性红点.
+  rpc ClearShopRedpoint(ClearShopRedpointRequest) returns (ClearShopRedpointReply);
+
+  // DeliverReservationReward 领取下期限定池招募池奖励.
+  rpc DeliverReservationReward(DeliverReservationRewardRequest) returns (DeliverReservationRewardReply);
+
+  // IncrSkipDial 自增跳过招募拨号.
+  rpc IncrSkipDial(IncrSkipDialRequest) returns (IncrSkipDialReply);
+  // FinishedSkipDialGuide 已完成跳过招募拨号引导.
+  rpc FinishedSkipDialGuide(FinishedSkipDialGuideRequest) returns (FinishedSkipDialGuideReply);
+}
+
+// DeliverReservationRewardRequest 领取下期限定池招募奖励请求
+message DeliverReservationRewardRequest {
+  int64 id      = 1;  // 招募池ID
+  int64 version = 2;  // 期数，用于判断限时招募是否换期了
+}
+
+// DeliverReservationRewardReply 领取下期限定池招募奖励响应
+message DeliverReservationRewardReply {
+  repeated corepb.Item rewards = 1;
+}
+
+message ClearShopRedpointRequest {
+  int64 shop_item_id = 1;  // 消除指定商品红点.
+}
+
+message ClearShopRedpointReply {}
+
+// QueryRedBuddyRequest 招募红色伙伴记录请求
+message QueryRedBuddyRequest {
+  string filter_type = 1;  // 过滤类型：招募ID
+}
+
+// QueryRedBuddyReply 招募红色伙伴记录响应.
+message QueryRedBuddyReply {
+  repeated QueryRedBuddyResult query_red_buddy_results = 1;
+}
+
+message QueryRedBuddyResult {
+  int64 buddy_id      = 1;  // 伙伴ID
+  string buddy_name   = 2;  // 伙伴名称
+  int64 recruit_count = 3;  // 招募到该伙伴的抽卡次数
+  string dtevent_time = 4;  // 游戏事件的时间, 格式 YYYY-MM-DD HH:MM:SS
+  bool recruit_succ   = 5;  // True: 已成功招募到SS伙伴；False：还未招募到SS 伙伴
+}
+message GetRecruitHistoryRequest {
+  int64 page_index      = 1;  // 页码(从0开始)
+  int64 page_size       = 2;  // 每页大小(不允许超过50)
+  string filter_type    = 3;  // 过滤类型
+  int64 query_timestamp = 4;  // 查询起始时间 (一次新的查询，需要时间戳的话，这个地方发0)
+}
+
+message RecruitHistory {
+  int32 lottery_rank  = 1;  // 单次招募下道具产出顺序（单抽记为1，十连抽下按道具产出顺序按1~10排序）
+  string dtevent_time = 2;  // 游戏事件的时间, 格式 YYYY-MM-DD HH:MM:SS
+  string item_name    = 3;  // 抽取的道具名称（对应抽取的道具id名称配置）
+  string item_type    = 4;  // 抽取的道具类型（伙伴整卡/伙伴碎片/援护整卡/援护碎片/信物）
+  int32 quality       = 5;  // 抽取的道具品质（SS/S/A/B/C）
+  string recruit_name = 6;  // 招募池名称（对应招募id系统名称配置）
+}
+
+message GetRecruitHistoryReply {
+  repeated RecruitHistory history = 1;
+  int64 query_timestamp           = 2;  // 查询起始时间 (如果是一次新的查询，这个地方会返回新的时间戳)
+  int64 total_size                = 3;  // 总记录数
+  int64 total_page                = 4;  // 总页数
+}
+
+message QueryRequest {}
+
+message QueryReply {
+  repeated RecruitInfo all_recruit_config = 1;  // 各种招募的配置及状态
+  bool opened_skip_dial                   = 2;  // 快速拨号已开启
+  bool show_skip_dial_guide               = 3;  // 展示跳过招募拨号动画引导
+}
+
+message RecruitInfo {
+  int64 id                                               = 1;   // 招募系统ID
+  string name                                            = 2;   // 系统名称
+  int64 sort_id                                          = 3;   // 排序ID
+  int64 open_time                                        = 4;   // 开启时间
+  int64 close_time                                       = 5;   // 关闭时间
+  bool is_show_remain                                    = 6;   // 是否显示剩余时间
+  int64 next_refresh_time                                = 7;   // 下次可免费招募刷新时间。1970后秒数。 如果为0表示不免费
+  int64 skip_btn_interval                                = 8;   // 跳过按钮消失时间
+  corepb.Item single_cost_item                           = 9;   // 单抽所需道具
+  corepb.Item ten_cost_item                              = 10;  // 十连所需道具
+  repeated int64 reward_detail                           = 11;  // 招募详情, 展示可能获得的道具列表
+  string desc                                            = 12;  // [Deprecated]描述文字
+  zonepb.buddypb.BuddyBriefInfo display_buddy            = 13;  // [Deprecated]展示用的buddy的信息
+  int64 day_recruit_count                                = 14;  // 当天招募次数
+  int64 max_recruit_count                                = 15;  // 每日招募上限
+  int64 version                                          = 16;  // 期数，为0表示不关心
+  string resource                                        = 17;  // 客户端的图片资源（保留字段）
+  int64 up_count                                         = 18;  // [Deprecated] 再抽up_count次必出display_buddy
+  int64 remain_free_recruit_count                        = 19;  // 当前还剩的免费招募次数
+  int64 max_free_recruit_count                           = 20;  // 最多的免费招募次数
+  repeated QuickBuyPrice buy_price                       = 21;  // 招募所需的道具
+  int64 recruit_type                                     = 22;  // 招募类型 1-常规 2-新手 3-限时
+  int64 remain_time                                      = 23;  // [Deprecated] 新手招募为剩余天数， 限时招募为剩余秒数
+  repeated int64 prob_up_buddys                          = 24;  // 概率提升的伙伴列表
+  int64 current_ss_count                                 = 25;  // 再次XX次必得的提示之当前次数, 如已经抽10次，
+  int64 needed_ss_count                                  = 26;  // 再次XX次必得的提示之目标次数
+  int64 discount_percent                                 = 27;  // 折扣率。以100为默认，如8折返回80
+  repeated string descriptions                           = 28;  // 描述文字列表
+  repeated zonepb.buddypb.BuddyBriefInfo display_buddies = 29;  // 展示用的buddy的信息列表
+  int64 total_recruit_count                              = 30;  // 总抽卡次数
+  int64 max_total_recruit_count                          = 31;  // 最大的抽卡次数，-1表示没有上限
+  repeated int64 new_reward_detail                       = 32;  // 伙伴详情中显示新的伙伴，是reward_detail的子集
+  bool fifty_draw_flag                                   = 33;  // 是否开启了50连抽 true-是
+  corepb.Item fifty_cost_item                            = 34;  // 五十连所需道具
+  int64 unlock_quest_id                                  = 35;  // 为解锁主线ID， 为0表示已解锁，非0为解锁需要的通关的主线ID
+  bool main_buddy_full_star                              = 36;  // 当前招募的主伙伴是否满星.(只有限定 招募才有效)
+  bool show_reward_box                                   = 37;  // 是否有招募宝箱奖励(只有限定招募才有效)
+  int64 total_limitup_count                              = 38;  // 限定招募中历史累计次数（它是会跨周期累计的)
+  int64 target_limitup_count                             = 39;  // 限定招募中能够领取宝箱的次数(配置表中的)
+  repeated corepb.Item draw_presents                     = 40;  // 每次抽卡赠送的道具
+  ShopItemInfo shop_item_info                            = 41;  // 限时商品信息
+  repeated Task tasks                                    = 42;  // 奖励任务列表
+  NextRecruitLimitUPInfo next_limitup_info               = 43;  // 下一期限定池红色伙伴信息.
+  int64 countdown_time                                   = 44;  // 倒计时开始时间戳(限定池).
+}
+
+// NextRecruitLimitUPInfo 下期限定池数据.
+message NextRecruitLimitUPInfo {
+  int64 recruit_id                     = 1;  // 招募池ID
+  int64 version                        = 2;  // 期数
+  int64 buddy_id                       = 3;  // 红色伙伴ID
+  repeated corepb.Item reserve_rewards = 4;  // 预约伙伴奖励
+  bool is_reserved                     = 5;  // 是否已预约.
+  string curr_remove_time_desc         = 6;  // 当期招募池下架时间说明
+  string remove_title                  = 7;  // 下架标题
+  string remove_desc                   = 8;  // 下架说明
+  string remove_bg_image               = 9;  // 下架背景图
+}
+
+message QuickBuyPrice {
+  int64 id              = 1;  // 招募所需道具ID
+  corepb.Item cost_coin = 2;  // 购买道具货币消耗
+}
+
+enum DrawMode {
+  DM_UNKNOWN = 0;  // 用于兼容旧协议
+  DM_SINGLE  = 1;  // 单抽
+  DM_TEN     = 2;  // 十连抽
+  DM_FIFTY   = 3;  // 五十连抽
+}
+
+message DrawRequest {
+  int64 id      = 1;  // 招募ID，前面下发的
+  bool single   = 2;  // [Deprecated] 单抽还是10连。过渡阶段，当model=0时依然生效，后续会废弃不用。
+  bool free     = 3;  // [Deprecated] 听说后面设计上免费可替代10连抽中的次数，在这里上报是否免费就没意义了。
+  int64 version = 4;  // 期数，用于判断限时招募是否换期了
+  DrawMode mode = 5;  // 抽卡模式，0-兼容旧协议 1-单抽 2-十连抽 3-五十连抽
+}
+
+message DrawReward {
+  bool transformed      = 1;  // 为true表示发生了转化，转化的物品信息放在real_item里
+  corepb.Item item      = 2;  // 抽中的物品
+  corepb.Item real_item = 3;  // 表示真正得到的物品 (有可能是碎片和羁绊道具混合的情况)
+}
+
+// 如果道具或货币不够时，会返回错误码，客户端可能要根据错误码做逻辑
+message DrawReply {
+  int64 id = 1;  // 本次招募ID
+  // bool single = 2;  // [Deprecated] 单抽还是10连
+  // repeated corepb.Item rewards                = 3;   //
+  // (Deprecated)奖励列表(为了兼容保留)
+  // int64 next_refresh_time         = 4;   // [Deprecated]本次招募下一次免费时间
+  // int64 day_recruit_count         = 5;   // [Deprecated]当天招募次数
+  // int64 max_recruit_count         = 6;   // [Deprecated]每日招募上限
+  // bool free                       = 7;   // [Deprecated]是否免费抽奖
+  // int64 remain_free_recruit_count = 8;   // [Deprecated]当前还剩的免费招募次数
+  // int64 max_free_recruit_count    = 9;   // [Deprecated]最多的免费招募次数
+  int64 version = 10;  // 期数，为0表示不关心
+  // string resource                 = 11;  // [Deprecated]客户端的图片资源（保留字段）
+  // int64 up_count                              = 12;  //
+  // 再抽up_count次必出display_buddy
+  // zonepb.buddypb.BuddyBriefInfo display_buddy = 13;  // [Deprecated]展示用的buddy的信息
+  int64 buddy_num                  = 14;  // 当前拥有的伙伴个数
+  repeated DrawReward draw_rewards = 15;  // 抽中的物品
+
+  // int64 current_ss_count        = 16;  // [Deprecated]再次XX次必得的提示之当前次数, 如已经抽10次，
+  // int64 needed_ss_count         = 17;  // [Deprecated]再次XX次必得的提示之目标次数
+  // int64 total_recruit_count     = 18;  // [Deprecated]总抽卡次数
+  // int64 max_total_recruit_count = 19;  // [Deprecated]最大的抽卡次数，-1表示没有上限
+
+  // int64 discount_percent = 20;  // [Deprecated]折扣率。以100为默认，如8折返回80
+  // bool fifty_draw_flag   = 21;  // [Deprecated]是否开启了50连抽 true-是
+  DrawMode mode                           = 22;  // 当次抽卡的mode
+  repeated RecruitInfo all_recruit_config = 23;  // 各种招募的配置及状态
+  int64 interrupt_reason                  = 24;  // 本次招募中断原因。 0-无中断 1-整卡伙伴  2-满星
+  repeated corepb.Item draw_presents      = 25;  // 本次抽卡动作获得的赠送道具（数量按实际抽卡次数算）
+  RedBuddyStat red_buddy_stat             = 26;  // 本次抽红卡所花费的招募次数
+  bool opened_skip_dial                   = 27;  // 快速拨号已开启
+  bool show_skip_dial_guide               = 28;  // 展示跳过招募拨号动画引导
+}
+
+// RedBuddyStat 本周期的抽红卡统计数据
+message RedBuddyStat {
+  int64 draw_count = 2;  // 本周期抽中红卡所花费的次数(如果该draw_count=0表示没有抽中红卡).
+}
+
+message BuyPropsRequest {
+  int64 prop_id = 1;
+  int64 num     = 2;  // 购买的数量
+}
+
+// 购买成功
+message BuyPropsReply {
+  repeated corepb.Item rewards = 1;  // 实际获得的物品
+}
+
+// 判断是否满足抽取条件
+message CheckRequest {
+  int64 id      = 1;  // 招募ID，前面下发的
+  bool single   = 2;  // [Deprecated] 单抽还是10连。过渡阶段，当model=0时依然生效，后续会废弃不用。
+  int64 version = 3;  // 期数，用于判断限时招募是否换期了
+  DrawMode mode = 4;  // 当次抽卡的mode
+}
+
+message CheckReply {}  // 如果出错会以通用错误返回，否则成功
+
+message OpenRewardDetailRequest {
+  int64 id      = 1;  // 招募id
+  int64 version = 2;  // 期号
+}
+
+message OpenRewardDetailReply {}
+
+message QueryRewardBoxDetailRequest {
+  int64 id      = 1;  // 招募ID
+  int64 version = 2;  // 期数，用于判断限时招募是否换期了
+}
+
+// Task 任务数据
+message Task {
+  reserved 3;
+  int64 task_id = 1;  // 任务ID
+  TaskType typ  = 2;  // 任务类型: 1: 红整卡任务；2. 抽卡次数任务
+  // bool rewarded                = 3;  // 是否已经领取过
+  repeated corepb.Item rewards = 4;  // 奖励列表
+  int64 current_count          = 5;  // 当前已经招募的次数（这里可能超过target_count)
+  int64 target_count           = 6;  // 领取奖励需要的次数
+  TaskStatus status            = 7;  // 任务状态
+}
+
+// DeliverTaskRewardedRequest 抽卡奖励任务领取请求.
+message DeliverTaskRewardedRequest {
+  int64 id      = 1;  // 招募ID
+  int64 version = 2;  // 期数，用于判断限时招募是否换期了
+  int64 task_id = 3;  // 点击领取的任务ID(批量领取时检查是否存在移除的奖励)
+}
+
+// DeliverTaskRewardedReply 抽卡奖励任务领取响应
+message DeliverTaskRewardedReply {
+  repeated int64 task_ids     = 1;  // 任务ID列表
+  repeated corepb.Item awards = 2;  // 已领取的奖励道具列表
+}
+
+// BuyShopItemRequest 招募商品购买请求(只能是道具购买, 非直购商品)
+message BuyShopItemRequest {
+  int64 shop_item_id = 1;  // 商品ID
+  int64 buy_count    = 2;  // 购买的商品数量
+}
+
+// BuyShopItemReply 招募商品购买请求响应.
+message BuyShopItemReply {
+  repeated corepb.Item rewards = 1;  // 购买商品获得的道具列表.
+}
+
+// ShopItemInfo 获取商品详情.
+message ShopItemInfo {
+  int64 shop_item_id          = 1;   // 商品id
+  string title                = 2;   // 礼包标题
+  string desc                 = 3;   // 礼包描述
+  string backgound_desc       = 4;   // 背景图描述.
+  string background_img       = 5;   // 背景图
+  repeated corepb.Item awards = 6;   // 物品道具列表
+  repeated corepb.Item costs  = 7;   // 消耗的道具列表
+  string product_id           = 8;   // midas直购道具ID
+  int64 price                 = 9;   // 价格，单位：分
+  int64 begin_ts              = 10;  // 开始时间戳
+  int64 end_ts                = 11;  // 结束时间戳
+  ShopItemBuyMode mode        = 12;  // 商品购买模式
+  bool has_redpoint           = 13;  // 有红点
+  int64 strictly_reminder_ts  = 14;  // 礼包强提醒时间(文字红色)
+}
+
+// ShopItemBuyMode 商品购买模式
+enum ShopItemBuyMode {
+  SIBM_UNKNOWN   = 0;  // 未知
+  SIMB_DIRECTBUY = 1;  // 直购模式
+  SIMB_ITEM      = 2;  // 消耗道具购买模式
+}
+
+// TaskType 任务类型
+enum TaskType {
+  TT_UNKNOWN          = 0;  // 未知
+  TT_DRAWED_REDCARD   = 1;  // 红整卡
+  TT_DRAWED_CARDCOUNT = 2;  // 抽卡次数
+}
+
+enum TaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNDONE = 0;  // 不可领奖
+  REWARD = 1;  // 可领奖
+  FINISH = 2;  // 已领奖
+}
+
+// IncrSkipDialRequest 增加跳过拨号次数请求
+message IncrSkipDialRequest {}
+
+// IncrSkipDialReply 增加跳过拨号次数响应
+message IncrSkipDialReply {}
+
+message FinishedSkipDialGuideRequest {}
+message FinishedSkipDialGuideReply {}

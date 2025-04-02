@@ -1,0 +1,82 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.intelofferpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/intelofferpb";
+
+import "corepb/common.proto";
+
+service CSService {
+  // 打开情报信盒 (奖励已经确定下来了，但是没有实际发奖)
+  rpc OpenIntelBox(OpenIntelBoxRequest) returns (OpenIntelBoxReply);
+  // 领取情报信盒奖励 (扣费+发奖)
+  rpc ClaimIntelBoxRewards(ClaimIntelBoxRewardsRequest) returns (ClaimIntelBoxRewardsReply);
+  // 页面请求情报信盒
+  rpc QueryIntelBox(QueryIntelBoxRequest) returns (QueryIntelBoxReply);
+  // 页面请求情报卡池
+  rpc QueryIntelBuddyPool(QueryIntelBuddyPoolRequest) returns (QueryIntelBuddyPoolReply);
+  // 领取情报卡池解锁新伙伴的奖励 [无奖励，只播放动画, 用于消除红点]
+  rpc ClaimIntelBuddyPoolReward(ClaimIntelBuddyPoolRewardRequest) returns (ClaimIntelBuddyPoolRewardReply);
+}
+
+message ClaimIntelBuddyPoolRewardRequest {
+  int64 buddy_id = 1 [deprecated = true];  // 弃用
+}
+message ClaimIntelBuddyPoolRewardReply {
+  repeated corepb.Item rewards = 1 [deprecated = true];  // 弃用
+}
+
+message QueryIntelBoxRequest {}
+message QueryIntelBoxReply {
+  repeated BoxPreview box_preview = 1;                      // 情报信盒预览
+  int64 box_open_cost             = 2 [deprecated = true];  // 开启宝箱消耗
+  bool can_batch_open             = 3 [deprecated = true];  // 是否支持批量开启
+  int64 batch_open_cnt            = 4;                      // 批量开启的最大次数
+}
+
+message BoxPreview {
+  repeated int64 reward_buddy_ids   = 1;  // 本次可以领取的奖励(伙伴ID) (当前已解锁的)
+  repeated int64 unopened_buddy_ids = 2;  // 本次不可出现的奖励(伙伴ID) (未解锁的)
+  int64 quality                     = 3;  // 宝箱品质
+  int64 min_reward_count            = 4;  // 最少奖励数量
+  int64 max_reward_count            = 5;  // 最多奖励数量
+}
+
+message ChoiceRewardDrop {
+  repeated corepb.Item choice_rewards = 1;  // 一次奖励掉落，N选1
+}
+
+// 批量奖励掉落
+message BatchChoiceRewardDrop {
+  repeated ChoiceRewardDrop rewards = 1;  // 宝箱自选奖励
+}
+
+message OpenIntelBoxRequest {
+  int64 count = 1;  // 开启次数
+}
+
+message OpenIntelBoxReply {
+  repeated ChoiceRewardDrop choice_rewards = 1 [deprecated = true];  // 随机出来的需要选择领取的奖励
+  repeated corepb.Item rewards             = 2;                      // 随机出来的奖励
+  int64 quality                            = 3 [deprecated = true];  // 宝箱品质
+  int64 count                              = 4;                      // 实际打开的次数
+  repeated BatchChoiceRewardDrop choices   = 5;                      // 按宝箱开启顺序记录
+}
+
+message ClaimIntelBoxRewardsRequest {
+  repeated ChoiceRewardDrop choice_rewards = 1 [deprecated = true];  // 玩家选择领取的奖励 (每个 ChoiceRewardDrop 里面的数组长度必须为 1)
+  repeated BatchChoiceRewardDrop choices   = 2;                      // 玩家选择领取的奖励
+  int64 count                              = 3;                      // 开启次数
+}
+
+message ClaimIntelBoxRewardsReply {
+  repeated corepb.Item rewards = 1;  // 领取的奖励
+}
+
+message QueryIntelBuddyPoolRequest {}
+
+message QueryIntelBuddyPoolReply {
+  repeated int64 rewarded_buddy_ids    = 1;  // 已经解锁并且领奖了的buddy的id
+  repeated int64 completed_buddy_ids   = 2;  // 新解锁未领奖的buddy的id
+  repeated int64 unrecruited_buddy_ids = 3;  // 未招募的伙伴id
+}

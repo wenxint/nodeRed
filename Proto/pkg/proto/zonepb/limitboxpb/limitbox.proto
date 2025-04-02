@@ -1,0 +1,138 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.limitboxpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/limitboxpb";
+
+import "corepb/common.proto";
+
+service LimitBoxService {
+  // 购买格子
+  rpc BuyGrid(BuyGridRequest) returns (BuyGridResponse);
+  // 锁定宝箱
+  // rpc LockBox(LockBoxRequest) returns (LockBoxResponse);
+  // 解锁宝箱
+  // rpc UnlockBox(UnlockBoxRequest) returns (UnlockBoxResponse);
+  // 获取奖励
+  rpc RewardOpenedBox(RewardOpenedBoxRequest) returns (RewardOpenedBoxResponse);
+  // 丢弃宝箱
+  // rpc DeleteBox(DeleteBoxRequest) returns (DeleteBoxResponse);
+  // 购买立即获取宝箱奖励
+  rpc RewardOpeningBox(RewardOpeningBoxRequest) returns (RewardOpeningBoxReponse);
+  // 拉取信息
+  rpc GetAllBox(GetAllBoxRequest) returns (GetAllBoxResponse);
+  // 开启宝箱
+  // rpc OpenBox(OpenBoxRequest) returns (OpenBoxResponse);
+  // 一键领取
+  rpc RewardAllOpenedBox(RewardAllOpenedBoxRequest) returns (RewardAllOpenedBoxResponse);
+}
+
+enum LimitBoxType {
+  LIMIT_BOX_TYPE_UNKNOWN = 0;  // 无
+  SECRET_FIELD           = 1;  // 秘境
+  LIMIT_BOX_TYPE_MAX     = 2;  // 最大值
+}
+
+enum BuyGridType {
+  BUY_GRID_TYPE_UNKNOWN = 0;  // 无
+  BUY_GRID_TYPE_UNOPEN  = 1;  // 购买背包宝箱格子
+  BUY_GRID_TYPE_OPEN    = 2;  // 购买开启队列格子
+}
+
+enum LimitBoxState {
+  LIMIT_BOX_STATE_UNKNOWN = 0;  // 无
+  UNOPENED                = 1;  // 未开启
+  OPENING                 = 2;  // 开启中
+  OPENED                  = 3;  // 已开启
+}
+
+message BuyGridRequest {
+  LimitBoxType type     = 1;
+  BuyGridType grid_type = 2;
+}
+
+message BuyGridResponse {}
+
+// message LockBoxRequest {
+//  LimitBoxType type = 1;
+//  int64 id          = 2;
+//  int64 cnt         = 3;
+//}
+
+// message LockBoxResponse {}
+
+// message UnlockBoxRequest {
+//  LimitBoxType type = 1;
+//  int64 id          = 2;
+//  int64 cnt         = 3;
+//}
+
+// message UnlockBoxResponse {}
+
+message AwardsList {
+  repeated corepb.Item awards = 1;
+  int64 id                    = 2;
+  string reward_uuid          = 3;
+}
+
+message RewardOpenedBoxRequest {
+  LimitBoxType type  = 1;
+  int64 id           = 2;
+  string reward_uuid = 3;
+}
+
+message RewardOpenedBoxResponse {
+  AwardsList awards = 1;
+}
+
+message DeleteBoxRequest {
+  LimitBoxType type = 1;
+  int64 id          = 2;
+  int64 cnt         = 3;
+}
+
+message DeleteBoxResponse {}
+
+message RewardOpeningBoxRequest {
+  LimitBoxType type  = 1;
+  int64 id           = 2;
+  string reward_uuid = 3;
+}
+
+message RewardOpeningBoxReponse {}
+
+message BoxDetail {
+  int64 id            = 1;  // 宝箱id
+  LimitBoxState state = 2;  // 宝箱状态
+  int64 opening_time  = 3;  // 开启倒计时
+  string reward_uuid  = 4;  // 领奖唯一标识
+  bool islock         = 5;  // 是否锁定
+  int64 cnt           = 6;  // 数量
+}
+
+message GetAllBoxRequest {
+  LimitBoxType type = 1;
+}
+
+message GetAllBoxResponse {
+  int64 bag_grid                   = 1;
+  repeated BoxDetail unopened_list = 4;
+}
+
+message OpenBoxRequest {
+  LimitBoxType type = 1;
+  int64 id          = 2;  // 宝箱id
+  int64 cnt         = 3;  // 宝箱数量
+}
+
+message OpenBoxResponse {}
+
+message RewardAllOpenedBoxRequest {
+  LimitBoxType type = 1;
+}
+
+message RewardAllOpenedBoxResponse {
+  // 奖励合并后返回
+  // 客户端每次调用完领取宝箱之后会重新GetAllBox，所以是不需要uuid的，直接返回items即可
+  repeated corepb.Item awards = 1;
+}

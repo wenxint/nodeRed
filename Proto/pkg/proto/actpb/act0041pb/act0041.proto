@@ -1,0 +1,63 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0041pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0041pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0041Service {
+  // 解锁剧情
+  rpc UnlockStory(UnlockStoryRequest) returns (UnlockStoryReply);
+  // 看完剧情
+  rpc CompleteStory(CompleteStoryRequest) returns (CompleteStoryReply);
+  // 批量领取任务奖励
+  rpc BatchClaimTaskRewards(BatchClaimTaskRewardsRequest) returns (BatchClaimTaskRewardsReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 current_day                  = 1;                      // 当前进行天数
+  map<int64, Story> storys           = 2;                      // 剧情信息：剧情 ID -> 信息
+  repeated actpb.commonpb.Task tasks = 3 [deprecated = true];  // 所有任务详细信息
+  int64 currency_count               = 4;                      // 当前货币数量
+  repeated TaskInfo tasks_info       = 5;                      // 所有任务详情
+}
+
+message TaskInfo {
+  int64 id                         = 1;  // 任务ID
+  string name                      = 2;  // 任务名称
+  string desc                      = 3;  // 任务描述
+  repeated corepb.Item rewards     = 4;  // 任务奖励
+  actpb.commonpb.TaskStatus status = 5;  // 任务状态
+  int64 condition                  = 6;  // 完成条件
+}
+
+message Story {
+  bool unlocked   = 1;  // 是否已解锁
+  bool completed  = 2;  // 是否已看完剧情
+  bool unlockable = 3;  // 是否可解锁
+}
+
+message UnlockStoryRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message UnlockStoryReply {}
+
+message CompleteStoryRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message CompleteStoryReply {}
+
+message BatchClaimTaskRewardsRequest {
+  int64 task_id = 1;  // 优先领取的任务 ID
+}
+
+message BatchClaimTaskRewardsReply {
+  repeated corepb.Item rewards    = 1;  // 领取到的奖励
+  repeated int64 claimed_task_ids = 2;  // 领取到的任务 ID 列表
+}

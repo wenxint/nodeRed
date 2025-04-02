@@ -1,0 +1,23 @@
+// cs protocol
+syntax = "proto3";
+
+package pvppb;
+option go_package = "git.code.oa.com/red/fightsvr/pkg/proto/pvppb";
+
+// 这里定义 pb 化的vkey
+
+// 新的hash上报
+message PbVekyNewHash {
+  uint64 hash         = 1;  // 客户端上报的hash值
+  int32 svr_frame_id  = 2;  //
+  int32 svr_frame_id2 = 3;  // 实际要用的帧id
+
+  uint64 frame_hash    = 4;  // 客户端上报的收到的帧数据的hash值
+}
+
+// 摄像机参数上报
+message PbVekyCameraParam {
+  bool result       = 1;  // 结果 默认50%以上的失败率认为错误
+  int32 total_count = 2;  // 统计次数
+  int32 fail_count  = 3;  // 失败次数
+}

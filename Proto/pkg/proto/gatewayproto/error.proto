@@ -1,0 +1,11 @@
+// cs protocol
+syntax = "proto3";
+
+package gatewaypb;
+option go_package = "git.woa.com/red/api-gateway/pkg/proto/gatewaypb";
+
+enum ApiGatewayError {
+    OK = 0;
+
+    SystemInternalError = 1150001; // 系统内部错误
+}
