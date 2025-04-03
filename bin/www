@@ -86,4 +86,5 @@ function onListening() {
   // console.log(process.env, "process.env");
 
   console.log(`Server running at http://localhost:${addr.port}`);
+  console.log("当前进程ID:", process.pid)
 }
