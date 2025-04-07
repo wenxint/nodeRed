@@ -16,96 +16,57 @@ const rootCache = new Map();
  * @returns {string|null} proto文件路径或null
  */
 function findProtoFileByPackage(packageName) {
+  console.log(packageName, "packageName");
+
   try {
     console.log(`尝试查找包 ${packageName} 的proto文件`);
 
     // 处理包含服务名的情况，例如 actpb.act0152pb.CSAct0152Service
-    // 需要提取实际的包名部分，忽略服务名
     const parts = packageName.split(".");
-
-    // 检查最后一个部分是否是服务名（通常包含Service字样）
-    const lastPart = parts[parts.length - 1];
-    const isServiceName = lastPart.includes("Service");
-
-    // 如果最后一个部分是服务名，则忽略它
-    const packageParts = isServiceName
-      ? parts.slice(0, parts.length - 1)
-      : parts;
+    const targetFolder = parts[1]; // 获取目标文件夹名，例如 act0152pb
 
     // 构建基础目录路径
-    const baseDir = path.join(__dirname, "..", "..", "Proto", "pkg", "proto");
+    const baseDir = path.join(__dirname, "..", "..", "Proto");
 
-    // 尝试查找包目录
-    let packageDir = "";
-    let validPathFound = true;
+    // 递归查找目标文件夹
+    function findTargetFolder(dir) {
+      try {
+        const items = fs.readdirSync(dir);
 
-    for (const part of packageParts) {
-      packageDir = path.join(baseDir, packageDir, part);
-      if (!fs.existsSync(packageDir)) {
-        console.warn(`目录不存在: ${packageDir}`);
-        validPathFound = false;
-        break;
-      }
-    }
+        for (const item of items) {
+          const fullPath = path.join(dir, item);
+          const stats = fs.statSync(fullPath);
 
-    // 如果找到有效路径，尝试在该目录中查找proto文件
-    if (validPathFound) {
-      // 提取模块名，通常是倒数第二个部分，例如从 actpb.act0152pb 提取 act0152pb
-      const moduleName = packageParts[packageParts.length - 1];
+          if (stats.isDirectory()) {
+            // 如果找到目标文件夹
+            if (item === targetFolder) {
+              // 获取文件夹中的文件
+              const files = fs.readdirSync(fullPath);
+              const protoFile = files.find((file) => file.endsWith(".proto"));
 
-      // 构建可能的文件名模式
-      const possibleFileNames = [
-        `${moduleName.replace("pb", "")}.proto`, // act0152.proto
-        "api.proto",
-        `${moduleName}.proto`, // act0152pb.proto
-      ];
-
-      // 在包目录中查找proto文件
-      for (const fileName of possibleFileNames) {
-        const filePath = path.join(packageDir, fileName);
-        if (fs.existsSync(filePath)) {
-          console.log(`找到proto文件: ${filePath}`);
-          return filePath;
-        }
-      }
-    }
-
-    // 如果上面的方法找不到，尝试更灵活的搜索方式
-    // 例如，对于 actpb.act0152pb.CSAct0152Service，尝试直接查找 act0152pb 目录
-    if (!validPathFound && packageParts.length >= 2) {
-      const possibleModuleNames = [
-        packageParts[packageParts.length - 1], // 最后一个部分
-        packageParts[1], // 第二个部分（通常是模块名）
-      ];
-
-      for (const moduleName of possibleModuleNames) {
-        // 尝试直接构建路径
-        const directPath = path.join(baseDir, packageParts[0], moduleName);
-
-        if (fs.existsSync(directPath)) {
-          console.log(`找到可能的模块目录: ${directPath}`);
-
-          // 构建可能的文件名
-          const possibleFileNames = [
-            `${moduleName.replace("pb", "")}.proto`, // act0152.proto
-            "api.proto",
-            `${moduleName}.proto`, // act0152pb.proto
-          ];
-
-          // 在目录中查找proto文件
-          for (const fileName of possibleFileNames) {
-            const filePath = path.join(directPath, fileName);
-            if (fs.existsSync(filePath)) {
-              console.log(`找到proto文件: ${filePath}`);
-              return filePath;
+              if (protoFile) {
+                const filePath = path.join(fullPath, protoFile);
+                console.log(`找到proto文件: ${filePath}`);
+                return filePath;
+              }
             }
+            // 递归搜索子目录
+            const result = findTargetFolder(fullPath);
+            if (result) return result;
           }
         }
+        return null;
+      } catch (err) {
+        console.error(`搜索目录失败: ${err.message}`);
+        return null;
       }
     }
 
-    console.warn(`未找到包 ${packageName} 的proto文件`);
-    return null;
+    const result = findTargetFolder(baseDir);
+    if (!result) {
+      console.warn(`未找到包 ${packageName} 的proto文件`);
+    }
+    return result;
   } catch (error) {
     console.error(`查找proto文件失败: ${error.message}`);
     return null;
@@ -197,6 +158,7 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
       const packagePrefix = parts.slice(0, parts.length - 2).join(".");
       typeName = `${packagePrefix}.${methodName}Reply`;
     }
+    console.log(typeName, "typeName");
 
     // 查找消息类型并解码
     const Response = root.lookupType(typeName);
