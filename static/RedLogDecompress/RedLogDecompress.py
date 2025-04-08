@@ -16,7 +16,13 @@ def add_prefix_to_filename(path, prefix):
     
 if __name__ == '__main__':
     logpath = sys.argv[1]
-    dllpath = os.path.dirname(os.path.abspath(__file__)) + '/libshoco.dll'
+    # 根据操作系统选择正确的库文件
+    if sys.platform == 'win32':
+        lib_name = 'libshoco.dll'
+    else:
+        lib_name = 'libshoco.so'
+    
+    dllpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), lib_name)
     new_path = add_prefix_to_filename(logpath, "Decompressed") 
  
     shoco = ctypes.CDLL(dllpath)
