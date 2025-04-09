@@ -33,19 +33,31 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
     // 执行Python脚本
     const python = spawn('python', [pythonScriptPath, req.file.path]);
 
+    let stdOutput = '';
     let errorOutput = '';
+
+    // 收集标准输出
+    python.stdout.on('data', (data) => {
+      const output = data.toString();
+      stdOutput += output;
+      console.log(`Python输出: ${output}`);
+    });
 
     // 收集错误输出
     python.stderr.on('data', (data) => {
-      errorOutput += data.toString();
+      const error = data.toString();
+      errorOutput += error;
+      console.error(`Python错误: ${error}`);
     });
 
     // 等待Python脚本执行完成
     await new Promise((resolve, reject) => {
       python.on('close', (code) => {
         if (code !== 0) {
+          console.error(`Python脚本退出码: ${code}`);
           reject(new Error(`Python脚本执行失败: ${errorOutput}`));
         } else {
+          console.log(`Python脚本执行完成，输出: ${stdOutput}`);
           resolve();
         }
       });
