@@ -7,11 +7,11 @@ import base64
 import re
 import platform
 import stat
-import struct
 import traceback
 import time
 import ctypes
 import subprocess
+import signal
 
 def add_prefix_to_filename(path, prefix):
     dir_name, file_name = os.path.split(path)
@@ -20,30 +20,11 @@ def add_prefix_to_filename(path, prefix):
     new_path = os.path.join(dir_name, new_file_name)
     return new_path
 
-# 手动实现与libshoco兼容的解压函数
-def manual_shoco_decompress(input_data):
-    """
-    手动实现一个简单的解压算法，保留原始二进制数据
-    """
-    print("使用手动实现的解压算法...")
-
-    try:
-        # 确保input_data是bytes类型
-        if not isinstance(input_data, bytes):
-            input_data = bytes(input_data)
-
-        print(f"输入数据大小: {len(input_data)} 字节")
-
-        # 直接返回原始数据，保留所有二进制内容
-        # 这只是一个退路，如果实际的libshoco解压失败
-        print(f"手动解压完成，返回原始数据，大小: {len(input_data)} 字节")
-        return input_data
-    except Exception as e:
-        print(f"手动解压失败: {e}")
-        traceback.print_exc()
-
-        # 创建空字节数组作为最后的退路
-        return b''
+# 简单的备用解压实现
+def fallback_manual_decompress(input_data):
+    """备用解压函数，当无法使用libshoco库时使用"""
+    print("警告: 使用备用解压方法，返回原始数据")
+    return input_data
 
 # 使用libshoco库解压数据
 def decompress_with_libshoco(input_data):
@@ -65,8 +46,7 @@ def decompress_with_libshoco(input_data):
     # 检查库文件是否存在
     if not os.path.exists(lib_path):
         print(f"错误: 找不到库文件 {lib_path}")
-        print("尝试使用手动实现的解压函数")
-        return manual_shoco_decompress(input_data)
+        return fallback_manual_decompress(input_data)
 
     print(f"找到库文件: {lib_path}")
 
@@ -83,39 +63,29 @@ def decompress_with_libshoco(input_data):
     print(f"库文件大小: {os.path.getsize(lib_path)} 字节")
     print(f"库文件权限: {oct(os.stat(lib_path).st_mode)}")
 
-    # 尝试重新编译libshoco（仅在Linux上）
-    if sys.platform != 'win32':
-        try:
-            compile_script = os.path.join(script_dir, 'compile_libshoco_linux.sh')
-            if os.path.exists(compile_script):
-                print("尝试重新编译libshoco库...")
-                compile_cmd = f"cd {script_dir} && bash {compile_script}"
-                compile_result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
-                if compile_result.returncode == 0:
-                    print("编译成功！")
-                    print(compile_result.stdout)
-                else:
-                    print(f"编译失败，错误: {compile_result.stderr}")
-            else:
-                print(f"编译脚本 {compile_script} 不存在，跳过编译")
-        except Exception as e:
-            print(f"尝试编译时出错: {e}")
-
     # 尝试加载库文件
     shoco = None
 
     print(f"库文件路径: {lib_path}")
 
-    # 尝试多种加载方式
-    try:
-        print(f"尝试使用绝对路径加载库: {lib_path}")
-        shoco = ctypes.CDLL(lib_path)
-        print(f"成功加载库文件: {lib_path}")
-    except Exception as e:
-        print(f"使用绝对路径加载库失败: {e}")
+    # 加载库文件 - Windows路径
+    if sys.platform == 'win32':
+        try:
+            print(f"尝试加载Windows DLL: {lib_path}")
+            shoco = ctypes.CDLL(lib_path)
+            print(f"成功加载Windows DLL")
+        except Exception as e:
+            print(f"加载Windows DLL失败: {e}")
+            return fallback_manual_decompress(input_data)
+    # 加载库文件 - Linux路径
+    else:
+        try:
+            print(f"尝试使用绝对路径加载库: {lib_path}")
+            shoco = ctypes.CDLL(lib_path)
+            print(f"成功加载库文件: {lib_path}")
+        except Exception as e:
+            print(f"使用绝对路径加载库失败: {e}")
 
-        # 在Linux上尝试使用环境变量加载
-        if sys.platform != 'win32':
             try:
                 # 设置环境变量
                 os.environ['LD_LIBRARY_PATH'] = f"{script_dir}:{os.environ.get('LD_LIBRARY_PATH', '')}"
@@ -126,14 +96,21 @@ def decompress_with_libshoco(input_data):
                 print(f"通过LD_LIBRARY_PATH成功加载库文件")
             except Exception as e2:
                 print(f"通过LD_LIBRARY_PATH加载失败: {e2}")
+
                 # 尝试从源码直接加载
                 try:
                     print("尝试从源码直接加载shoco库...")
                     shoco_source = os.path.join(script_dir, 'shoco', 'shoco.c')
                     if os.path.exists(shoco_source):
                         # 在Linux上使用系统编译器编译
-                        compile_cmd = f"gcc -shared -fPIC -o {lib_path} {shoco_source} -I{os.path.join(script_dir, 'shoco')}"
+                        print("直接使用gcc编译源代码...")
+                        safe_lib_path = lib_path.replace('"', '\\"')
+                        safe_source_path = shoco_source.replace('"', '\\"')
+                        safe_include_path = os.path.join(script_dir, 'shoco').replace('"', '\\"')
+
+                        compile_cmd = f"gcc -std=c99 -O3 -Wall -fPIC -shared \"{safe_source_path}\" -o \"{safe_lib_path}\" -I\"{safe_include_path}\""
                         print(f"执行编译命令: {compile_cmd}")
+
                         compile_result = subprocess.run(compile_cmd, shell=True, capture_output=True, text=True)
                         if compile_result.returncode == 0:
                             print("从源码编译成功！尝试重新加载...")
@@ -141,27 +118,25 @@ def decompress_with_libshoco(input_data):
                             print("从源码编译的库加载成功！")
                         else:
                             print(f"从源码编译失败: {compile_result.stderr}")
+                            return fallback_manual_decompress(input_data)
                     else:
                         print(f"找不到源码文件: {shoco_source}")
+                        return fallback_manual_decompress(input_data)
                 except Exception as e3:
                     print(f"从源码加载失败: {e3}")
 
-                # 尝试加载系统库
-                try:
-                    from ctypes import cdll
-                    shoco = cdll.LoadLibrary(lib_path)
-                    print(f"通过cdll.LoadLibrary成功加载库")
-                except Exception as e3:
-                    print(f"所有加载方法都失败: {e3}")
-                    print("尝试使用手动实现的解压函数")
-                    return manual_shoco_decompress(input_data)
-
-    # 已经在上面尝试过加载库文件，这里不需要重复
+                    # 最后一次尝试 - 使用cdll.LoadLibrary
+                    try:
+                        from ctypes import cdll
+                        shoco = cdll.LoadLibrary(lib_path)
+                        print(f"通过cdll.LoadLibrary成功加载库")
+                    except Exception as e4:
+                        print(f"所有加载方法都失败: {e4}")
+                        return fallback_manual_decompress(input_data)
 
     if shoco is None:
         print("无法加载libshoco库")
-        print("尝试使用手动实现的解压函数")
-        return manual_shoco_decompress(input_data)
+        return fallback_manual_decompress(input_data)
 
     # 设置函数参数和返回类型
     try:
@@ -170,47 +145,66 @@ def decompress_with_libshoco(input_data):
         print("成功配置函数参数类型")
     except Exception as e:
         print(f"设置函数参数和返回类型失败: {e}")
-        print("尝试使用手动实现的解压函数")
-        return manual_shoco_decompress(input_data)
+        return fallback_manual_decompress(input_data)
 
     # 调用解压函数
     try:
-        # 为大文件输出进度日志
+        # 数据准备
         total_size = len(input_data)
         print(f"开始调用shoco_decompress函数，数据大小: {total_size} 字节")
 
-        # 创建输出缓冲区，确保足够大
+        # 创建输出缓冲区
         buffer_size = len(input_data) * 2
+        print(f"准备分配内存缓冲区，大小: {buffer_size} 字节")
         buffer = ctypes.create_string_buffer(buffer_size)
+        print(f"内存缓冲区分配完成")
 
         # 确保input_data是bytes类型
         if not isinstance(input_data, bytes):
             print("转换input_data为bytes类型")
             input_data = bytes(input_data)
 
-        # 创建一个指向输入数据的C类型指针
+        # 创建指向输入数据的C类型指针
         c_input = ctypes.c_char_p(input_data)
+        print(f"C类型指针创建完成，准备调用解压函数")
+
+        # 设置超时机制（仅Linux）
+        if sys.platform != 'win32':
+            def timeout_handler(signum, frame):
+                raise TimeoutError("解压操作超时")
+
+            signal.signal(signal.SIGALRM, timeout_handler)
+            timeout_seconds = 300  # 5分钟超时
+            signal.alarm(timeout_seconds)
+            print(f"已设置{timeout_seconds}秒超时保护")
+
+        print(f"正在调用解压函数，这可能需要一些时间...")
 
         # 调用库函数解压
         decompressSize = shoco.shoco_decompress(c_input, len(input_data), buffer, buffer_size)
 
+        # 取消超时（仅Linux）
+        if sys.platform != 'win32':
+            signal.alarm(0)
+
         elapsed = time.time() - start_time
         print(f"解压完成，用时: {elapsed:.1f}秒")
-        print(f"压缩大小: {len(input_data)}, 解压大小: {decompressSize}")
+        print(f"压缩大小: {len(input_data)}字节, 解压大小: {decompressSize}字节")
 
         if decompressSize <= 0:
             print(f"警告: 解压结果大小异常: {decompressSize}")
-            print("尝试使用手动实现的解压函数")
-            return manual_shoco_decompress(input_data)
+            return fallback_manual_decompress(input_data)
 
         # 使用正确的方式获取解压后的数据
         result = bytes(buffer.raw[:decompressSize])
         return result
+    except TimeoutError as te:
+        print(f"解压操作超时: {te}")
+        return fallback_manual_decompress(input_data)
     except Exception as e:
         print(f"调用库函数解压失败: {e}")
         traceback.print_exc()
-        print("尝试使用手动实现的解压函数")
-        return manual_shoco_decompress(input_data)
+        return fallback_manual_decompress(input_data)
 
 if __name__ == '__main__':
     try:
