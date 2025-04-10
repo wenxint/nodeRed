@@ -209,13 +209,16 @@ def decompress_with_libshoco(input_data):
 if __name__ == '__main__':
     try:
         # 确保所有输出都立即刷新，这对于Node.js捕获输出很重要
+        # 明确指定使用UTF-8编码，解决控制台乱码问题
         sys.stdout = io.TextIOWrapper(
             io.FileIO(sys.stdout.fileno(), 'w'),
+            encoding='utf-8',
             write_through=True,
             line_buffering=True
         )
         sys.stderr = io.TextIOWrapper(
             io.FileIO(sys.stderr.fileno(), 'w'),
+            encoding='utf-8',
             write_through=True,
             line_buffering=True
         )
