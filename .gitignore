@@ -24,3 +24,7 @@ pnpm-debug.log*
 # Embedded Git repositories
 static/RedLogDecompress/shoco/
 *.sw?
+
+# Large log files
+static/RedLogDecompress/RedAppDecompressed.log
+static/RedLogDecompress/RedApp.log
