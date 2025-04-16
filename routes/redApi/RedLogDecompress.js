@@ -17,10 +17,10 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
     }
 
     // 检查文件类型
-    if (!req.file.originalname.endsWith('.log')) {
-      fs.unlinkSync(req.file.path);
-      throw new AppError(400, '只允许上传.log文件');
-    }
+    // if (!req.file.originalname.endsWith('.log')) {
+    //   fs.unlinkSync(req.file.path);
+    //   throw new AppError(400, '只允许上传.log文件');
+    // }
 
     // Python脚本路径
     const pythonScriptPath = path.join(__dirname, '..', '..', 'static', 'RedLogDecompress', 'RedLogDecompress.py');
@@ -107,7 +107,16 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
     });
 
     // 获取解压后的文件路径
-    const decompressedFilePath = req.file.path.replace('.log', 'Decompressed.log');
+    let decompressedFilePath;
+    if (req.file.path.endsWith('.log')) {
+      decompressedFilePath = req.file.path.replace('.log', 'Decompressed.log');
+    } else if (req.file.path.endsWith('.redlog')) {
+      decompressedFilePath = req.file.path.replace('.redlog', 'Decompressed.redlog');
+    } else {
+      // 默认情况，使用.log作为后缀
+      decompressedFilePath = req.file.path + 'Decompressed.log';
+    }
+
 
     // 检查解压后的文件是否存在
     if (!fs.existsSync(decompressedFilePath)) {
@@ -137,7 +146,16 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    const decompressedPath = req.file ? req.file.path.replace('.log', 'Decompressed.log') : null;
+    let decompressedPath = null;
+    if (req.file) {
+      if (req.file.path.endsWith('.log')) {
+        decompressedPath = req.file.path.replace('.log', 'Decompressed.log');
+      } else if (req.file.path.endsWith('.redlog')) {
+        decompressedPath = req.file.path.replace('.redlog', 'Decompressed.redlog');
+      } else {
+        decompressedPath = req.file.path + 'Decompressed.log';
+      }
+    }
     if (decompressedPath && fs.existsSync(decompressedPath)) {
       fs.unlinkSync(decompressedPath);
     }
