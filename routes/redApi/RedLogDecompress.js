@@ -41,13 +41,17 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
       shell: true,
       env: {
         ...process.env,
-        PYTHONIOENCODING: 'utf-8', // 确保正确编码
-        LD_LIBRARY_PATH: path.join(__dirname, '..', '..', 'static', 'RedLogDecompress') // 指定库路径
+        PYTHONIOENCODING: 'utf-8',
+        LD_LIBRARY_PATH: path.join(__dirname, '..', '..', 'static', 'RedLogDecompress')
       }
     });
 
     let stdOutput = '';
     let errorOutput = '';
+
+    // 设置超时时间（5分钟）
+    const TIMEOUT = 5 * 60 * 1000;
+    let timeoutId;
 
     // 收集标准输出
     python.stdout.on('data', (data) => {
@@ -71,7 +75,15 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
 
     // 等待Python脚本执行完成
     await new Promise((resolve, reject) => {
+      // 设置超时处理
+      timeoutId = setTimeout(() => {
+        // 杀死进程
+        python.kill();
+        reject(new Error('Python脚本执行超时'));
+      }, TIMEOUT);
+
       python.on('close', (code) => {
+        clearTimeout(timeoutId);
         console.log(`Python脚本退出码: ${code}`);
         if (code !== 0) {
           reject(new Error(`Python脚本执行失败，退出码: ${code}\n${errorOutput}`));
@@ -83,9 +95,15 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
 
       // 添加错误处理
       python.on('error', (err) => {
+        clearTimeout(timeoutId);
         console.error(`启动Python进程失败: ${err}`);
         reject(new Error(`启动Python进程失败: ${err.message}`));
       });
+    }).finally(() => {
+      // 确保进程被清理
+      if (!python.killed) {
+        python.kill();
+      }
     });
 
     // 获取解压后的文件路径
