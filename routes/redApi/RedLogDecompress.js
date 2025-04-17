@@ -17,10 +17,10 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
     }
 
     // 检查文件类型
-    // if (!req.file.originalname.endsWith('.log')) {
-    //   fs.unlinkSync(req.file.path);
-    //   throw new AppError(400, '只允许上传.log文件');
-    // }
+    if (!req.file.originalname.endsWith('.log') && !req.file.originalname.endsWith('.redlog')) {
+      fs.unlinkSync(req.file.path);
+      throw new AppError(400, '只允许上传.log和.redlog文件');
+    }
 
     // Python脚本路径
     const pythonScriptPath = path.join(__dirname, '..', '..', 'static', 'RedLogDecompress', 'RedLogDecompress.py');
