@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const createUpload = require("../../middleware/upload");
-const upload = createUpload();
+
 const path = require("path");
 const protobuf = require("protobufjs");
 const fs = require("fs");
