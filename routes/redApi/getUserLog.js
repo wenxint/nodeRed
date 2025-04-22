@@ -109,7 +109,10 @@ router.post('/getUserLog', async (req, res, next) => {
       }
 
       // 查找所有.redlog结尾的文件
-      const redlogFiles = findRedlogFiles(extractDir, extractDir);
+      const allRedlogFiles = findRedlogFiles(extractDir, extractDir);
+
+      // 过滤掉包含RedFSPProfiler的文件
+      const redlogFiles = allRedlogFiles.filter(item => !item.file.includes('RedFSPProfiler'));
 
       // 使用统一响应格式返回结果
       ResponseHelper.success(res, {
@@ -189,7 +192,10 @@ router.get('/checkLogFiles/:openId', async (req, res, next) => {
       });
 
       // 查找所有.redlog结尾的文件
-      const redlogFiles = findRedlogFiles(extractDir, extractDir);
+      const allRedlogFiles = findRedlogFiles(extractDir, extractDir);
+
+      // 过滤掉包含RedFSPProfiler的文件
+      const redlogFiles = allRedlogFiles.filter(item => !item.file.includes('RedFSPProfiler'));
 
       // 使用统一响应格式返回结果
       return ResponseHelper.success(res, {
