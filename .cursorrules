@@ -1,0 +1,80 @@
+{
+  "description": "Node-Red项目代码组织规则",
+  "rules": [
+    {
+      "name": "项目架构总览",
+      "description": "项目采用Express框架构建，按照功能模块进行目录划分"
+    },
+    {
+      "name": "目录结构规则",
+      "description": "项目主要目录及其用途",
+      "directories": {
+        "routes": "路由处理目录，包含所有API路由定义",
+        "routes/redApi": "redApi模块相关路由，每个文件对应一个独立的路由模块",
+        "middleware": "中间件目录，包含错误处理、文件上传等中间件",
+        "common": "公共代码目录，存放可复用的工具函数和通用逻辑",
+
+        "services": "业务服务层，实现具体业务逻辑",
+        "views": "视图模板目录",
+        "public": "静态资源目录",
+        "static": "额外静态资源目录",
+        "bin": "可执行文件和启动脚本",
+        "logs": "日志文件目录"
+      }
+    },
+    {
+      "name": "文件命名规则",
+      "description": "文件命名采用驼峰命名法，以功能模块为前缀"
+    },
+    {
+      "name": "路由组织规则",
+      "description": "redApi路由自动加载机制：app.js中自动扫描routes/redApi目录下的所有.js文件并注册为路由"
+    },
+    {
+      "name": "错误处理规则",
+      "description": "统一使用middleware/errorHandler.js中的AppError类进行错误处理，格式为: new AppError(statusCode, message)"
+    },
+    {
+      "name": "代码抽象规则",
+      "description": "公共代码应放在common目录下，按功能模块划分文件"
+    },
+    {
+      "name": "Proto文件组织",
+      "description": "Proto文件按包名组织，支持动态查找和解析protobuf数据"
+    },
+    {
+      "name": "中间件规则",
+      "description": "自定义中间件放在middleware目录，统一导出并在app.js中注册"
+    },
+    {
+      "name": "文件上传规则",
+      "description": "使用middleware/upload.js中的createUpload函数处理文件上传"
+    },
+    {
+      "name": "环境配置规则",
+      "description": "使用.env文件管理环境变量，根据NODE_ENV加载不同环境配置"
+    },
+    {
+      "name": "异步错误处理",
+      "description": "使用try-catch和next(error)模式处理异步错误，确保错误传递给全局错误处理中间件"
+    }
+  ],
+  "conventions": {
+    "modules": {
+      "redApi": "按文件进行路由划分，每个文件对应一个独立功能模块",
+      "errorHandling": "使用new AppError(statusCode, message)统一进行错误处理",
+      "publicCode": "公共代码统一放在common目录下，新建的公共模块也应遵循此规则"
+    },
+    "coding": {
+      "documentation": "使用JSDoc注释风格记录函数用途和参数",
+      "errorHandling": "使用try-catch块并传递错误给next函数",
+      "asyncPattern": "使用async/await处理异步操作"
+    }
+  },
+  "fileTypes": {
+    ".js": "Node.js源代码文件",
+
+    ".env": "环境变量配置文件",
+    ".ejs": "视图模板文件"
+  }
+}

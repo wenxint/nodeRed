@@ -127,6 +127,7 @@ router.post('/getUserLog', async (req, res, next) => {
 
       return; // 已经发送响应，直接返回
     } catch (error) {
+      console.log(error,'error');
       // 处理网络错误
       let message = '获取日志文件失败';
       let statusCode = 500;
@@ -208,7 +209,7 @@ router.get('/checkLogFiles/:openId', async (req, res, next) => {
       res.status(200).json(responseData);
 
       // 在返回响应后异步删除临时文件夹（延迟5秒）
-      deleteDirectoryAsync(extractDir, 5000);
+      deleteDirectoryAsync(extractDir, 0);
 
       return; // 已经发送响应，直接返回
     } else {

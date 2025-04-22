@@ -203,6 +203,7 @@ async function downloadAndExtractZip(openId, forceRedownload = false) {
 
     return extractDir;
   } catch (error) {
+    console.log(error,'error22555');
     console.error(`下载或解压ZIP文件失败: ${error.message}`);
 
     // 清理可能存在的部分文件
