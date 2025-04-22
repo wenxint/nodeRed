@@ -9,6 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const { AppError } = require("../../middleware/errorHandler");
 const { decompressRedLog } = require("../../common/decompressLogshoco");
+const ResponseHelper = require("../../common/response");
 
 // 获取配置好的 upload 实例
 const upload = createUpload();
@@ -42,12 +43,10 @@ router.post("/uploadRedLogDecompress", upload.single("file"), async (req, res, n
       fs.unlinkSync(req.file.path);
       fs.unlinkSync(decompressedFilePath);
 
-      // 设置响应头和状态码
-      res.status(200).json({
-        success: true,
-        data: content.toString('base64'),
-        logs: "文件解压成功"
-      });
+      // 使用统一响应格式返回结果
+      return ResponseHelper.success(res, {
+        data: content.toString('base64')
+      }, "文件解压成功");
     } catch (decompressionError) {
       console.error('文件解压失败:', decompressionError);
       throw new AppError(500, `文件解压失败: ${decompressionError.message}`);

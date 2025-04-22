@@ -7,6 +7,7 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const { AppError } = require('../../middleware/errorHandler');
+const ResponseHelper = require('../../common/response');
 const {
   decompressRedLog,
   downloadAndExtractZip,
@@ -66,13 +67,11 @@ router.post('/openIdDecompressFile', async (req, res, next) => {
 
       console.log(`文件解压成功: ${decompressedFilePath}`);
 
-      // 返回解压后的文件内容
-      res.status(200).json({
-        success: true,
-        message: '文件解压成功',
+      // 使用统一响应格式返回结果
+      ResponseHelper.success(res, {
         fileName: path.basename(decompressedFilePath),
         data: content.toString('base64') // 转换为base64格式发送
-      });
+      }, '文件解压成功');
 
      // 在返回响应后异步删除临时文件夹（延迟0毫秒）
      deleteDirectoryAsync(userLogDir, 0);// 延迟删除，确保响应已经发送

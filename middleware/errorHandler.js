@@ -10,13 +10,18 @@ class AppError extends Error {
   }
 }
 
+const ResponseHelper = require('../common/response');
+
 // 开发环境错误处理
 const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
+  // 使用统一响应格式
+  return res.status(err.statusCode).json({
     success: false,
-    error: err,
     message: err.message,
-    stack: err.stack
+    error: {
+      stack: err.stack,
+      ...err
+    }
   });
 };
 
@@ -24,20 +29,16 @@ const sendErrorDev = (err, res) => {
 const sendErrorProd = (err, res) => {
   // 可操作的错误：发送给客户端
   if (err.isOperational) {
-    res.status(err.statusCode).json({
-      success: false,
-      message: err.message
-    });
+    // 使用统一响应格式
+    return ResponseHelper.error(res, err.message, err.statusCode);
   }
   // 编程错误：不泄露错误详情
   else {
     // 记录错误
     console.error('ERROR 💥', err);
 
-    res.status(500).json({
-      success: false,
-      message: '服务器内部错误'
-    });
+    // 使用统一响应格式
+    return ResponseHelper.error(res, '服务器内部错误', 500);
   }
 };
 

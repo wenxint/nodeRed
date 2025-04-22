@@ -7,6 +7,7 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const { AppError } = require('../../middleware/errorHandler');
+const ResponseHelper = require('../../common/response');
 const {
   decompressRedLog,
   downloadAndExtractZip,
@@ -110,17 +111,12 @@ router.post('/getUserLog', async (req, res, next) => {
       // 查找所有.redlog结尾的文件
       const redlogFiles = findRedlogFiles(extractDir, extractDir);
 
-      // 保存返回结果，以便在删除文件夹前返回
-      const responseData = {
-        success: true,
-        message: '文件已成功下载并解压',
+      // 使用统一响应格式返回结果
+      ResponseHelper.success(res, {
         extractPath: extractDir,
         files: processedFiles,
         redlogFiles: redlogFiles
-      };
-
-      // 返回成功信息
-      res.status(200).json(responseData);
+      }, '文件已成功下载并解压');
 
       // 在返回响应后异步删除临时文件夹（延迟0毫秒）
       deleteDirectoryAsync(extractDir, 0);
@@ -195,29 +191,18 @@ router.get('/checkLogFiles/:openId', async (req, res, next) => {
       // 查找所有.redlog结尾的文件
       const redlogFiles = findRedlogFiles(extractDir, extractDir);
 
-      // 保存返回结果，以便在删除文件夹前返回
-      const responseData = {
-        success: true,
+      // 使用统一响应格式返回结果
+      return ResponseHelper.success(res, {
         exists: true,
-        message: '已找到日志文件',
         extractPath: extractDir,
-        files: files,
-        redlogFiles: redlogFiles
-      };
-
-      // 返回成功信息
-      res.status(200).json(responseData);
-
-      // 在返回响应后异步删除临时文件夹（延迟5秒）
-      deleteDirectoryAsync(extractDir, 0);
-
-      return; // 已经发送响应，直接返回
+        files,
+        redlogFiles
+      }, '日志文件已存在');
     } else {
-      return res.status(200).json({
-        success: true,
-        exists: false,
-        message: '未找到该openId的日志文件'
-      });
+      // 使用统一响应格式返回结果
+      return ResponseHelper.success(res, {
+        exists: false
+      }, '日志文件不存在，需要下载');
     }
   } catch (error) {
     console.error('检查日志文件错误:', error);

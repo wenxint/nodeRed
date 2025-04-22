@@ -13,7 +13,7 @@
         "routes/redApi": "redApi模块相关路由，每个文件对应一个独立的路由模块",
         "middleware": "中间件目录，包含错误处理、文件上传等中间件",
         "common": "公共代码目录，存放可复用的工具函数和通用逻辑",
-
+        "Proto": "Protocol Buffers定义目录，包含proto文件和相关结构",
         "services": "业务服务层，实现具体业务逻辑",
         "views": "视图模板目录",
         "public": "静态资源目录",
@@ -35,10 +35,17 @@
       "description": "统一使用middleware/errorHandler.js中的AppError类进行错误处理，格式为: new AppError(statusCode, message)"
     },
     {
+      "name": "统一响应格式规则",
+      "description": "所有API响应必须使用common/response.js中的ResponseHelper类处理，保持一致的响应格式"
+    },
+    {
       "name": "代码抽象规则",
       "description": "公共代码应放在common目录下，按功能模块划分文件"
     },
-
+    {
+      "name": "Proto文件组织",
+      "description": "Proto文件按包名组织，支持动态查找和解析protobuf数据"
+    },
     {
       "name": "中间件规则",
       "description": "自定义中间件放在middleware目录，统一导出并在app.js中注册"
@@ -60,7 +67,8 @@
     "modules": {
       "redApi": "按文件进行路由划分，每个文件对应一个独立功能模块",
       "errorHandling": "使用new AppError(statusCode, message)统一进行错误处理",
-      "publicCode": "公共代码统一放在common目录下，新建的公共模块也应遵循此规则"
+      "publicCode": "公共代码统一放在common目录下，新建的公共模块也应遵循此规则",
+      "responseFormat": "使用ResponseHelper统一API响应格式：success(), error(), page()"
     },
     "coding": {
       "documentation": "使用JSDoc注释风格记录函数用途和参数",
@@ -70,7 +78,7 @@
   },
   "fileTypes": {
     ".js": "Node.js源代码文件",
-
+    ".proto": "Protocol Buffers定义文件",
     ".env": "环境变量配置文件",
     ".ejs": "视图模板文件"
   }

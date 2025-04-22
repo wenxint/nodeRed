@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const deepseek = require("../services/deepseek");
 const { AppError } = require('../middleware/errorHandler');
+const ResponseHelper = require('../common/response');
 
 // 文本生成接口
-router.post("/generate-text", async (req, res) => {
+router.post("/generate-text", async (req, res, next) => {
   try {
     const { prompt, options } = req.body;
     if (!prompt) {
@@ -12,14 +13,14 @@ router.post("/generate-text", async (req, res) => {
     }
 
     const result = await deepseek.generateText(prompt, options);
-    res.json(result);
+    return ResponseHelper.success(res, result, '文本生成成功');
   } catch (error) {
     next(error);
   }
 });
 
 // 代码生成接口
-router.post("/generate-code", async (req, res) => {
+router.post("/generate-code", async (req, res, next) => {
   try {
     const { prompt, options } = req.body;
     if (!prompt) {
@@ -27,7 +28,7 @@ router.post("/generate-code", async (req, res) => {
     }
 
     const result = await deepseek.generateCode(prompt, options);
-    res.json(result);
+    return ResponseHelper.success(res, result, '代码生成成功');
   } catch (error) {
     next(error);
   }

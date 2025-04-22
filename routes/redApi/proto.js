@@ -6,6 +6,7 @@ const path = require("path");
 const protobuf = require("protobufjs");
 const fs = require("fs");
 const { AppError } = require("../../middleware/errorHandler");
+const ResponseHelper = require("../../common/response");
 
 // 缓存已加载的Root实例，避免重复加载
 const rootCache = new Map();
@@ -231,17 +232,13 @@ router.post("/proto/submit", async (req, res, next) => {
       fullTypeName
     );
 
-    // 返回结果
-    res.json({
-      success: true,
-      message: "解析成功",
-      data: {
-        packageName,
-        methodName,
-        protoFile: protoFilePath,
-        result: jsonResult,
-      },
-    });
+    // 使用统一响应格式返回结果
+    return ResponseHelper.success(res, {
+      packageName,
+      methodName,
+      protoFile: protoFilePath,
+      result: jsonResult,
+    }, "解析成功");
   } catch (error) {
     next(error);
   }
