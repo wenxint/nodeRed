@@ -1,0 +1,26 @@
+// cs protocol
+syntax = "proto3";
+
+package roompb.actteampb;
+option go_package = "git.woa.com/red/roomsvr/pkg/proto/roompb/actteampb";
+
+// 用于客户端调用的服务接口
+// 均需要在 metadata 里带上 "x-room-id: 房间ID"
+service Service {
+  rpc NotifyReady(NotifyReadyRequest) returns (NotifyReadyReply);
+}
+
+message NotifyReadyRequest {}
+
+message NotifyReadyReply {}
+
+message NotifyReadyNtf {
+  string room_id = 1;
+}
+
+message StartGameRequest {}
+message StartGameReply {}
+
+message InviteMessage {
+  int64 act_id = 1;
+}

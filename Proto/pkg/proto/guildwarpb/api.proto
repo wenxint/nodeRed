@@ -1,0 +1,51 @@
+// cs protocol
+syntax = "proto3";
+
+package guildwarpb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/guildwarpb";
+
+import "corepb/guildwar_common.proto";
+import "corepb/fight_common.proto";
+
+// 总结算通知包
+message GuildWarResultNotify {
+  bool win_flag    = 1;  // true-赢 false-输
+  int64 next_phase = 2;  // 下一场比赛的阶段，对应 GuildWarPhase，如果为OffSeason(10)，表示获得冠军
+  int64 begin_time = 3;  // 下一场比赛的开始时间
+}
+
+// 战场通知包类型
+enum BattleFieldNotifyType {
+  BFNT_UNKNOWN                 = 0;  // 未知
+  BFNT_FULL_AJUST_ORDER        = 1;  // 全量更新 调整顺序 （战场里的数据需全部刷新一遍）
+  BFNT_FULL_UP_DOWN            = 2;  // 全量更新 上阵和下阵可能导致一些顺序的变化 （战场里的数据需全部刷新一遍）
+  BFNT_FULL_PHASE_SETTLE       = 3;  // 全量更新 一个阶段总结算
+  BFNT_INCR_ENTER_BATTLE_FIELD = 4;  // 增量更新 进入战场 （如果玩家已经在战场就更新一下数据；如果玩家不在战场，则将玩家插入到指定同盟的末尾）
+  BFNT_INCR_PREPARE_FIGHT      = 5;  // 增量更新 战斗前的3秒倒计时 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_BEGIN_FIGHT        = 6;  // 增量更新 倒计时结束后进入战斗 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_END_FIGHT          = 7;  // 增量更新 战斗结束展示结果 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_BUY_WINNING_STREAK = 8;  // 增量更新 购买连胜次数 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_EAT_CUISINE        = 9;  // 增量更新 食用料理 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_WAIT_GAME_START = 10;  // 增量更新 倒计时结束后,创建战斗并等待响应 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+  BFNT_INCR_WAIT_PLAYER_ENTER = 11;  // 增量更新 倒计时结束后,创建战斗前，等待玩家进入战场 （战场里的数据 刷新players中指定gid对应的数据, players只包含有变化的玩家）
+}
+
+// 战报
+message GuildWarBattleReport {
+  int64 left_player                   = 1;  // 左边的玩家
+  int64 right_player                  = 2;  // 右边的俺家
+  corepb.FightResultType fight_result = 3;  // 0-左边赢右边 1-平局 2-右边赢左边
+  int64 win_count                     = 4;  // 胜利次数
+}
+
+// 战场通知包
+message GuildWarBattleFieldNotify {
+  int64 type                                = 1;  // 参考枚举 BattleFieldNotifyType
+  corepb.GuildWarGuildFightInfo left_guild  = 2;  // 左边的同盟【蓝】
+  corepb.GuildWarGuildFightInfo right_guild = 3;  // 右边的同盟【红】
+  int64 atime_ns                            = 4;  // 访问时间（纳秒），用于与EnterBattleFieldReply的时序判断
+  repeated GuildWarBattleReport reports     = 5;  // 战报，最多三条
+}
+
+// 比赛即将开始的通知包
+message GuildWarFightBeginNotify {}

@@ -1,0 +1,35 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.reportpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/reportpb";
+
+service ReportService {
+  // 玩家不良行为举报协议
+  rpc ReportPlayer(ReportPlayerRequest) returns (ReportPlayerResponse);
+}
+
+message ReportPlayerRequest {
+  int64 report_gid = 1;  // 被举报玩家 GID
+
+  int64 report_scene            = 2;  // 举报场景
+  repeated int64 report_reasons = 3;  // 举报原因
+  int64 report_category         = 4;  // 举报大类
+  string report_desc            = 5;  // 举报描述
+
+  // 如果是举报聊天、公会资料，需要填写举报内容
+  string report_content = 6;  // 举报内容
+
+  // 如果是举报对局，需要填写对局ID和对局时间
+  int64 report_game_trace_id = 7;  // 对局ID
+  int64 report_battle_time   = 8;  // 对局 unix 时间戳
+
+  // 如果举报公会，需要填写公会ID和公会名
+  int64 report_guild_id    = 9;   // 公会ID
+  string report_guild_name = 10;  // 公会名
+
+  // 如果举报聊天语音消息，需要填写 fileid
+  string report_voice_fileid = 11;  // 语音消息 gvoice fileid
+}
+
+message ReportPlayerResponse {}

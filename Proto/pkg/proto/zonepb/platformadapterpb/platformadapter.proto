@@ -1,0 +1,25 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.platformadapterpb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/platformadapterpb";
+
+service PlatformAdapterService {
+  // 上报打开平台专属入口
+  rpc ReportOpenPlatformEntrance(ReportOpenPlatformEntranceRequest) returns (ReportOpenPlatformEntranceResponse);
+  // 上报从平台游戏中心启动
+  rpc ReportLaunchFromGameCenter(ReportLaunchFromGameCenterRequest) returns (ReportLaunchFromGameCenterResponse);
+}
+
+message ReportOpenPlatformEntranceRequest {
+  int64 entry_id = 1;  // 入口id（同system_id）
+}
+
+message ReportOpenPlatformEntranceResponse {}
+
+message ReportLaunchFromGameCenterRequest {
+  string third_openid = 1;  // 第三方平台openid
+}
+
+message ReportLaunchFromGameCenterResponse {}

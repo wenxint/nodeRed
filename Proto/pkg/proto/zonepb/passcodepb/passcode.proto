@@ -1,0 +1,64 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.passcodepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/passcodepb";
+
+service Service {
+  rpc Settings(SettingsRequest) returns (SettingsReply) {}                    // 获取设置
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsReply) {}  // 更新设置
+  rpc Verify(VerifyRequest) returns (VerifyReply) {}                          // 校验密码
+  rpc ChangePasscode(ChangePasscodeRequest) returns (ChangePasscodeReply) {}  // 修改密码
+  rpc RequestReset(RequestResetRequest) returns (RequestResetReply) {}        // 请求强制重置
+  rpc CancelReset(CancelResetRequest) returns (CancelResetReply) {}           // 取消强制重置
+}
+
+message Status {
+  bool enabled                      = 1;  // 是否开启二级密码，为否时不必再弹检验密码弹窗
+  bool verified                     = 2;  // 是否已验证过，为是时不必再弹检验密码弹窗
+  int64 reset_at                    = 3;  // 如果不是 0 说明请求了重置，值是到点重置时间的 unix 时间戳
+  bool verify_only_once_per_session = 4;  // 是否单次登录期间不再验证
+}
+
+message Settings {
+  bool verify_only_once_per_session = 1;  // 是否单次登录期间不再验证
+}
+
+message SettingsRequest {}
+
+message SettingsReply {
+  Status status = 2;  //  // 其他设置，包括：二级密码是否设置；强制关闭二级密码状态
+}
+
+message UpdateSettingsRequest {
+  Settings settings = 1;  // 新设置
+}
+
+message UpdateSettingsReply {
+  Settings settings = 1;  // 更新完后的设置
+}
+
+message VerifyRequest {
+  string passcode = 1;  // 密码
+}
+
+message VerifyReply {
+  bool ok = 1;  // 密码是否正确
+}
+
+message ChangePasscodeRequest {
+  string old_passcode = 1;  // 新设置时这里留空
+  string new_passcode = 2;  // 为空时表示取消二级密码
+}
+
+message ChangePasscodeReply {}
+
+message RequestResetRequest {}
+
+message RequestResetReply {
+  int64 reset_at = 1;  // 到点重置时间的 unix 时间戳
+}
+
+message CancelResetRequest {}
+
+message CancelResetReply {}

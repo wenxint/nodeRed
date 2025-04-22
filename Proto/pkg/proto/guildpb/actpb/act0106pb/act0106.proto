@@ -1,0 +1,352 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.actpb.act0106pb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/actpb/act0106pb";
+
+
+import "corepb/common.proto";
+
+// 同盟寻宝大赛
+service TreasureHuntService {
+  rpc QueryStateInfo(QueryStateInfoRequest) returns (QueryStateInfoReply);        // 主界面信息
+  rpc CheckTavernEvent(CheckTavernEventRequest) returns (CheckTavernEventReply);  // 酒馆npc事件前置判断
+  rpc OpenerDone(OpenerDoneRequest) returns (OpenerDoneReply);                    // 开场播放完成
+  rpc PlotEnd(PlotEndRequest) returns (PlotEndReply);                             // 剧情结算
+  rpc QueryTaverInfo(QueryTaverInfoRequest) returns (QueryTaverInfoReply);        // 酒馆信息
+  rpc Shops(ShopsRequest) returns (ShopsReply);                                   // 交易所信息
+  rpc BuyShopItem(BuyShopItemRequest) returns (BuyShopItemReply);                 // 购买商店商品
+  rpc WelfareInfo(WelfareInfoRequest) returns (WelfareInfoReply);                 // 福利奖励信息
+  rpc WelfareAward(WelfareAwardRequest) returns (WelfareAwardReply);              // 福利领奖
+  rpc HunterUnionInfo(HunterUnionInfoRequest) returns (HunterUnionInfoReply);     // 猎人工会信息
+  rpc HunterUnionHire(HunterUnionHireRequest) returns (HunterUnionHireReply);     // 猎人工会雇佣
+
+  rpc QueryBigMap(QueryBigMapRequest) returns (QueryBigMapReply);                                      // 查询大地图
+  rpc ClaimTreasureTaskReward(ClaimTreasureTaskRewardRequest) returns (ClaimTreasureTaskRewardReply);  // 领取寻宝任务进度奖励（批量领奖）
+  rpc QueryManual(QueryManualRequest) returns (QueryManualReply);                                      // 查询情报
+  rpc QueryReward(QueryRewardRequest) returns (QueryRewardReply);                                      // 查询奖励（同盟任务和排名奖励）
+  rpc GuildInnerRanking(GuildInnerRankingRequest) returns (GuildInnerRankingReply);                    // 盟内排名
+  rpc QueryTreasureMap(QueryTreasureMapRequest) returns (QueryTreasureMapReply);                       // 查询宝藏地图
+  rpc FlipGrid(FlipGridRequest) returns (FlipGridReply);                                               // 翻转格子
+  rpc CompleteGridEvent(CompleteGridEventRequest) returns (CompleteGridEventReply);                    // 完成格子事件
+}
+
+message QueryStateInfoRequest {}
+
+message RankParam {
+  bool is_warzone_open                                = 1;  // 战区是否开启 true-开启了 false-未开启
+  string rank_instance                                = 2;  // 排行榜的instance
+  string rank_id_personal_treasure_hunt_value_zone    = 3;  // 个人寻宝值小区
+  string rank_id_personal_treasure_hunt_value_warzone = 4;  // 个人寻宝值战区
+  string rank_id_guild_treasure_hunt_value_zone       = 5;  // 同盟寻宝值小区
+  string rank_id_guild_treasure_hunt_value_warzone    = 6;  // 同盟寻宝值战区
+}
+
+message QueryStateInfoReply {
+  corepb.PersonalDisplayInfo display_info = 1;  // 玩家展示信息
+  int64 guild_flag                        = 2;  // 同盟旗帜
+  string guild_name                       = 3;  // 同盟名称
+  int64 player_hunt_value                 = 4;  // 个人寻宝值
+  int64 player_rank                       = 5;  // 个人寻宝值排名
+  int64 guild_hunt_value                  = 6;  // 同盟寻宝值
+  int64 guild_rank                        = 7;  // 同盟寻宝值排名
+
+  corepb.Item hunt_coins = 8;   // 寻宝币
+  repeated NpcInfo npcs  = 9;   // npc
+  bool is_play           = 10;  // 是否播放剧情
+  int64 plot_id          = 11;  // 起始剧情ID
+  repeated Pos npc_pos   = 12;  // npc位置
+  RankParam rank_param   = 13;  // 排行榜参数
+}
+
+message NpcInfo {
+  int64 npc_id   = 1;
+  int64 event_id = 2;  // 事件id
+  int64 plot_id  = 3;  // 剧情id
+}
+
+message CheckTavernEventRequest {
+  int64 event_id = 1;  // 事件id
+}
+message CheckTavernEventReply {}
+
+message OpenerDoneRequest {
+  int64 plot_id   = 1;  // 剧情id
+  int64 plot_step = 2;  // 剧情步骤
+}
+message OpenerDoneReply {
+  repeated corepb.Item rewards = 1;
+}
+
+message PlotEndRequest {
+  int64 plot_id   = 1;  // 剧情id
+  int64 plot_step = 2;  // 剧情步骤
+  int64 event_id  = 3;  // 事件id（酒馆事件或者主界面NPC事件）, 也可以是宝藏ID（个人宝藏或者同盟宝藏）
+}
+message PlotEndReply {
+  repeated corepb.Item rewards = 1;
+}
+
+message QueryTaverInfoRequest {}
+message QueryTaverInfoReply {
+  repeated NpcInfo up_npcs   = 1;  // 上方npc
+  repeated NpcInfo down_npcs = 2;  // 下方npc
+  repeated Pos npc_pos       = 3;  // npc位置
+}
+
+message Pos {
+  int64 x = 1;
+  int64 y = 2;
+}
+
+message ShopsRequest {}
+message ShopsReply {
+  repeated ShopInfo shops = 1;  // 商品列表
+}
+message ShopInfo {
+  int64 shop_id         = 1;  // 商品ID
+  corepb.Item shop_item = 2;  // 商品道具
+  corepb.Item cost_item = 3;  // 消耗道具.
+  int64 bought_count    = 4;  // 已购买次数
+  int64 buy_limit_count = 5;  // 限制总购买次数
+  int64 open_time       = 6;  // 上线时间
+}
+
+message BuyShopItemRequest {
+  int64 shop_id   = 1;  // 商品ID
+  int64 buy_count = 2;  // 购买次数
+}
+message BuyShopItemReply {
+  repeated corepb.Item shop_item = 1;  // 商品道具
+}
+
+message WelfareInfoRequest {}
+message WelfareInfoReply {
+  repeated corepb.Item rewards = 1;  // 奖励展示
+}
+
+message WelfareAwardRequest {}
+message WelfareAwardReply {
+  repeated corepb.Item rewards = 1;  // 实际领奖
+}
+
+message HunterUnionInfoRequest {}
+message HunterUnionInfoReply {
+  repeated corepb.Item rewards = 1;  // 奖励展示
+  corepb.Item hire_cost        = 2;  // 雇佣费用
+  int64 hire_times             = 3;  // 剩余雇佣次数
+}
+
+message HunterUnionHireRequest {}
+message HunterUnionHireReply {
+  repeated corepb.Item rewards = 1;  // 获得奖励
+}
+
+message QueryBigMapRequest {}
+
+message ProgressState {
+  int64 id                     = 1;  // 进度id，用于领奖时唯一区分
+  int64 progress               = 2;  // 当前进度
+  int64 target_progress        = 3;  // 目标进度
+  RewardStatus status          = 4;  // 状态 0-不可领奖 1-可领奖 2-已领奖
+  repeated corepb.Item rewards = 5;  // 奖励
+}
+
+message TreasureInfo {
+  int64 id                               = 1;   // 宝藏ID
+  int64 type                             = 2;   // 宝藏类型 0-个人宝藏 1-同盟宝藏
+  string name                            = 3;   // 宝藏名称
+  string desc                            = 4;   // 宝藏描述
+  EventStatus status                     = 5;   // 宝藏状态 0-未解锁 1-可搜寻 2-已完成
+  int64 coordinate_x                     = 6;   // 坐标x
+  int64 coordinate_y                     = 7;   // 坐标y
+  int64 quality_type                     = 8;   // 寻宝品质 (个人宝藏专属） 0-未定义 1-普通宝藏 2-珍贵宝藏
+  repeated corepb.Item rewards           = 9;   // 通关奖励 （个人宝藏专属）
+  int64 progress                         = 10;  // 寻宝进度（同盟宝藏专属）
+  repeated ProgressState progress_states = 11;  // 进度任务（同盟宝藏专属）
+  int64 event_type                       = 12;  // 事件类型 0-无 1-剧情 2-宝藏地图
+  int64 event_arg                        = 13;  // 事件参数 剧情对应剧情ID 宝藏地图对应地图ID
+}
+
+message BigMapAreaInfo {
+  int64 id                        = 1;  // 区域ID
+  string name                     = 2;  // 区域名称
+  bool unlocked                   = 3;  // 是否解锁
+  bool played                     = 4;  // 是否播放过动画
+  repeated TreasureInfo treasures = 5;  // 宝藏信息
+}
+
+message QueryBigMapReply {
+  repeated BigMapAreaInfo areas = 1;
+}
+
+message QueryManualRequest {}
+
+// 道具情报
+message ItemManual {
+  message ItemState {
+    int64 id      = 1;  // 道具id
+    string name   = 2;  // 是否需要?
+    int64 sort_id = 3;  // 排序id
+    int64 status  = 4;  // 状态 0-未收集 1-已收集
+  }
+  int64 collected_count    = 1;  // 已收集的个数
+  repeated ItemState items = 2;  // 所有道具
+}
+
+// 宝藏情报
+message TreasureManual {
+  message TreasureState {
+    int64 id                     = 1;  // 宝藏ID
+    int64 type                   = 2;  // 宝藏类型 0-未定义 1-普通 2-珍贵
+    string name                  = 3;  // 宝藏名称
+    string desc                  = 4;  // 宝藏描述
+    EventStatus status           = 5;  // 宝藏状态 0-未解锁 1-可搜寻 2-已完成
+    int64 npc_id                 = 6;  // 情报NPCID
+    repeated corepb.Item rewards = 7;  // 奖励
+    int64 event_type             = 8;  // 事件类型 0-无 1-剧情 2-宝藏地图
+    int64 event_arg              = 9;  // 事件参数 剧情对应剧情ID 宝藏地图对应地图ID
+  }
+  int64 completed_count            = 1;  // 已完成的个数
+  repeated TreasureState treasures = 2;  // 所有宝藏
+}
+
+// NPC事件情报
+message NPCEventManual {
+  message NPCEventState {
+    int64 id                     = 1;  // 事件ID
+    string desc                  = 2;  // 事件描述
+    EventStatus status           = 3;  // 状态 0-未解锁 1-已解锁 2-已完成
+    int64 npc_id                 = 4;  // 情报NPCID
+    repeated corepb.Item rewards = 5;  // 奖励
+  }
+  int64 completed_count         = 1;  // 已完成的个数
+  repeated NPCEventState events = 2;  // 所有NPC事件
+}
+
+message QueryManualReply {
+  ItemManual item_manual          = 1;  // 道具情报
+  TreasureManual treasure_manual  = 2;  // 宝藏情报
+  NPCEventManual npc_event_manual = 3;  // NPC事件情报
+}
+
+message QueryRewardRequest {}
+
+message TreasureTask {
+  int64 id                               = 1;  // 宝藏ID
+  string name                            = 2;  // 宝藏名称
+  EventStatus status                     = 3;  // 状态 0-未解锁 1-已解锁 2-已完成
+  int64 unlock_param                     = 4;  // 解锁参数(需要的寻宝值)
+  int64 progress                         = 5;  // 当前进度
+  repeated ProgressState progress_states = 6;  // 进度条
+  int64 hunt_value                       = 7;  // 当前寻宝值
+}
+
+message RankReward {
+  int64 param                  = 1;  // 参数 1 2 4 8 16 50 ...
+  string desc                  = 2;  // 描述
+  repeated corepb.Item rewards = 3;  // 奖励
+}
+
+message QueryRewardReply {
+  repeated TreasureTask treasure_tasks = 1;  // 任务列表
+  bool is_warzone_open                 = 2;  // 战区是否开启 true-开启了 false-未开启
+  repeated RankReward rank_rewards     = 3;  // 排行榜奖励
+}
+
+message ClaimTreasureTaskRewardRequest {
+  int64 treasure_id = 1;  // 宝藏ID
+  int64 task_id     = 2;  // 任务ID
+}
+message ClaimTreasureTaskRewardReply {
+  repeated corepb.Item rewards           = 1;  // 奖励
+  repeated ProgressState progress_states = 2;  // 有变化的进度任务
+}
+
+message GuildInnerRankingRequest {}
+
+// 玩家用的rankdata
+message PlayerRankData {
+  int64 gid    = 1;   // 玩家ID
+  int64 rank   = 2;   // 排行 0-未进排行榜  其他为具体的排名
+  int64 w1     = 3;   // 用于排行的分数1
+  int64 w2     = 4;   // 用于排行的分数2
+  int64 w3     = 5;   // 用于排行的分数3
+  int64 level  = 6;   // 玩家等级
+  string name  = 7;   // 玩家名字
+  int64 zone   = 8;   // 玩家所在的小区
+  int64 role   = 9;   // 玩家角色
+  int64 gender = 10;  // 性别
+}
+
+message GuildInnerRankingReply {
+  repeated PlayerRankData rank_list = 1;  // 排行信息
+  PlayerRankData my_rank_info       = 2;  // 查询者自己的同盟排名信息 不在榜上排名为0
+  int64 total_rank_count            = 3;  // 当前榜单总数
+}
+
+message QueryTreasureMapRequest {
+  int64 treasure_id = 1;  // 宝藏ID
+  int64 map_id      = 2;  // 地图ID
+}
+
+message GridState {
+  int64 id       = 1;  // 格子id
+  bool opened    = 2;  // 是否翻开了
+  bool activated = 3;  // （如果有事件的话）是否激活了
+  bool completed = 4;  // （如果有事件的话）是否完成了
+}
+
+message HuntPlayerInfo {
+  int64 gid       = 1;
+  string plat_pic = 2;  // 头像
+}
+
+message QueryTreasureMapReply {
+  bool completed                        = 1;  // 是否完成了
+  string name                           = 2;  // 地图名称
+  int64 treasure_type                   = 3;  // 0-个人宝藏 1-同盟宝藏
+  repeated GridState grids              = 4;  // 格子状态信息 （格子详细信息建议读表）
+  repeated corepb.Item obtained_rewards = 5;  // 已获得的奖励
+  repeated HuntPlayerInfo players       = 6;  // （同盟宝藏有效）已完成寻宝的5名探索者
+  int64 total_complete_count            = 7;  // （同盟宝藏有效）总的完成寻宝人数
+}
+
+message FlipGridRequest {
+  int64 treasure_id = 1;  // 宝藏ID
+  int64 map_id      = 2;  // 地图ID
+  int64 grid_id     = 3;  // 格子ID
+}
+
+message FlipGridReply {
+  repeated GridState changed_grids = 1;  // 变化的格子状态信息 （格子详细信息建议读表）
+}
+
+message CompleteGridEventRequest {
+  int64 treasure_id = 1;  // 宝藏ID
+  int64 map_id      = 2;  // 地图ID
+  int64 grid_id     = 3;  // 格子ID
+}
+message CompleteGridEventReply {
+  bool completed                        = 1;  // 是否完成了
+  repeated GridState changed_grids      = 2;  // 变化的格子状态信息 （格子详细信息建议读表）
+  repeated corepb.Item rewards          = 3;  // 当前获得的奖励
+  repeated corepb.Item obtained_rewards = 4;  // 已获得的所有奖励
+}
+
+// 事件或者宝藏（特殊事件）的状态
+enum EventStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NONE   = 0;  // 未激活 或未解锁
+  ACTIVE = 1;  // 已激活 或可搜寻
+  DONE   = 2;  // 已完成
+}
+
+// 奖励状态
+enum RewardStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNDONE    = 0;  // 不可领奖
+  AVAILABLE = 1;  // 可领奖
+  RECEIVED  = 2;  // 已领奖
+}

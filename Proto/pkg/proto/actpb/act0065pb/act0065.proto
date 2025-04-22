@@ -1,0 +1,115 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0065pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0065pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0065Service {
+  // 填色
+  rpc FillPaint(FillPaintRequest) returns (FillPaintReply);
+  // 赠送颜料列表
+  rpc GivePaintList(GivePaintListRequest) returns (GivePaintListReply);
+  // 赠送颜料
+  rpc GivePaint(GivePaintRequest) returns (GivePaintReply);
+}
+
+message ActGetDetailRequest {}
+
+enum RewardStatus {
+  REWARD_STATUS_UNKNOWN = 0;  // 未知类型
+  REWARD_STATUS_UNDONE  = 1;  // 不可领奖
+  REWARD_STATUS_REWARD  = 2;  // 可领奖
+  REWARD_STATUS_FINISH  = 3;  // 已领奖
+}
+
+message RewardDetail {
+  int64 reward_id                   = 1;  // 奖励 ID
+  int64 reward_progress             = 2;  // 奖励所需要的进度
+  repeated corepb.Item reward_items = 3;  // 奖励道具列表
+  RewardStatus reward_status        = 4;  // 奖励状态
+}
+
+message ReceivePaintRecord {
+  BasicInfo basic_info = 1;  // 玩家基本信息
+  int64 paint_id       = 2;  // 赠送颜料 ID（与配置表中 PaintType 相对应）
+}
+
+message ActGetDetailReply {
+  int64 current_progress                           = 1;  // 当前填色（奖励）进度
+  map<int64, int64> paint_count                    = 2;  // 颜料 ID（与配置表中 PaintType 相对应） -> 颜料数量
+  repeated actpb.commonpb.Task tasks               = 3;  // 所有任务详细信息
+  repeated RewardDetail rewards                    = 4;  // 所有奖励详细信息
+  repeated ReceivePaintRecord receive_paint_record = 5;  // 领取到他人赠送的颜料列表
+  int64 today_given_times                          = 6;  // 当日被他人赠送次数
+  int64 today_given_times_limit                    = 7;  // 当日被他人赠送次数上限
+  int64 give_paint_min_count                       = 8;  // 可赠送颜料的最小数量
+}
+
+message ActDeliverRewardReply {
+  map<int64, int64> paint_count = 1;  // 颜料 ID（与配置表中 PaintType 相对应） -> 颜料数量
+}
+
+message FillPaintRequest {
+  bool is_one_click_fill = 1;  // 是否为一键填色
+}
+
+message FillPaintReply {
+  repeated corepb.Item awards   = 1;  // 填色后的奖励列表
+  map<int64, int64> paint_count = 2;  // 颜料 ID（与配置表中 PaintType 相对应） -> 颜料数量
+  int64 current_progress        = 3;  // 当前填色（奖励）进度
+  repeated RewardDetail rewards = 4;  // 所有奖励详细信息
+}
+
+enum ListAction {
+  LIST_ACTION_UNKNOWN = 0;  // 未知类型
+  LIST_ACTION_OPEN    = 1;  // 打开赠送列表
+  LIST_ACTION_CLOSE   = 2;  // 关闭赠送列表
+}
+
+message GivePaintListRequest {
+  ListAction action = 1;  // 操作赠送列表行为
+}
+
+enum PlayerStatus {
+  PLAYER_STATUS_UNKNOWN = 0;  // 未知类型
+  PLAYER_STATUS_GIVE    = 1;  // 可以赠送
+  PLAYER_STATUS_FULL    = 2;  // 当日赠送已满
+  PLAYER_STATUS_CLOSE   = 3;  // 活动暂未开启
+}
+
+enum PlayerType {
+  PLAYER_TYPE_UNKNOWN  = 0;  // 未知玩家类型
+  PLAYER_TYPE_GAME     = 1;  // 游戏好友
+  PLAYER_TYPE_PLATFORM = 2;  // 平台好友
+  PLAYER_TYPE_GUILD    = 3;  // 同盟好友
+}
+
+message BasicInfo {
+  int64 gid                                        = 1;  // 玩家 ID
+  PlayerType player_type                           = 2;  // 玩家类型
+  corepb.PersonalDisplayInfo personal_display_info = 3;  // 玩家个人信息
+}
+
+message PlayerDetail {
+  BasicInfo basic_info          = 1;  // 玩家基本信息
+  map<int64, int64> paint_count = 2;  // 颜料 ID（与配置表中 PaintType 相对应） -> 颜料数量
+  PlayerStatus status           = 3;  // 玩家状态
+}
+
+message GivePaintListReply {
+  repeated PlayerDetail players = 1;  // 赠送颜料列表玩家信息
+  int64 today_give_times        = 2;  // 当日已赠送次数
+  int64 today_give_times_limit  = 3;  // 当日赠送次数上限
+}
+
+message GivePaintRequest {
+  int64 given_gid = 1;  // 被赠送玩家 gid
+  int64 paint_id  = 2;  // 赠送颜料 ID（与配置表中 PaintType 相对应）
+}
+
+message GivePaintReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+}

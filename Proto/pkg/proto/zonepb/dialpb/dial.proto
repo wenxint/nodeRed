@@ -1,0 +1,71 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.dialpb;
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/zonepb/specialpackpb/specialpack.proto";
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/dialpb";
+
+// 空岛贝系统
+service DialService {
+  // 拉取所有空岛贝的信息
+  rpc DialInfos(DialInfosRequest) returns (DialInfosReply);
+
+  // 解锁一个空岛贝
+  rpc UnlockDial(UnlockDialRequest) returns (UnlockDialReply);
+
+  // 强化改造一个空岛贝
+  rpc ReformDial(ReformDialRequest) returns (ReformDialReply);
+}
+
+message DialInfosRequest {}
+
+message DialInfosReply {
+  map<int64, DialInfo> dial_infos                         = 1;  // 空岛贝信息
+  int64 fc                                                = 2;  // 整个空岛贝系统的实力值
+  repeated zonepb.specialpackpb.SpecialPack special_packs = 3;  // 所拥有的限时礼包
+}
+
+message DialSystemInfo {
+  map<int64, DialInfo> dial_infos = 1;  // 空岛贝信息
+  int64 unlocked_dail_count       = 2;  // 已解锁的空岛贝数量
+}
+
+message DialInfo {
+  int64 dial_id                           = 1;   // 空岛贝ID
+  bool unlocked                           = 2;   // 是否已经解锁
+  bool can_unlock                         = 3;   // 如果尚未解锁，现在是否已经达成解锁条件
+  int64 fragment                          = 4;   // 如果尚未达成解锁条件，当前碎片的收集个数
+  int64 level                             = 5;   // 如果已经解锁，当前等级
+  corepb.FightAttr attr                   = 6;   // 如果已经解锁，该空岛贝的属性加成
+  ItemInfo item_info                      = 7;   // 如果已经解锁，升到下一级所需的道具相关信息（用于红点计算）
+  corepb.FightSkill skill_info            = 8;   // 技能相关信息，包含空岛贝等级加成和工厂加成
+  corepb.FightSkill next_level_skill_info = 9;   // 技能下一等级信息，包含空岛贝等级加成和工厂加成
+  int64 unlock_player_level_needed        = 10;  // 解锁所需玩家等级
+}
+
+message UnlockDialRequest {
+  int64 dial_id = 1;  // 要解锁的空岛贝ID
+}
+
+message ReformDialRequest {
+  int64 dial_id = 1;  // 要强化/改造的空岛贝ID
+}
+
+message UnlockDialReply {
+  DialInfo dial_info = 1;  // 空岛贝解锁/强化后，新的空岛贝信息
+  int64 fc           = 2;  // 新的实力值
+}
+
+message ReformDialReply {
+  DialInfo dial_info = 1;  // 空岛贝解锁/强化后，新的空岛贝信息
+  int64 fc           = 2;  // 新的实力值
+}
+
+message ItemInfo {
+  repeated corepb.Item items_owned  = 1;  // 玩家持有的道具信息
+  repeated corepb.Item items_needed = 2;  // 实际需要的道具信息
+}

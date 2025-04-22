@@ -1,0 +1,160 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0057pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0057pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0057Service {
+  // 邀请队友
+  rpc InviteMember(InviteMemberRequest) returns (InviteMemberReply);
+  // 请离队友
+  rpc LeaveMember(LeaveMemberRequest) returns (LeaveMemberReply);
+  // 被邀请记录信息
+  rpc InviteRecord(InviteRecordRequest) returns (InviteRecordReply);
+  // 接受邀请
+  rpc AcceptInvite(AcceptInviteRequest) returns (AcceptInviteReply);
+  // 可邀请好友列表
+  rpc InviteFriendList(InviteFriendListRequest) returns (InviteFriendListReply);
+  // 拒绝好友邀请
+  rpc RejectInvitation(RejectInvitationRequest) returns (RejectInvitationReply);
+}
+
+message ActGetDetailRequest {}
+
+enum SailingStatus {
+  SAILING_STATUS_UNKNOWN = 0;  // 未知类型
+  SAILING_STATUS_UNDONE  = 1;  // 不可领奖
+  SAILING_STATUS_REWARD  = 2;  // 可领奖
+  SAILING_STATUS_FINISH  = 3;  // 已领奖
+}
+
+message SailingReward {
+  int64 id                          = 1;  // 奖励 ID
+  int64 sailing_progress            = 2;  // 奖励所需的小队航程
+  repeated corepb.Item reward_items = 3;  // 奖励道具列表
+  SailingStatus status              = 4;  // 奖励状态
+}
+
+message BasicInfo {
+  int64 gid                                        = 1;  // 玩家 ID
+  corepb.PersonalDisplayInfo personal_display_info = 3;  // 玩家个人信息
+}
+
+message MemberChangedDetail {
+  repeated MemberDetail join_team_members  = 1;  // 加入小队玩家
+  repeated MemberDetail leave_team_members = 2;  // 离开小队玩家
+}
+
+message MemberDetail {
+  BasicInfo basic_info        = 1;  // 成员基础信息
+  int64 today_progress        = 2;  // 成员今日航程
+  int64 leave_team_timestamp  = 3;  // 可离队时间戳
+  int64 yesterday_daily_score = 4;  // 昨日活跃度
+  int64 low_daily_score       = 5;  // 低活跃度，用于请离判断
+}
+
+// TeamChangedNotify 队伍变更 notify
+message TeamChangedNotify {}
+
+// NewInviteNotify 新邀请 notify
+message NewInviteNotify {}
+
+message ActGetDetailReply {
+  int64 total_progress                      = 1;   // 小队总航程
+  int64 new_progress                        = 2;   // 新增航程
+  repeated MemberDetail member_detail       = 3;   // 小队成员详情
+  repeated actpb.commonpb.Task daily_tasks  = 4;   // 每日任务详细信息
+  repeated actpb.commonpb.Task weekly_tasks = 5;   // 每周任务详细信息
+  repeated SailingReward rewards            = 6;   // 所有航程奖励详细信息
+  MemberChangedDetail member_changed_detail = 7;   // 小队成员变化信息
+  int64 friendship_buddy_times              = 8;   // 友情援护可借用伙伴次数
+  bool has_new_invited_flag                 = 9;   // 是否有新的被邀请标志
+  bool has_undone_invited_flag              = 10;  // 是否有未处理的被邀请标志
+  int64 total_friendship_buddy_times        = 11;  // 友情援护可借用伙伴总次数
+}
+
+// 领取奖励请求 reward_type 含义 - 1 表示每日任务奖励；2 表示每周任务奖励；3 表示航程奖励
+message ActDeliverRewardReply {
+  int64 total_progress = 1;  // 小队总航程
+}
+
+message InviteMemberRequest {
+  int64 member_gid = 1;  // 邀请队友 gid
+}
+
+message InviteMemberReply {}
+
+message LeaveMemberRequest {
+  int64 member_gid = 1;  // 请离队友 gid
+}
+
+message LeaveMemberReply {}
+
+message InviteRecordRequest {}
+
+message InviteRecrod {
+  BasicInfo inviter              = 1;  // 邀请人信息
+  repeated BasicInfo invite_team = 2;  // 邀请人队伍成员信息
+}
+
+message InviteRecordReply {
+  repeated InviteRecrod invite_record = 1;  // 邀请记录列表
+}
+
+message AcceptInviteRequest {
+  int64 invite_gid = 1;  // 接受的玩家 gid
+}
+
+message AcceptInviteReply {}
+
+enum ListType {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LIST_TYPE_GUILD  = 0;  // 同盟好友
+  LIST_TYPE_FRIEND = 1;  // 游戏好友
+}
+
+enum ListAction {
+  LIST_ACTION_UNKNOWN = 0;  // 未知类型
+  LIST_ACTION_OPEN    = 1;  // 打开邀请列表
+  LIST_ACTION_SCROLL  = 2;  // 滚动邀请列表
+  LIST_ACTION_CLOSE   = 3;  // 关闭邀请列表
+}
+
+message InviteFriendListRequest {
+  ListAction list_action = 1;  // 列表操作
+  ListType list_type     = 2;  // 列表类型
+  int64 begin_position   = 3;  // 开始位置
+  int64 end_position     = 4;  // 结束位置
+}
+
+message InviteFriendDetail {
+  BasicInfo basic_info         = 1;  // 玩家基础信息
+  int64 today_sailing_progress = 2;  // 今日航程进度
+  bool is_online               = 3;  // 是否在线
+  int64 last_login_ts          = 4;  // 上一次登陆时间戳
+  bool is_join_team            = 5;  // 是否已经加入队伍
+  bool is_open                 = 6;  // 是否开启活动
+  bool is_already_invited      = 7;  // 是否已经邀请过
+}
+
+message InviteFriendListReply {
+  repeated InviteFriendDetail invite_friends = 1;  // 可邀请好友列表
+  int64 total_count                          = 2;  // 列表总人数
+  int64 begin_position                       = 3;  // 开始位置
+  int64 end_position                         = 4;  // 结束位置
+}
+
+message LoadoutData {
+  int64 remain_borrowing_times = 1;  // 剩余可借用次数
+  int64 total_borrowing_times  = 2;  // 总可借用次数
+}
+
+message RejectInvitationRequest {
+  int64 member_gid = 1;  // 拒绝队友 gid
+}
+
+message RejectInvitationReply {
+}

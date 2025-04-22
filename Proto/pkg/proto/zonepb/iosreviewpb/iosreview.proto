@@ -1,0 +1,11 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.iosreviewpb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/iosreviewpb";
+
+// 通知要进行IOS评分
+message IOSReviewNotify {
+  int64 task_id = 1;  // 任务ID
+}

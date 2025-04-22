@@ -1,0 +1,28 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0002pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0002pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0002Service {
+  rpc ActGetTaskAward(ActGetTaskAwardRequest) returns (ActGetTaskAwardReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task task_list = 2;
+  int64 level                            = 3;
+}
+
+message ActGetTaskAwardRequest {
+  int32 task_id = 1;
+}
+
+message ActGetTaskAwardReply {
+  actpb.commonpb.Task task    = 1;
+  repeated corepb.Item awards = 3;
+}

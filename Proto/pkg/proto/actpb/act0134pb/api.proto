@@ -1,0 +1,53 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0134pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0134pb";
+
+import "corepb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {}
+
+service CSAct0134Service {
+
+  // 外围功能
+
+  // 战斗相关
+}
+
+// ----------- 这里是GameStartMsg和GameOverMsg中各透传字段解包用的message定义 ------------
+
+enum FactionType {
+  FACTION_TYPE_UNKNOWN = 0;
+  FACTION_TYPE_GHOST   = 1;  // 鬼
+  FACTION_TYPE_HUMAN   = 2;  // 人类
+}
+
+message GameStartPlayerInfo {
+  FactionType faction_type = 1;  // 阵营
+}
+
+message GameStartPassthroughData {
+  enum CharacterType {
+    CHARACTER_TYPE_UNKNOWN = 0;
+    CHARACTER_TYPE_MORIA   = 1;
+    CHARACTER_TYPE_GHOST   = 2;
+    CHARACTER_TYPE_PLAYER  = 3;
+  }
+  // 角色类型 + 伙伴id -> 固定属性
+  message AttrCfg {
+    repeated int64 buddy_id      = 1;
+    CharacterType character_type = 2;
+    corepb.FightAttr attrs       = 3;  // 固定属性
+  }
+
+  repeated AttrCfg attr_cfgs = 1;
+}
+
+message GameOverPlayerInfo {
+  FactionType faction_type = 1;  // 阵营
+  int64 score              = 2;  // 得分
+  bool is_win              = 3;  // 是否胜利
+}

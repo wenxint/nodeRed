@@ -1,0 +1,64 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0016pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0016pb";
+
+import "corepb/common.proto";
+
+// CSAct0016Service 奖励领取服务
+service CSAct0016Service {
+  //  DeliverActReward 领取活动奖励
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+  // ActClaimHiddenRewards 领取藏品奖励
+  rpc ActClaimHiddenRewards(ActClaimHiddenRewardsRequest) returns (ActClaimHiddenRewardsReply);
+}
+
+// DeliverActRewardRequest 奖励领取请求
+message DeliverActRewardRequest {
+  TaskType task_type = 1;  // 任务类型.
+}
+
+// DeliverActRewardReply 返回玩家领取到的奖励
+message DeliverActRewardReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+  corepb.Item hidden_rewards  = 2;  // 藏品奖励信息
+}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  int64 level                               = 1;   // 玩家等级
+  int64 strength                            = 2;   // 玩家实力
+  repeated int64 level_rewarded_task_ids    = 3;   // 成长征程页签已领取的任务ID列表.
+  repeated int64 strength_rewarded_task_ids = 4;   // 启航实力页签已领取的任务ID列表.
+  repeated int64 buddy_rewarded_task_ids    = 5;   // 同行羁绊页签已领取的任务ID列表(羁绊与任务ID 无序).
+  repeated BuddyStar buddy_stars            = 6;   // 同行羁绊页签下玩家拥有的伙伴星数
+  int64 coin_rewarded                       = 7;   // 已领取的金币数量.
+  int64 remaining_time                      = 8;   // 玩家参与活动的剩余时间(时间戳：秒)
+  int64 total_coin_count                    = 9;   // 活动可以薅的金币总数.
+  corepb.Item hidden_rewards                = 10;  // 藏品奖励信息
+}
+
+// BuddyStar 伙伴与星数.
+message BuddyStar {
+  int64 id    = 1;  // 伙伴ID.
+  int64 count = 2;  // 伙伴星数.
+}
+
+// TaskType 任务类型.
+enum TaskType {
+  TYPE_UNKNOWN  = 0;  // 未知类型
+  LEVEL_TASK    = 1;  // 成长征程任务类型.
+  STRENGTH_TASK = 2;  // 启航实力任务类型.
+  BUDDY_TASK    = 3;  // 同行羁绊任务类型.
+}
+
+message ActClaimHiddenRewardsRequest {}
+
+message ActClaimHiddenRewardsReply {
+  repeated corepb.Item hidden_rewards      = 1;  // 原始藏品奖励信息
+  repeated corepb.Item real_hidden_rewards = 2;  // 真实的藏品奖励
+}

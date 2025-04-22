@@ -1,0 +1,12 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb";
+
+enum ZoneRedpoint {
+  ZONE_REDPOINT_UNKNOWN = 0;
+
+  // 注意一级系统的红点id以系统id为准 不用在这定义枚举了
+  // 没有在 SystemOpen 表里配置的，二级和三级红点id可以在这里定义
+}

@@ -1,0 +1,36 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.stylishpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/stylishpb";
+
+service CSService {
+  rpc QueryStylishInfo(QueryStylishInfoRequest) returns (QueryStylishInfoReply);           // 查询时髦信息
+  rpc UpgradeStylishLevel(UpgradeStylishLevelRequest) returns (UpgradeStylishLevelReply);  // 升级时髦等级
+}
+
+message QueryStylishInfoRequest {}
+
+message QueryStylishInfoReply {
+  reserved 5, 6;
+  int64 show_level                 = 1;  // 时髦等级（历史最高）
+  int64 show_point                 = 2;  // 时髦值（历史最高）
+  int64 next_level_point           = 3;  // 下一等级所需时髦值，-1表示无上限
+  repeated StylishEntry entry_list = 4;  // 时髦统计
+}
+
+message StylishEntry {
+  int64 system_id     = 1;  // 系统ID
+  int64 collect_num   = 2;  // 已收集数量
+  int64 total_num     = 3;  // 增加时髦值的数量上限
+  int64 collect_point = 4;  // 已增加时髦值
+  int64 total_point   = 5;  // 时髦值上限
+  bool first_unlock   = 6;  // 是否首次解锁
+}
+
+message UpgradeStylishLevelRequest {}
+
+message UpgradeStylishLevelReply {
+  int64 new_level               = 1;
+  repeated int64 new_wordstrips = 2;  // 解锁新词条
+}

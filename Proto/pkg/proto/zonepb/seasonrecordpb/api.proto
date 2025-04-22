@@ -1,0 +1,102 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.seasonrecordpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/seasonrecordpb";
+
+import "corepb/common.proto";
+
+service CSSeasonRecordService {
+
+  rpc GetFcSeasonInfo(GetFcSeasonInfoRequest) returns (GetFcSeasonInfoReply);
+  rpc GetBountyGameInfo(GetBountyGameInfoRequest) returns (GetBountyGameInfoReply);
+  rpc GetPvpLadderInfo(GetPvpLadderInfoRequest) returns (GetPvpLadderInfoReply);
+  rpc GetBPSeasonInfo(GetBPSeasonInfoRequest) returns (GetBPSeasonInfoReply);
+}
+
+message GetBPSeasonInfoRequest {
+  int64 season_id = 1;
+}
+
+message GetBPSeasonInfoReply {
+  BattlepassInfo battlepass_info = 1;
+}
+
+message GetFcSeasonInfoRequest {
+  int64 season_id = 1;
+}
+
+message GetFcSeasonInfoReply {
+  FcSeasonInfo fc_season_info = 1;
+}
+
+message FcSeasonInfo {
+  int64 begin_fc                         = 1;
+  int64 last_fc                          = 2;
+  map<int64, int64> fc_records           = 3;
+  repeated BuddyInfo recruit_buddy_infos = 4;
+}
+
+message BuddyInfo {
+  int64 buddy_id = 1;  // 伙伴ID
+  int64 star     = 2;  // 星级
+}
+
+message GetBountyGameInfoRequest {
+  int64 season_id = 1;
+}
+
+message GetBountyGameInfoReply {
+  BountyGameInfo bounty_game_info = 1;
+}
+
+message BountyGameInfo {
+  int64 rank                 = 1;  // 排名
+  int64 win_times            = 2;  // 胜利次数
+  int64 fight_times          = 3;  // 战斗次数
+  map<int64, int64> scores   = 4;  // 积分记录 时间戳 -> 积分
+  int64 begin_score          = 5;  // 开始积分
+  int64 end_score            = 6;  // 结束积分
+  int64 highest_score        = 7;  // 最高积分
+  repeated BuddyInfo buddies = 8;  // 伙伴信息
+}
+
+message GetPvpLadderInfoRequest {
+  int64 season_id = 1;
+}
+
+message GetPvpLadderInfoReply {
+  PvpLadderInfo pvp_ladder_info = 1;
+}
+
+message PvpLadderInfo {
+  int64 rank                           = 1;  // 排名
+  int64 win_times                      = 2;  // 胜利次数
+  int64 fight_times                    = 3;  // 战斗次数
+  repeated LadderBuddyInfo buddy_infos = 4;  // 伙伴信息
+  int64 highest_score                  = 5;  // 最高积分
+  int64 begin_score                    = 6;  // 开始积分
+  int64 end_score                      = 7;  // 结束积分
+  map<int64, int64> scores             = 8;  // 积分记录 时间戳 -> 积分
+}
+
+message LadderBuddyInfo {
+  int64 buddy_id  = 1;  // 伙伴ID
+  int64 win_times = 2;  // 胜利次数
+}
+
+message BattlepassInfo {
+  int64 level                       = 1;  // 等级
+  int64 complete_tasks              = 2;  // 完成任务数
+  int64 total_daily_score           = 3;  // 总活跃
+  repeated corepb.Item reward_items = 4;  // 奖励物品
+  BPType bp_type                    = 5;  // 特典类型
+  int64 bp_season_id                = 6;  // 特典赛季ID
+}
+
+enum BPType {
+  TYPE_UNKNOWN = 0;
+  NORMAL       = 1;  // 普通特典
+  ADVANCED     = 2;  // 高级特典
+  LUXURY       = 3;  // 豪华特典（特殊的高级特典）
+}

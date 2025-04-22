@@ -1,0 +1,270 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.shoppb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/shoppb";
+
+
+import "corepb/common.proto";
+
+service ShopService {
+  // 获取商店列表（简要信息）
+  rpc GetShopList(GetShopListRequest) returns (GetShopListReply);
+
+  // 获取商店信息（详细信息）
+  rpc GetShopInfo(GetShopInfoRequest) returns (GetShopInfoReply);
+
+  // 刷新橱窗组
+  rpc RefreshShopWindowGroup(RefreshShopWindowGroupRequest) returns (RefreshShopWindowGroupReply);
+
+  // 购买商店商品
+  rpc BuyShopItem(BuyShopItemRequest) returns (BuyShopItemReply);
+
+  // 批量购买商店商品
+  rpc BatchBuyShopItem(BatchBuyShopItemRequest) returns (BatchBuyShopItemReply);
+
+  // 获取商品购买价格&获得
+  rpc GetShopItemPrice(GetShopItemPriceRequest) returns (GetShopItemPriceReply);
+
+  // 获取橱窗自选商品列表
+  rpc GetShopWindowItems(GetShopWindowItemsRequest) returns (GetShopWindowItemsReply);
+
+  // 设置橱窗自选商品
+  rpc SetShopWindowItems(SetShopWindowItemsRequest) returns (SetShopWindowItemsReply);
+
+  // 移除【新】标识
+  rpc RemoveNewTag(RemoveNewTagRequest) returns (RemoveNewTagReply);
+}
+
+message RemoveNewTagRequest {
+  repeated int64 shop_window_group_ids = 1;
+}
+
+message RemoveNewTagReply {}
+
+message GetShopListRequest {}
+message GetShopListReply {
+  repeated Shop shop_list = 1;
+}
+
+message GetShopInfoRequest {
+  repeated int64 shop_id_list = 1;
+}
+message GetShopInfoReply {
+  repeated Shop shop_list                 = 1;
+  SuperCaptainCoupon super_captain_coupon = 2;
+}
+
+message SuperCaptainCoupon {
+  int64 required_gold_amount = 1;  // 满多少
+  int64 discount_per_coupon  = 2;  // 减多少
+}
+
+message RefreshShopWindowGroupRequest {
+  int64 shop_id              = 1;
+  int64 shop_window_group_id = 2;
+}
+message RefreshShopWindowGroupReply {
+  Shop shop = 1;
+}
+
+message BuyShopItemRequest {
+  int64 shop_id                                       = 1;
+  int64 shop_window_group_id                          = 2;
+  int64 shop_window_id                                = 3;
+  int64 shop_item_id                                  = 4;
+  int64 buy_cnt                                       = 5;
+  repeated corepb.GiftSelectedItem gift_selected_item = 6;
+  int64 cost_item                                     = 7;  // 货币id，如果是多货币模式，需要传这个值
+  int64 dynamic_pack_from_system                      = 8;  // 商品来源系统，用于其他玩法提供的动态触发式礼包的展示
+  int64 dynamic_pack_id                               = 9;  // 动态触发式礼包ID
+}
+message BuyShopItemReply {
+  Shop shop                   = 1;
+  repeated corepb.Item awards = 2;
+}
+
+message BatchBuyShopItemRequest {
+  repeated BuyShopItemRequest buy_shop_item_request = 1;
+}
+
+message BatchBuyShopItemReply {
+  repeated Shop shop_list     = 1;
+  repeated corepb.Item awards = 2;
+}
+
+message GetShopItemPriceRequest {
+  int64 shop_id                  = 1;
+  int64 shop_window_group_id     = 2;
+  int64 shop_window_id           = 3;
+  int64 shop_item_id             = 4;
+  int64 buy_cnt                  = 5;
+  int64 dynamic_pack_from_system = 6;  // 商品来源系统，用于其他玩法提供的动态触发式礼包的展示
+  int64 dynamic_pack_id          = 7;  // 动态触发式礼包ID
+}
+message GetShopItemPriceReply {
+  repeated corepb.Item costs = 2;  // 花费
+  repeated corepb.Item items = 3;  // 获得
+  message Cost {
+    int64 buy_cnt  = 1;
+    int64 item_id  = 2;
+    int64 item_num = 3;
+  }
+  repeated Cost costs_all       = 4;
+  repeated CostMulti cost_multi = 5;  // 多货币花费
+}
+
+message CostMulti {
+  repeated corepb.Item costs = 1;  // 花费
+}
+
+message GetShopWindowItemsRequest {
+  repeated int64 shop_window_ids = 1;
+}
+message GetShopWindowItemsReply {
+  message ShopWindowItem {
+    int64 shop_window_id          = 1;
+    repeated ShopItem shop_items  = 2;
+    repeated corepb.Item cost     = 3;
+    repeated CostMulti cost_multi = 4;  // 多货币花费
+  };
+  repeated ShopWindowItem shop_window_items = 1;
+}
+
+message SetShopWindowItemsRequest {
+  message ShopWindowItem {
+    int64 shop_window_id = 1;
+    int64 shop_item_id   = 2;
+  }
+  repeated ShopWindowItem shop_window_items = 1;
+}
+message SetShopWindowItemsReply {}
+
+message Shop {
+  int64 shop_id                                      = 1;
+  string shop_name                                   = 2;
+  map<int64, ShopWindowGroup> shop_window_group_list = 3;
+  int64 shop_type                                    = 4;  // 商店类型。1=普通 2=推荐页
+}
+
+message ShopWindowGroup {
+  int64 shop_window_group_id                     = 1;
+  string shop_window_group_name                  = 2;
+  map<int64, ShopWindow> shop_window_list        = 3;
+  int64 refresh_time                             = 4;  // 系统刷新倒计时 0-表示不可系统刷新
+  int64 manual_refresh_cnt                       = 5;  // 已经手动刷新次数
+  int64 manual_refresh_cnt_max                   = 6;  // 最大手动刷新次数
+  int64 manual_refresh_free_cnt                  = 7;  // 免费手动刷新次数
+  repeated ManualRefreshCost manual_refresh_cost = 8;  // 手动刷新消耗
+  bool is_new                                    = 9;  // 【新】标签
+  // int64 shop_recommend_template                        = 10;  // 推荐页模板。1=主展示 2=副橱窗
+  int64 shop_recommend_time_begin                      = 11;  // 推荐页开始售卖时间
+  int64 shop_recommend_time_end                        = 12;  // 推荐页开始售卖时间
+  map<int64, ShopRecommendGroup> shop_recommend_groups = 13;
+  int64 default_tab_id                                 = 14;  // 默认选中的tab
+  int64 shop_window_group_template                     = 15;  // 橱窗组模板。1=推荐页主橱窗 2=推荐页道具橱窗 3=礼包商店
+  bool is_red_point                                    = 16;  // 是否有红点
+  int64 shop_id                                        = 17;  // 商店id
+}
+
+message ShopRecommendGroup {
+  int64 shop_recommend_group_id        = 1;  // 推荐橱窗组的id
+  int64 shop_recommend_group_type      = 2;  // 推荐页内的推荐橱窗组类型。1=副橱窗 2=道具橱窗
+  int64 shop_recommend_group_cost_type = 3;  // 购买类型。1=独立购买 2=次数共享
+  int64 buy_cnt                        = 4;  // 已经购买次数
+  int64 buy_cnt_max                    = 5;  // 最大购买次数
+}
+
+message ManualRefreshCost {
+  int64 id    = 1;
+  int64 count = 2;
+}
+
+message ShopWindow {
+  int64 shop_window_id          = 1;
+  int64 shop_window_type        = 2;  // 0-小橱窗 1-大橱窗
+  ShopItem shop_item            = 3;
+  int64 system_shop_item_id     = 4;  // 系统刷出的商品ID
+  int64 shop_recommend_group_id = 5;  // 所属的推荐页内的推荐橱窗组id
+  int64 tab_id                  = 6;  // 如果该橱窗组有多页签，所属的页签ID
+  bool is_new                   = 7;  // 【新】标签
+  int64 shop_window_group_id    = 8;  // 所属的橱窗组ID
+}
+
+enum ShopItemTimeType {
+  SHOP_ITEM_TIME_TYPE_UNKNOWN    = 0;  // 默认
+  SHOP_ITEM_TIME_TYPE_FIXED_TIME = 1;  // 固定时间
+  SHOP_ITEM_TIME_TYPE_OPEN_ZONE  = 2;  // 开服时间
+}
+
+message ShopItem {
+  int64 shop_item_id                      = 1;  // 这个是 shop item id
+  int64 id                                = 2;  // 这个是 item id
+  int64 count                             = 3;
+  int64 time_begin                        = 4;   // 开始售卖时间,用于倒计时
+  int64 time_end                          = 14;  // 开始售卖时间,用于倒计时
+  int64 buy_cnt                           = 5;   // 已经购买次数
+  int64 buy_cnt_max                       = 6;   // 最大购买次数
+  int64 cost_item_id                      = 7;   // 购买货币ID
+  int64 cost_item_num                     = 8;   // 当前价格
+  int64 cost_item_num_origin              = 9;   // 原始价格
+  int64 buy_level                         = 11;  // 购买等级
+  ShopItemPack pack                       = 13;  // 礼包内容（普通礼包/贝利）
+  int64 discount_time_begin               = 15;  // 折扣开始时间
+  int64 discount_time_end                 = 16;  // 折扣结束时间
+  repeated CostMultiItem cost_multi_items = 17;  // 多货币模式
+  BuyCondition unqualified_buy_condition  = 18;  // 不满足的“其他购买条件”（ShopItemConfig中的buy_condition）
+  ShowCondition show_condition            = 19;  // 配置的自定义显示条件，用于某些商店的排序使用（ShopItemConfig中的show_condition）
+  int64 last_refresh_time                 = 20;  // 商品刷新时间
+  int64 dynamic_pack_from_system          = 21;  // 商品来源系统，用于其他玩法提供的动态触发式礼包的展示
+  int64 dynamic_pack_id                   = 22;  // 动态触发式礼包ID
+  int64 dynamic_pack_expire_at            = 23;  // 动态触发式礼包过期时间
+  int64 cost_type                         = 24;  // 购买类型
+  int64 refresh_type                      = 25;  // 刷新类型
+  int64 buy_cnt_total                     = 26;  // 已经购买总次数
+  int64 buy_cnt_max_total                 = 27;  // 最大总购买次数，0表示不限制
+  ShopItemTimeType time_type              = 28;  // 显示/购买时间类型
+  int64 act_id                            = 29;  // 活动ID
+  string act_name                         = 30;  // 活动名称
+  int64 act_achieved_way                  = 31;  // 活动跳转途径
+  int64 shop_window_id                    = 32;  // 所属的橱窗ID
+  int64 buy_dialog_style                  = 33;  // 购买弹窗样式
+}
+
+message CostMultiItem {
+  int64 cost_item_id         = 1;  // 购买货币ID
+  int64 cost_item_num        = 2;  // 当前价格
+  int64 cost_item_num_origin = 3;  // 原始价格
+}
+
+message ShopItemPack {
+  repeated corepb.Item items = 1;
+}
+
+// 拷贝自 internal/pkg/systems/shop/config/config.proto
+message BuyCondition {
+  SystemConditionType cond_type = 1;  // 其他购买条件限制
+  repeated string args          = 2;  // 其他购买条件限制参数
+  string show_tips              = 3;  // 其他购买限制提示文本
+}
+
+// 拷贝自 internal/pkg/systems/shop/config/config.proto
+message ShowCondition {
+  SystemConditionType cond_type = 1;  // 其他显示条件限制
+  repeated string args          = 2;  // 其他显示条件限制参数
+}
+
+// 拷贝自 internal/pkg/systems/shop/config/config.proto
+enum SystemConditionType {
+  SYSTEM_CONDITION_UNKNOWN              = 0;   // 无
+  INTELSOCIETY_LEVEL                    = 1;   // 情报社等级
+  TREASURE_NUM                          = 2;   // 藏品数量
+  VOYAGE_EXPLORE_MYSTERY_PRODUCT_UNLOCK = 3;   // 海域探险神秘商品解锁
+  GUILD_LEVEL                           = 4;   // 同盟等级
+  TOTAL_RECHARGE                        = 5;   // 累计充值
+  DIAMOND_TOTAL_CONSUME                 = 6;   // 钻石累计消费
+  GOLD_TOTAL_CONSUME                    = 7;   // 金币累计消费
+  BUDDY_STAR                            = 8;   // 伙伴星级
+  WILLCRYSTAL_SEASON_OPEN               = 9;   // 意志赛季开启
+  SHIP_LINEAR_UNLOCK_COUNT              = 10;  // 线性船坞解锁数量
+}

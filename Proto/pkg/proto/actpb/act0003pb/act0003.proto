@@ -1,0 +1,146 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0003pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0003pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0003Service {
+  // 批量领取活动奖励
+  rpc BatchDeliverActReward(BatchDeliverActRewardRequest) returns (BatchDeliverActRewardReply);
+  // 批量领取进度奖励
+  rpc BatchDeliverProgressReward(BatchDeliverProgressRewardRequest) returns (BatchDeliverProgressRewardReply);
+  // 选择可替换任务
+  rpc ChooseReplaceableTask(ChooseReplaceableTaskRequest) returns (ChooseReplaceableTaskReply);
+}
+
+message ActGetDetailRequest {
+  int64 choose_day = 1;  // 选中的日数（双周任务范围 1-14），其中 -1 表示存在红点的最后一天，或者没有红点就默认最后一天
+}
+
+enum DailyTaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCKED   = 0;  // 未解锁
+  UNLOCKED = 1;  // 已解锁
+}
+
+enum ReplaceableStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  REPLACEABLE   = 0;  // 未领取置换任务奖励
+  UNREPLACEABLE = 1;  // 已领取置换任务奖励
+}
+
+// 单个任务信息
+message DailyTask {
+  actpb.commonpb.Task task = 1;  // 常规任务信息
+  bool is_replaceable      = 2;  // 是否为可替换任务
+  int64 jump_behavior      = 3;  // 任务跳转
+}
+
+// 背景图和背景音乐信息
+message BackgroundMusic {
+  string music_id     = 1;  // 背景音乐 ID
+  string backgroud_id = 2;  // 背景图片 ID
+}
+
+// 双周任务中每日任务信息
+message DailyTasks {
+  int64 status                  = 1;  // 每日任务状态(0:未解锁，1:已解锁)
+  repeated DailyTask task_list  = 2;  // 每日任务列表
+  int64 replaceable_task_status = 3;  // 每日置换任务奖励是否领取（0：还未领取，1：已经领取）
+  int64 replaceable_task_id     = 4;  // 当前可替换任务 ID
+  bool have_redpoint            = 5;  // 当天存在待领取任务，有红点
+  bool is_all_reward_received   = 6;  // 当天奖励是否全部领取完
+}
+
+enum ProgressStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  STILL_LOCKED    = 0;  // 未解锁
+  CAN_RECEIVE     = 1;  // 未领取
+  ALREADY_RECEIVE = 2;  // 已领取
+}
+
+message Progress {
+  int64 id                    = 1;  // 进度 ID
+  int64 need_task_cnt         = 2;  // 需要完成任务个数
+  int64 progress_status       = 3;  // 进度领取状态(0:未解锁, 1:未领取, 2:已领取)
+  repeated corepb.Item awards = 4;  // 进度奖励
+  bool special_reward         = 5;  // 特别大奖标识
+}
+
+// 任务完成进度信息
+message ProgressInfo {
+  repeated Progress progress_list = 1;  // 任务进度信息
+  int64 complete_task_cnt         = 2;  // 已完成任务数量
+  int64 total_task_cnt            = 3;  // 总任务数量
+}
+
+message ActGetDetailReply {
+  repeated DailyTasks daily_tasks            = 2;  // 双周每日活动详细信息
+  ProgressInfo progress_info                 = 3;  // 任务完成进度信息
+  repeated BackgroundMusic background_musics = 4;  // 双周每日背景图片和背景音乐信息
+  int64 current_day                          = 5;  // 活动进行日数
+  int64 close_time                           = 6;  // 活动结束时间，0 不结束，其他结束时间戳
+}
+
+message ActDeliverRewardReply {
+  repeated DailyTasks daily_tasks = 1;  // 双周每日活动详细信息，只有本日包含详细任务信息，其他日只有红点信息
+  ProgressInfo progress_info      = 2;  // 任务完成进度信息
+}
+
+message DeliverActRewardRequest {
+  int64 task_id                                       = 1;  // 任务 ID
+  repeated corepb.GiftSelectedItem gift_selected_item = 2;  // 可选礼包选中道具信息
+}
+
+message DeliverActRewardReply {
+  repeated DailyTasks daily_tasks = 1;  // 双周每日活动详细信息，只有本日包含详细任务信息，其他日只有红点信息
+  ProgressInfo progress_info      = 2;  // 任务完成进度信息
+  repeated corepb.Item awards     = 3;  // 领取到的奖励
+}
+
+message BatchDeliverActRewardRequest {
+  int64 task_id                                       = 1;  // 任务 ID
+  repeated corepb.GiftSelectedItem gift_selected_item = 2;  // 可选礼包选中道具信息
+}
+
+message BatchDeliverActRewardReply {
+  repeated DailyTasks daily_tasks = 1;  // 双周每日活动详细信息，只有本日包含详细任务信息，其他日只有红点信息
+  ProgressInfo progress_info      = 2;  // 任务完成进度信息
+  repeated corepb.Item awards     = 3;  // 领取到的奖励
+  repeated int64 awarded_ids      = 4;  // 本次领取的奖励的id列表
+}
+
+message DeliverProgressRewardRequest {
+  int64 progress_id                                   = 1;  // 进度 ID
+  int64 choose_day                                    = 2;  // 选中的日数（双周任务范围 1-14），其中 -1 表示存在红点的最后一天，或者没有红点就默认最后一天
+  repeated corepb.GiftSelectedItem gift_selected_item = 3;  // 可选礼包选中道具信息
+}
+
+message DeliverProgressRewardReply {
+  repeated DailyTasks daily_tasks = 1;  // 双周每日活动详细信息，只有本日包含详细任务信息，其他日只有红点信息
+  ProgressInfo progress_info      = 2;  // 任务完成进度信息
+  repeated corepb.Item awards     = 3;  // 领取到的奖励
+}
+
+message BatchDeliverProgressRewardRequest {
+  int64 progress_id                                   = 1;  // 进度 ID
+  int64 choose_day                                    = 2;  // 选中的日数（双周任务范围 1-14），其中 -1 表示存在红点的最后一天，或者没有红点就默认最后一天
+  repeated corepb.GiftSelectedItem gift_selected_item = 3;  // 可选礼包选中道具信息
+}
+
+message BatchDeliverProgressRewardReply {
+  repeated DailyTasks daily_tasks = 1;  // 双周每日活动详细信息，只有本日包含详细任务信息，其他日只有红点信息
+  ProgressInfo progress_info      = 2;  // 任务完成进度信息
+  repeated corepb.Item awards     = 3;  // 领取到的奖励
+  repeated int64 progress_ids     = 4;  // 本次领取的进度奖励的id列表
+}
+
+message ChooseReplaceableTaskRequest {
+  int64 choose_day          = 1;  // 选择替换日数
+  int64 replaceable_task_id = 2;  // 选择替换任务 ID
+}
+
+message ChooseReplaceableTaskReply {}

@@ -1,0 +1,53 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0103pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0103pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0103Service {
+  rpc ViewQuests(ViewQuestsRequest) returns (ViewQuestsReply);  // 点击进入前往挑战按钮，用于消除红点
+  rpc GameStart(GameStartRequest) returns (GameStartReply);     // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);           // 结算
+}
+
+message ActGetDetailRequest {}
+
+enum QuestStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCKED   = 0;  // 未解锁
+  UNLOCKED = 1;  // 已解锁
+  PASSED   = 2;  // 已通关
+}
+
+message QuestInfo {
+  int64 quest_id           = 1;  // 关卡 ID
+  QuestStatus quest_status = 2;  // 关卡状态
+  int64 open_at            = 3;  // 开启时间戳
+  bool new                 = 4;  // “新”标记
+}
+
+message ActGetDetailReply {
+  repeated QuestInfo quests          = 1;  // 所有关卡详细信息
+  repeated actpb.commonpb.Task tasks = 2;  // 所有任务详细信息
+  bool new_open                      = 3;  // 是否新开启
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {}
+
+message GameEndRequest {
+  int64 quest_id = 1;  // 关卡 ID
+  bool is_pass   = 2;  // 是否通关
+}
+
+message GameEndReply {}
+
+message ViewQuestsRequest {}
+
+message ViewQuestsReply {}

@@ -1,0 +1,159 @@
+// cs protocol
+syntax = "proto3";
+
+package guildwarpb.islandsiegepb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/guildwarpb/islandsiegepb";
+
+// 海岛争夺战服务
+service IslandSiegeService {
+  // Launch 进入海岛争夺战，后台自动开启基于 notify 的状态同步
+  rpc Launch(LaunchRequest) returns (LaunchReply);
+  // Leave 离开海岛争夺战
+  rpc Leave(LeaveRequest) returns (LeaveReply);
+  // Move 移动至指定据点
+  rpc Move(MoveRequest) returns (MoveReply);
+  // Match 在据点中发起战斗匹配
+  rpc Match(MatchRequest) returns (MatchReply);
+  // CancelMatch 取消战斗匹配
+  rpc CancelMatch(CancelMatchRequest) returns (CancelMatchReply);
+  // Rally 在据点中发起集结
+  rpc Rally(RallyRequest) returns (RallyReply);
+  // Heartbeat 心跳
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);
+  // ChangeWarShip 更换战舰
+  rpc ChangeWarShip(ChangeWarShipRequest) returns (ChangeWarShipReply);
+}
+
+message IslandSiegeInfo {
+  int64 version                       = 1;  // 状态版本号
+  SiegeMetadata siege_metadata        = 2;  // 战斗状态
+  map<int64, PointInfo> point_infos   = 3;  // 据点信息
+  map<int64, GuildInfo> guild_infos   = 4;  // 同盟信息
+  map<int64, PlayerInfo> player_infos = 5;  // 玩家信息
+}
+
+message StateNotify {
+  repeated IslandSiegeInfo updates = 1;  // 增量的状态更新
+}
+
+message ShowErrorNotify {
+  int64 code     = 1;  // 错误码
+  string message = 2;  // 错误信息
+}
+
+message PersonalNotify {
+  IslandSiegeInfo update = 1;  // 个人即时状态更新
+}
+
+message MatchSuccessNotify {
+  int64 opponent_gid = 1;  // 对手玩家 ID
+}
+
+// 匹配取消通知
+message MatchCancelNotify {}
+
+enum SiegeStatus {
+  SIEGE_STATE_UNKNOWN = 0;
+  NOT_STARTED         = 1;  // 未开始
+  PREPARING           = 2;  // 准备阶段
+  FIGHTING            = 3;  // 战斗阶段
+  FINISHED            = 4;  // 已经结束
+}
+
+message SiegeMetadata {
+  SiegeStatus status          = 1;  // 战斗状态
+  int64 now_ms                = 2;  // 对局逻辑时间，从 0 开始计数(毫秒)
+  int64 defender              = 3;  // 守方同盟ID
+  int64 defender_win_at_ms    = 4;  // 守方预期防守胜利逻辑时间(毫秒)
+  repeated int64 attackers    = 5;  // 攻方同盟ID列表
+  int64 preparation_end_at_ms = 6;  // 准备阶段结束逻辑时间(毫秒)
+  int64 game_end_at_ms        = 7;  // 对局结束逻辑时间(毫秒)
+}
+
+message PointInfo {
+  int64 hp                = 1;  // 据点剩余耐久度
+  int64 total_hp          = 2;  // 据点总耐久度
+  int64 last_straw_player = 3;  // 最后一击玩家
+}
+
+message GuildInfo {
+  int64 rally_point             = 1;  // 集结点
+  int64 birth_point             = 2;  // 出生点
+  int64 damage_to_resouce_point = 3;  // 对资源点造成的伤害
+}
+
+enum GuildRole {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  MEMBER       = 0;  // 普通成员
+  LEADER       = 1;  // 团长
+  VICE_LEADER  = 2;  // 副团长
+  SQUAD_LEADER = 3;  // 小队长
+}
+
+message PlayerInfo {
+  int64 guild_id       = 1;   // 所属同盟ID
+  int64 hp_percent     = 2;   // 剩余血量百分比
+  int64 point          = 3;   // 所在据点ID，如果玩家正在移动，此处记录目标据点ID，需结合 arrive_at 字段计算是否到达
+  int64 arrive_at_ms   = 4;   // 如果玩家正在移动，预计到达的逻辑时间(毫秒)
+  int64 from_point     = 5;   // 如果玩家正在移动，出发据点ID
+  bool online          = 6;   // 玩家是否还在线
+  GuildRole role       = 7;   // 玩家同盟职务
+  int64 successive_win = 8;   // 连胜次数
+  bool fighting        = 9;   // 玩家是否在战斗中
+  int64 warship_id     = 10;  // 战船ID
+}
+
+message LaunchRequest {
+  string siege_id = 1;  // 海岛争夺战ID
+}
+
+message LaunchReply {
+  IslandSiegeInfo island_siege_info = 1;  // 海岛争夺战信息
+}
+
+message LeaveRequest {
+  string siege_id = 1;  // 海岛争夺战ID
+}
+
+message LeaveReply {}
+
+message MoveRequest {
+  string siege_id    = 1;  // 海岛争夺战ID
+  int64 target_point = 2;  // 目标据点
+}
+
+message MoveReply {}
+
+message MatchRequest {
+  string siege_id              = 1;  // 海岛争夺战ID
+  repeated int64 target_guilds = 2;  // 目标公会列表
+}
+
+message MatchReply {}
+
+message CancelMatchRequest {
+  string siege_id = 1;  // 海岛争夺战ID
+}
+
+message CancelMatchReply {}
+
+message RallyRequest {
+  string siege_id   = 1;  // 海岛争夺战ID
+  int64 rally_point = 2;  // 集结点
+  bool cancel       = 3;  // 是否取消集结
+}
+
+message RallyReply {}
+
+message HeartbeatRequest {
+  string siege_id = 1;  // 海岛争夺战ID
+}
+
+message HeartbeatReply {}
+
+message ChangeWarShipRequest {
+  string siege_id  = 1;  // 海岛争夺战ID
+  int64 warship_id = 2;  // 战舰ID
+}
+
+message ChangeWarShipReply {}

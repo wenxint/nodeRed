@@ -1,0 +1,48 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.adventuretaskpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/adventuretaskpb";
+
+import "corepb/common.proto";
+
+service Service {
+  rpc QueryTaskDetail(QueryTaskDetailRequest) returns (QueryTaskDetailReply);
+  rpc BatchDeliverAwards(BatchDeliverAwardsRequest) returns (BatchDeliverAwardsReply);
+  rpc QueryAwardsInfo(QueryAwardsInfoRequest) returns (QueryAwardsInfoReply);
+}
+
+message QueryAwardsInfoRequest {}
+
+message QueryAwardsInfoReply {
+  repeated corepb.Item awards = 1;
+}
+
+message QueryTaskDetailRequest {}
+
+message QueryTaskDetailReply {
+  repeated TaskInfo tasks_info = 1;  // 所有任务详情
+}
+
+message TaskInfo {
+  int64 id                    = 1;  // 任务ID
+  repeated corepb.Item awards = 2;  // 任务奖励
+  TaskStatus status           = 3;  // 任务状态
+}
+
+enum TaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNOPEN = 0;  // 未开放
+  UNDONE = 1;  // 不可领奖
+  REWARD = 2;  // 可领奖
+  FINISH = 3;  // 已领奖
+}
+
+message BatchDeliverAwardsRequest {
+  int64 task_id = 1;
+}
+
+message BatchDeliverAwardsReply {
+  repeated corepb.Item awards = 1;
+  repeated int64 received_ids = 2;  // 领取的任务ID
+}

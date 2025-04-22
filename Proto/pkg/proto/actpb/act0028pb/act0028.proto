@@ -1,0 +1,36 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0028pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0028pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0028Service {
+  // 领取活动奖励
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Task task_list = 1;
+  int64 act_begin_time    = 3;  // 活动开始时间
+}
+
+message Task {
+  actpb.commonpb.Task task = 1;
+  int64 begin_time         = 2;
+  int64 end_time           = 3;
+}
+
+message DeliverActRewardRequest {
+  int64 task_id                                       = 1;
+  repeated corepb.GiftSelectedItem gift_selected_item = 2;  // 可选礼包选中道具信息
+}
+
+message DeliverActRewardReply {
+  repeated corepb.Item awards = 1;
+  int64 week                  = 2;
+}

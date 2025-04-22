@@ -1,0 +1,80 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.paypb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/paypb";
+
+import "corepb/common.proto";
+
+// 支付服务
+service PayService {
+  // QueryRechargeState 查询首充资格与累充进度值.
+  rpc QueryRechargeState(QueryRechargeStateRequest) returns (QueryRechargeStateReply);
+  // OnPaySuccess  玩家在客户端付款成功后的主动通知服务端支付完成.
+  rpc OnPaySuccess(OnPaySuccessRequest) returns (OnPaySuccessReply);
+  // GetDirectBuyConfig 获取直购商品配置表.
+  rpc GetDirectBuyConfig(GetDirectBuyConfigRequest) returns (GetDirectBuyConfigReply);
+}
+
+message Product {
+  string product_id = 1;  // 商品ID
+  int64 count       = 2;  // 数量
+}
+
+message QueryRechargeStateRequest {}
+
+message QueryRechargeStateReply {
+  repeated PlayerProductState player_product_states = 1;  // 代币各个档位物品ID是否已首充.
+  int64 total_recharge                              = 2;  // 充值总金额
+  bool hide_total_recharge                          = 3;  // 隐藏充值总金额
+}
+
+// PlayerProductState 玩家代币充值档位信息.
+message PlayerProductState {
+  int64 shop_item_id      = 1;  // 商品ID
+  bool is_first_recharged = 2;  // 是否已首充
+  string product_id       = 3;  // midas代币商品ID
+}
+
+// OnPaySuccessRequest 通知购买成功的米大师物品ID列表
+message OnPaySuccessRequest {
+  repeated string product_ids = 1;  // 购买的物品ID列表
+  bool need_notify            = 2;  // 是否需要给 客户端 发 notify 通知
+}
+
+// OnPaySuccessReply  直接回空包, 表示服务端已收到客户端支付成功的通知.
+message OnPaySuccessReply {}
+
+// BuyDiamondEventNtf  购买钻石成功后的新增钻石数事件通知.
+message BuyDiamondEventNtf {
+  int64 total_diamond_count = 1;  // 钻石余额.
+  int64 incr_diamond_count  = 2;  // 新增钻石数.
+}
+
+message DirectBuySuccessNotify {
+  string product_id            = 1;  // 米大师商品ID
+  int64 related_id             = 2;  // 业务关联ID
+  int64 system_id              = 3;  // 所在系统
+  repeated corepb.Item rewards = 4;  // 发货物品
+}
+
+// UnlockNewRechargeEventNtf  解锁新的大额充值档位事件通知.
+message UnlockNewRechargeEventNtf {
+  repeated int64 prices = 1;  // 解锁多个价格档位(单位：分)
+}
+
+message GetDirectBuyConfigRequest {}
+
+message GetDirectBuyConfigReply {
+  repeated DirectBuyConfig direct_buy_configs = 1;  // 直购配置列表
+}
+
+message DirectBuyConfig {
+  int64 system_id              = 1;  // 系统ID
+  string product_id            = 2;  // 米大师平台道具ID
+  int64 related_id             = 3;  // 关联业务侧的商品ID.
+  repeated corepb.Item rewards = 4;  // 奖励列表
+  int64 price                  = 5;  // 业务侧实际价格
+  int64 show_price             = 6;  // 业务侧展示价格
+}

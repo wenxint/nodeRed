@@ -1,0 +1,75 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0060pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0060pb";
+
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+enum QuestStatus {   // 通关情况
+  TYPE_UNKNOWN = 0;  // 占位
+  NOT_START    = 1;  // 未开启
+  NOT_COMPLET  = 2;  // 未通关
+  COMPLETED    = 3;  // 已通关
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Quest quests                    = 1;  // 关卡信息
+  repeated actpb.commonpb.Task reward_info = 2;  // 任务列表
+}
+
+message Quest {
+  int64 quest_id        = 1;  // 关卡id
+  QuestStatus status    = 2;  // 关卡情况
+  bool new              = 3;  // “新”标记
+  int64 min_consum_time = 4;  // 历史最短通关耗时
+  int64 stars           = 5;  // 获取星数情况(按位存，三种情况，不大于7，显示最后一次星数最多的情况)
+  string rank_type      = 6;  // 排行榜类型
+  string rank_instance  = 7;  // 排行榜实例名
+  int64 open_at         = 8;  // 开放时间（时间戳）
+  bool is_unlock_show   = 9;  // 关卡解锁动画是否播放
+}
+
+message ActDeliverRewardRequest {}
+
+message ActDeliverRewardReply {}
+
+service CSAct0060Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);     // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);           // 结算
+  rpc UnlockShow(UnlockShowRequest) returns (UnlockShowReply);  // 设置关卡解锁动画为已播放状态
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+  int64 cur_consum_time         = 4;  // 本局通关耗时
+  int64 cur_stars               = 5;  // 本局获得星数情况(按位存）
+  bytes dungeon_record_bytes    = 6;  // 战斗对局数据，校验用
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 通用战斗结算消息
+  int64 previous_min_consum_time      = 2;  // 之前最短通关耗时
+  int64 this_min_consum_time          = 3;  // 当前最短通关耗时，不大于之前最短通关耗时
+  int64 previous_rank                 = 4;  // 之前排名(0表示未上榜)
+  int64 this_rank                     = 5;  // 当前排名
+}
+
+message UnlockShowRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message UnlockShowReply {}

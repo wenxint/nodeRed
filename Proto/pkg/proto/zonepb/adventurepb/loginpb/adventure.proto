@@ -1,0 +1,22 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.adventurepb.loginpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/adventurepb/loginpb";
+
+// 因为放在 adventurepb 会有循环依赖问题。。。
+
+message LoginInfo {
+  LoginChaptersInfo chapters_info = 1;
+  int64 last_completed_quest_id   = 2;  // 完成的最后一个主线关卡
+}
+
+message LoginChaptersInfo {
+  map<int64, LoginChapterInfo> chapters = 1;  // key 为章节 ID 的各章节信息
+}
+
+message LoginChapterInfo {
+  int64 chapter_id           = 1;  // 章节 ID
+  bool open                  = 2;  // 是否解锁
+  bool unlocking_modal_shown = 3;  // 是否已经展示过过章节解锁弹窗
+}

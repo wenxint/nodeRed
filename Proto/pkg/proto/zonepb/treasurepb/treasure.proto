@@ -1,0 +1,210 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.treasurepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/treasurepb";
+import "corepb/common.proto";
+import "pkg/proto/zonepb/specialpackpb/specialpack.proto";
+
+service TreasureService {
+  // QueryTreasureByID 查询单个密宝信息，可用于消除该藏品红点
+  rpc QueryTreasureByID(QueryTreasureByIDRequest) returns (QueryTreasureByIDReply);
+  // QueryTreasureInfo 查询藏品信息（包括奖励信息）
+  rpc QueryTreasureInfo(QueryTreasureInfoRequest) returns (QueryTreasureInfoReply);
+  // PlaceTreasure 放置藏品
+  rpc PlaceTreasure(PlaceTreasureRequest) returns (PlaceTreasureReply);
+  // Compose 合成藏品
+  rpc Compose(ComposeRequest) returns (ComposeReply);
+  // Update 升级藏品
+  rpc Update(UpdateRequest) returns (UpdateReply);
+  // GetReward 领取奖励
+  rpc GetReward(GetRewardRequest) returns (GetRewardReply);
+  // BatchGetRewards 批量领取奖励
+  rpc BatchGetReward(BatchGetRewardRequest) returns (BatchGetRewardReply);
+  // GetTreasureAttr 获取藏品模板属性
+  rpc GetTreasureAttr(GetTreasureAttrRequest) returns (GetTreasureAttrReply);
+  // ListUnclaimedHiddenTreasures 列举未领取的彩蛋藏品列表
+  rpc ListUnclaimedHiddenTreasures(ListUnclaimedHiddenTreasuresRequest) returns (ListUnclaimedHiddenTreasuresReply);
+  // ClaimHiddenTreasure 领取彩蛋藏品
+  rpc ClaimHiddenTreasure(ClaimHiddenTreasureRequest) returns (ClaimHiddenTreasureReply);
+  // TriggerHiddenTreasureEvent 触发藏品事件
+  rpc TriggerHiddenTreasureEvent(TriggerHiddenTreasureEventRequest) returns (TriggerHiddenTreasureEventReply);
+}
+
+// 藏品碎片
+message Fragment {
+  int64 id        = 1;  // 碎片ID
+  int64 count     = 2;  // 碎片数量
+  bool is_new     = 3;  // 是否新获得
+  bool is_possess = 4;  // 是否拥有
+}
+
+// 藏品信息
+message TreasureInfo {
+  int64 treasure_id             = 1;   // 藏品id
+  bool is_placed                = 2;   // 是否放置
+  int64 time                    = 3;   // 获得时间
+  int64 star                    = 4;   // 星级
+  corepb.FightAttr attr         = 5;   // 属性值，不含词条加成
+  repeated int64 wordstrip      = 6;   // 词条
+  corepb.FightAttr next_attr    = 7;   // 下一级属性
+  repeated int64 next_wordstrip = 8;   // 下一级词条
+  repeated Fragment fragments   = 9;   // 碎片详情, 如果藏品已经合成，此项为空
+  bool is_possess               = 10;  // 是否已拥有
+  bool can_update               = 11;  // 是否可升级
+  int64 score                   = 12;  // 收藏值
+}
+
+message TreasureInfos {
+  map<int64, TreasureInfo> treasures           = 1;  // 藏品信息
+  int64 accumulative_score                     = 2;  // 累计收藏值
+  repeated int64 unclaimed_hidden_treasure_ids = 3;  // 未领取的已解锁彩蛋藏品ID列表
+  repeated int64 unlock_treasure_ids           = 4;  // 已开放的可交互彩蛋藏品ID列表
+  map<int64, bytes> hidden_treasure_data       = 5;  // 已解锁未达到领取条件的藏品信息
+}
+
+message QueryTreasureByIDRequest {
+  int64 treasure_id = 1;  // 藏品id
+}
+
+// 拉取指定藏品信息
+message QueryTreasureByIDReply {
+  TreasureInfo treasure = 1;  // 藏品信息
+}
+
+// 奖励状态
+enum RewardState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NOTFINISH = 0;  // 未完成
+  FINISHED  = 1;  // 已完成
+  AWARDED   = 2;  // 已发奖
+}
+
+// 奖励信息
+message RewardInfo {
+  int64 reward_id          = 1;  // 藏品id
+  RewardState reward_state = 2;  // 任务状态
+  int64 count_need         = 3;  // 需要数量
+  int64 count_actual       = 4;  // 实际数量
+}
+
+// 收藏室详情，后续有变化，要发送通知
+message TreasureRoomInfo {
+  corepb.FightAttr attr         = 1;  // 绝对总加成
+  corepb.FightAttr attr_perc    = 2;  // 百分比总加成
+  repeated int64 effect         = 3;  // 总效果
+  int64 fc                      = 4;  // 收藏室总实力
+  int64 accumulative_score      = 5;  // 累计收藏值
+  int64 total_count             = 6;  // 总藏品数
+  map<int64, int64> class_count = 7;  // 分类藏品数
+}
+
+message QueryTreasureInfoRequest {}
+
+// 拉取任务信息
+message QueryTreasureInfoReply {
+  map<int64, TreasureInfo> treasures                      = 1;  // 藏品信息
+  map<int64, RewardInfo> rewards                          = 2;  // 奖励信息
+  repeated int64 accumulative_treasure                    = 3;  // 累计收藏件数按照c-b-a-s的顺序
+  TreasureRoomInfo room_info                              = 4;  // 收藏室详情
+  repeated int64 not_open_treasures                       = 5;  // 未开放的藏品
+  repeated zonepb.specialpackpb.SpecialPack special_packs = 6;  // 所拥有的限时礼包
+}
+
+message PlaceTreasureRequest {
+  int64 treasure_id = 1;
+}
+
+message PlaceTreasureReply {
+  TreasureInfo treasure = 1;  // 藏品信息
+}
+
+message GetRewardRequest {
+  int64 reward_id = 1;
+}
+
+message GetRewardReply {
+  repeated corepb.Item awards    = 1;  // 得到的奖励
+  map<int64, RewardInfo> rewards = 2;  // 奖励信息
+}
+
+message BatchGetRewardRequest {
+  int64 reward_id   = 1;  // 玩家点击领取的条目
+  int32 reward_type = 2;  // 奖励类型，也是页签
+}
+
+message BatchGetRewardReply {
+  repeated corepb.Item awards    = 1;  // 得到的奖励
+  map<int64, RewardInfo> rewards = 2;  // 奖励信息
+  repeated int64 awarded_ids     = 3;  // 本次领取的奖励的id列表
+}
+
+message ComposeRequest {
+  int64 treasure_id = 1;
+}
+
+message ComposeReply {
+  TreasureInfo treasure = 1;  // 藏品信息
+}
+
+message UpdateRequest {
+  int64 treasure_id  = 1;
+  int64 current_star = 2;  // 当前星级
+}
+
+message UpdateReply {
+  TreasureInfo treasure = 1;  // 藏品信息
+}
+
+message AddTreasureInfo {
+  int64 treasure_id                  = 1;
+  int64 index                        = 2;  // 获得的第几件藏品 -1为重复获得
+  repeated corepb.Item convert_items = 3;  // 奖励列表
+}
+
+message AddTreasureInfos {
+  repeated AddTreasureInfo add_treasure_infos = 1;
+}
+
+message TreasureRoomInfoChangeNotify {
+  TreasureRoomInfo notify = 1;  // 藏品室信息
+}
+
+message GetTreasureAttrRequest {
+  int64 treasure_id = 1;  // 藏品ID
+  int64 star        = 2;  // 藏品星级
+}
+
+message GetTreasureAttrReply {
+  corepb.FightAttr attr = 1;  // 绝对总加成，不含词条加成
+  repeated int64 effect = 2;  // 词条属性
+}
+
+message ListUnclaimedHiddenTreasuresRequest {}
+
+message ListUnclaimedHiddenTreasuresReply {
+  repeated int64 treasure_ids        = 1;  // 未领取的已解锁彩蛋藏品ID列表
+  repeated int64 unlock_treasure_ids = 2;  // 已开放的可交互彩蛋藏品ID列表
+}
+
+message ClaimHiddenTreasureRequest {
+  int64 treasure_id = 1;  // 藏品ID
+}
+
+message ClaimHiddenTreasureReply {
+  repeated corepb.Item rewards = 1;  // 领取结果
+}
+
+// UnclaimedHiddenTreasuresUpdateNTF 用来在可能有新未领取的彩蛋藏品时通知客户端
+message UnclaimedHiddenTreasuresUpdateNTF {
+  repeated int64 treasure_ids            = 1;  // 未领取的已解锁彩蛋藏品ID列表
+  repeated int64 unlock_treasure_ids     = 2;  // 已开放的可交互彩蛋藏品ID列表
+  map<int64, bytes> hidden_treasure_data = 3;  // 已解锁未达到领取条件的藏品信息
+}
+
+message TriggerHiddenTreasureEventRequest {
+  int64 treasure_id = 1;  // 藏品ID
+  bytes event       = 2;
+}
+
+message TriggerHiddenTreasureEventReply {}

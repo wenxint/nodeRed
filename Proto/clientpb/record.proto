@@ -1,0 +1,207 @@
+// cs protocol
+syntax = "proto3";
+package clientpb;
+option go_package = "git.woa.com/red/game-proto/clientpb";
+import "corepb/fight_common.proto";
+import "clientpb/logtrack.proto";
+// http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net/Proto/pkg/proto/clientpb/record.proto
+// 这个文件来自客户端, 修改必须由客户端发起后同步给我们!!!
+message DungeonSyncCmd {
+  int32 vkey              = 1;
+  int32 player_id         = 2;
+  repeated int32 arg_list = 3;
+  bytes pb_msg            = 4;
+}
+message DungeonSyncHash {
+  int32 player_id        = 1;
+  uint64 hash_code       = 2;
+  uint64 frame_hash_code = 3;
+}
+message DungeonVector3 {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}
+message DungeonBuff {
+  int32 id           = 1;
+  int32 duraFrame    = 2;
+  int32 currentFrame = 3;
+}
+message DungeonPlayerLst {
+  int32 player_id                 = 1;
+  DungeonVector3 pos              = 2;
+  int64 hp                        = 3;
+  int32 mapId                     = 5;
+  int32 cameraTargetId            = 6;
+  repeated DungeonBuff playerBuff = 4;
+}
+message DungeonMonsterLst {
+  int32 player_id                  = 1;
+  DungeonVector3 pos               = 2;
+  int64 hp                         = 3;
+  int32 mapId                      = 5;
+  int32 cameraTargetId             = 6;
+  repeated DungeonBuff monsterBuff = 4;
+}
+
+message GraphScriptDebugData {
+  int32 status = 1;  // 0空闲 1正在执行 2已经执行  4禁用  5删除
+}
+
+message GraphBlockDebugData {
+  int32 id                                = 1;
+  int32 status                            = 2;  // 0空闲 1正在执行 2已经执行  4禁用  5删除
+  repeated GraphScriptDebugData decorator = 3;
+  repeated GraphScriptDebugData frame     = 4;
+}
+
+message GraphGroupDebugData {
+  int32 id     = 1;
+  int32 status = 2;  // 0空闲 1正在执行 2已经执行  4禁用  5删除
+}
+
+message GraphDebugerData {
+  int32 sid                           = 1;
+  repeated GraphBlockDebugData blocks = 2;
+  repeated GraphGroupDebugData groups = 3;
+  string name                         = 4;
+}
+
+message SharedVariableData {
+  string key  = 1;
+  int32 value = 2;
+}
+
+message SharedVariableDataCommand {
+  repeated SharedVariableData level = 1;
+  repeated SharedVariableData view  = 2;
+}
+
+message DungeonSyncFrame {
+  int32 frame_id                                 = 1;  // 帧号
+  repeated DungeonSyncCmd cmd_list               = 2;  // 帧数据
+  repeated DungeonPlayerLst DungeonPlayer_list   = 4;
+  repeated DungeonMonsterLst DungeonMonster_list = 5;
+  repeated GraphDebugerData graph_data           = 6;
+  SharedVariableDataCommand shared_variable      = 7;
+}
+
+message DungeonHashFrame {
+  int32 frame_id                     = 1;  //帧号
+  repeated DungeonSyncHash hash_list = 2;  //帧hash
+}
+message DungeonRoundRecord {
+  repeated DungeonSyncFrame frame_list = 1;  // 帧列表
+  int32 round_idx                      = 2;  // 回合数，从1开始
+}
+
+message CustomInfoInRecord{
+  int32 frame_id = 1;                                     //帧号
+  repeated int32 dynamic_load_buff_ids = 2;               //动态加载的Buff id列表
+  repeated string dynamic_load_graph_ids = 3;            //动态加载的流程图 id列表
+}
+
+message DungeonRecord {
+  int32 app_ver                            = 1;
+  int32 res_ver                            = 2;
+  corepb.GameStartMessage start_msg        = 3;
+  repeated DungeonRoundRecord round_record = 4;  // 按回合存储的
+  uint64 hash_code                         = 5;  // 要讨论下
+  bytes ext_info                           = 6;  // 业务用到可能会存储一些自定义信息
+  repeated DungeonHashFrame framehash_list = 7;
+  bool record_by_client                    = 8;  // 是否由客户端录制，默认情况是由服务器录制
+  FightResult result                       = 9;  // 战斗结果
+  bytes valid_check_ext_info               = 10; // 对局有效性检查自定义信息
+  repeated CustomInfoInRecord custom_info_frame_list = 11;  //对局中需要动态加载资源的帧
+  bytes addit_info                         = 12; // 额外要存的信息，目前保存超新赛LobbyState信息
+}
+
+message ValidCheckCommonExInfo {
+  repeated int32 int_args                   = 1; // 通用int参数
+  repeated string str_args                  = 2; // 通用string参数
+  ValidCheckVaribleUnit damage_check        = 3; // 通用伤害校验，客户端取值一般是 battleStatistics:GetAllDamageToMonster() 或使用可上报服务器共享变量
+  ValidCheckVaribleUnit kill_num_check      = 4; // 通用击杀数校验 客户端取值一般是 battleStatistics:GetAllKillTimesToMonster() 或使用可上报服务器共享变量
+}
+
+// 数值校验单元结构
+message ValidCheckVaribleUnit {
+    int32 value                             = 1; // 待校验数值
+    string shared_varible_key               = 2; // 可选，传递时服务器校验取值对应共享变量值，否则按常规的取值方式
+}
+
+message FightResult {
+  repeated corepb.FightResult result = 1;  // 胜负结果
+}
+enum ErrorCode {
+  NotDefine = 0;           // 无意义
+  OK        = 1;           // 校验成功，没有作弊
+  //输入错误或者内部错误
+  AppVerError       = 2;   // 版本不一致
+  ResVerError       = 3;   // 资源版本不一致
+  NoPlayer          = 4;   // 没有角色
+  PlayerTeamIdError = 5;   // 角色teamid异常
+  DungeonNotExit    = 6;   // 关卡不存在
+  FrameCntLimit     = 7;   // 超过最大帧数
+  InternalError     = 8;   // 内部错误
+  ReqError          = 9;   // 请求有问题
+  SyncFrameEmpty    = 10;  // 收到的帧数据为空
+  Termination       = 11;  // 异常终止（传过来的帧数据不足以结束对局，可能是掉线或者服务器传过来的帧数据不足）
+  //怀疑作弊
+  SyncDt            = 101;  // 有人使用工具箱作弊
+  HashError         = 102;  // hash不一致
+  GameStartMsgError = 103;  // 客户端和校验服收到的GameStartMsg不一致
+  VkeyError         = 104;  // 关键vkey的上报异常
+  ReportError       = 105;  // 上报的数据错误，比如胜负关系，主要用于PVE
+}
+message HashErrorInfo {
+  int32 frame_id          = 1;  // 帧号
+  uint64 client_hash_code = 2;  // 客户端hash
+  uint64 Server_hash_code = 3;  // 校验服hash
+}
+message CheatPlayerInfo {
+  uint32 player_idx       = 1;  // 从1开始玩家编号
+  int64 team_id           = 2;  // 队伍ID, 从1开始
+  HashErrorInfo hash_info = 3;
+  bool use_sync_dt        = 4;  // 使用了工具箱Vkey，认为是作弊
+}
+message ValidPlayerInfo {
+  uint32 player_idx   = 1;  // 从1开始玩家编号
+  uint32 total_damage = 2;  // 造成伤害
+  uint32 hurt_times   = 3;  // 受击次数
+  int64 left_hp      = 4;  // 剩余血量
+                            // todo 再增加
+}
+message ValidRoundPlayerInfo {
+  uint32 player_idx  = 1;                // 从1开始玩家编号
+  int64 left_hp     = 2;                // 当前回合剩余血量（未计算胜利恢复的值）
+  uint32 mp          = 3;                // mp
+  uint32 buddy_index = 4;                // 伙伴序号(空岛贝与伙伴绑定)，与startmsg里的buddy序号对应
+                                         // (下一轮上场角色的索引，客户端回合继承用的)
+  map<int32, int32> inherited_attr = 5;  // 继承的属性，包含援护信息，之后可能考虑把血量和mp也放到这里
+  uint32 support_index             = 6;  // 援助序号，和startmsg里的support_buddy_info序号对应
+  int64 next_round_init_hp        = 7;  // 下个回合初始血量（胜利方：加上恢复的值 失败方：下个伙伴的初始血量）
+}
+
+// 血量，奥义点和伙伴数，通灵剩下几个等，很关键的几个数据
+message ValidRoundInfo {
+  repeated ValidRoundPlayerInfo round_player_info = 1;  // 玩家回合信息
+  PbVekyCameraParam cameradata                    = 2;  // 摄像机数据
+}
+message ValidResultInfo {
+  repeated corepb.FightResult result = 1;  // 战斗结果
+}
+message PbVekyCameraParam {
+  bool result       = 1;  // 结果 默认50%以上的失败率认为错误
+  int32 total_count = 2;  // 统计次数
+  int32 fail_count  = 3;  // 失败次数
+}
+message ValidResult {
+  ErrorCode error_code                       = 1;  // 比如版本不对的错误码，我看到业务的协议是放在别的位置
+  repeated CheatPlayerInfo cheat_player_info = 2;  // 怀疑的作弊名单
+  repeated ValidPlayerInfo player_info       = 3;  // 玩家信息
+  repeated ValidRoundInfo round_info         = 4;  // 分回合信息
+  ValidResultInfo result_info                = 5;  // 结果信息
+  LogTrackFrameInfo logtrack_info            = 6;  // 如果不同步会生成
+  DungeonRecord record                       = 7;  // 赏金赛模拟会生成
+  int32 ms_elapsed                           = 8;  // 校验耗时（ms）
+}

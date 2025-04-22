@@ -1,0 +1,166 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.seakingpb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/seakingpb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+// 狩猎海王服务
+service SeaKingService {
+  // CheckOpen 检查是否开启
+  rpc CheckOpen(CheckOpenRequest) returns (CheckOpenReply);
+  // Information 获取狩猎海王信息
+  rpc Information(InformationRequest) returns (InformationReply);
+  // StartFight 开始战斗
+  rpc StartFight(StartFightRequest) returns (StartFightReply);
+  // FinishFight 结束战斗
+  rpc FinishFight(FinishFightRequest) returns (FinishFightReply);
+  // GuildRanks 获取同盟伤害排行榜
+  rpc GuildRanks(GuildRanksRequest) returns (GuildRanksReply);
+  // PlayerRanks 获取玩家伤害排行榜
+  rpc PlayerRanks(PlayerRanksRequest) returns (PlayerRanksReply);
+  // RewardInfo 获取奖励预览信息
+  rpc RewardInfo(RewardInfoRequest) returns (RewardInfoReply);
+  // DrawReward 领取个人挑战奖励
+  rpc DrawReward(DrawRewardRequest) returns (DrawRewardReply);
+}
+
+message CheckOpenRequest {}
+
+message CheckOpenReply {}
+
+message InformationRequest {}
+
+message SeakingInfo {
+  int64 start_at                      = 1;  // 开始时间(unix second)
+  int64 end_at                        = 2;  // 结束时间(unix second)
+  int64 next_settle_at                = 3;  // 下次结算时间(unix second)
+  repeated int64 settle_times         = 4;  // 全部结算时间(unix second)
+  repeated PlayerRankInfo top_players = 5;  // 玩家伤害排行榜前10
+}
+
+message InformationReply {
+  SeakingInfo seaking_info = 1;  // 狩猎海王信息
+}
+
+message StartFightRequest {}
+
+message StartFightReply {
+  corepb.GameStartMessage start_message = 1;  // 游戏开始消息
+}
+
+// 纯客户端副本战斗结束时客户端上报的通用信息，放到同一个message中吧
+message PVEReport {
+  int64 fight_time                          = 1;   // 实际战斗时长，不包括暂停这些
+  int64 real_fight_time                     = 2;   // 从加载成功到战斗结束经过的时长
+  bool is_auto_fight                        = 3;   // 是否是自动战斗
+  int64 dead_times                          = 4;   // 死亡次数
+  int64 revive_times                        = 5;   // 复活次数
+  int64 dial_used_cnt                       = 6;   // 空岛贝使用次数
+  int64 damage                              = 7;   // 总伤害
+  bool success                              = 8;   // 是否通关
+  int64 dungeon_id                          = 9;   // 副本ID
+  bytes dungeon_record_bytes                = 10;  // 对局数据，优先取这个
+  int64 monster_kills                       = 11;  // 击杀怪物数量
+  corepb.PlayerFightActDetail fight_detail  = 12;  // 客户端统计的战斗动作详情
+  corepb.MonsterFightActDetail monster_info = 13;  // 怪物信息上报
+}
+
+message FinishFightRequest {
+  PVEReport report = 1;  // 战斗结果
+}
+
+message RankChange {
+  int64 before = 1;  // 战斗前排名
+  int64 after  = 2;  // 战斗后排名
+}
+
+message SettleInfo {
+  int64 current_damage   = 1;  // 当前战斗伤害
+  int64 max_damage       = 2;  // 个人最高伤害
+  RankChange player_rank = 3;  // 玩家排名变化
+  int64 guild_total      = 4;  // 同盟总伤害
+  RankChange guild_rank  = 5;  // 同盟排名变化
+}
+
+message FinishFightReply {
+  corepb.GameOverMessage over_message = 1;  // 游戏结束消息
+  SeakingInfo seaking_info            = 2;  // 更新后的狩猎海王信息
+  SettleInfo settle_info              = 3;  // 结算信息
+  int64 guild_id                      = 4;  // 同盟ID，如果为 0 表示已经退出同盟
+}
+
+message GuildRanksRequest {}
+
+message GuildRankInfo {
+  int64 rank         = 1;  // 同盟排名
+  int64 guild_id     = 2;  // 同盟ID
+  string guild_name  = 3;  // 同盟名
+  int64 guild_level  = 4;  // 同盟等级
+  string leader_name = 5;  // 同盟团长名
+  int64 damage       = 6;  // 伤害
+  int64 guild_flag   = 7;  // 同盟旗帜
+}
+
+message GuildRanksReply {
+  repeated GuildRankInfo guild_ranks = 1;  // 同盟排名
+  GuildRankInfo my_rank              = 2;  // 我的排名
+}
+
+message PlayerRanksRequest {
+  int64 rank_begin = 1;  // 排名开始(查询范围，包含该排名，从 1 开始)
+  int64 rank_end   = 2;  // 排名结束(查询范围，包含该排名，从 1 开始)
+}
+
+message PlayerRankInfo {
+  int64 rank                              = 1;  // 玩家排名
+  int64 gid                               = 2;  // 玩家 gid
+  int64 damage                            = 3;  // 玩家最高伤害
+  corepb.PersonalDisplayInfo display_info = 4;  // 玩家展示信息
+  string guild_name                       = 5;  // 所属同盟名
+  bool is_ranking_anonymous               = 6;  // 是否匿名
+}
+
+message PlayerRanksReply {
+  repeated PlayerRankInfo player_ranks = 1;  // 玩家排名
+  PlayerRankInfo my_rank               = 2;  // 我的排名
+}
+
+message RewardInfoRequest {}
+
+message PersonalTask {
+  int64 id                    = 1;  // 挑战任务ID
+  int64 progress              = 2;  // 挑战任务进度
+  int64 max_progress          = 3;  // 挑战任务最大进度
+  repeated corepb.Item reward = 4;  // 挑战任务奖励
+  bool available              = 5;  // 是否可领取
+  bool drawed                 = 6;  // 是否已领取
+}
+
+message RankReward {
+  int64 id                     = 1;  // 排名奖励ID
+  int64 rank_left              = 2;  // 排名开始，例如 [1,100] 中的 1
+  int64 rank_right             = 3;  // 排名结束，例如 [1,100] 中的 100
+  repeated corepb.Item rewards = 4;  // 排名奖励
+}
+
+message RewardInfoReply {
+  repeated PersonalTask personal_tasks    = 1;  // 个人挑战任务信息
+  repeated RankReward guild_rank_rewards  = 2;  // 同盟排名奖励信息预览
+  repeated RankReward player_rank_rewards = 3;  // 玩家排名奖励信息预览
+  int64 player_rank                       = 4;  // 玩家排名
+  int64 guild_rank                        = 5;  // 同盟排名
+}
+
+message DrawRewardRequest {
+  repeated int64 task_ids = 1;  // 需要领取的任务ID列表，支持批量领取
+}
+
+message DrawRewardReply {
+  repeated corepb.Item rewards         = 1;  // 领取的奖励
+  repeated PersonalTask personal_tasks = 2;  // 更新后的个人挑战任务信息
+}

@@ -1,0 +1,146 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.greaterriftpb;
+option go_package = "git.woa.com/red/zonesvr/pkg/proto/zonepb/greaterriftpb";
+
+import "corepb/common.proto";
+
+service GreaterRiftCSService {
+  // GetBag 获取背包信息
+  rpc GetBag(GetBagRequest) returns (GetBagReply);
+  // UsePlan 使用方案
+  rpc UsePlan(UsePlanRequest) returns (UsePlanReply);
+  // EquipBadge 装备徽章
+  rpc EquipBadge(EquipBadgeRequest) returns (EquipBadgeReply);
+  // DetachBadge 卸下徽章
+  rpc DetachBadge(DetachBadgeRequest) returns (DetachBadgeReply);
+  // AdvanceBadge 熔炼徽章
+  rpc AdvanceBadge(AdvanceBadgeRequest) returns (AdvanceBadgeReply);
+  // DecomposeBadge 分解徽章
+  rpc DecomposeBadge(DecomposeBadgeRequest) returns (DecomposeBadgeReply);
+  // GetCanDecomposeBadgeList 获取可分解徽章
+  rpc GetCanDecomposeBadgeList(GetCanDecomposeBadgeListRequest) returns (GetCanDecomposeBadgeListReply);
+  // OpenTreasure 打开宝箱
+  rpc OpenTreasure(OpenTreasureRequest) returns (OpenTreasureReply);
+  // ReceiveTreasure 领取宝箱奖励
+  rpc ReceiveTreasure(ReceiveTreasureRequest) returns (ReceiveTreasureReply);
+  // GetAdvanceInfo 获取熔炼信息
+  rpc GetAdvanceInfo(GetAdvanceInfoRequest) returns (GetAdvanceInfoReply);
+}
+
+message GetAdvanceInfoRequest {
+  int64 unique_id                = 1;  // 徽章唯一id
+  int64 rough_unique_id          = 2;  // 消耗的胚子物品唯一id
+  int64 selected_wordstrip_count = 3;  // 选中的词条数量
+}
+
+message GetAdvanceInfoReply {
+  int64 success_rate = 1;  // 熔炼成功率
+  int64 cost_count   = 2;  // 熔炼消耗次数
+}
+
+message GetCanDecomposeBadgeListRequest {}
+
+message GetCanDecomposeBadgeListReply {
+  repeated Badge badges = 1;
+}
+
+message ReceiveTreasureRequest {
+  int64 count = 1;  // 领取次数
+}
+
+message ReceiveTreasureReply {
+  repeated corepb.Item items = 1;  // 获得的物品
+}
+
+message OpenTreasureRequest {}
+
+message OpenTreasureReply {
+  repeated corepb.Item items = 1;  // 获得的物品
+}
+
+message DecomposeBadgeRequest {
+  repeated int64 unique_ids = 1;  // 物品唯一id
+}
+
+message DecomposeBadgeReply {
+  repeated corepb.Item items = 1;  // 分解获得材料
+}
+
+message AdvanceBadgeRequest {
+  int64 unique_id                               = 1;  // 物品唯一id
+  int64 rough_unique_id                         = 2;  // 消耗的胚子物品唯一id
+  repeated AdvanceWordstrip selected_wordstrips = 3;  // 选中的词条
+}
+
+message AdvanceBadgeReply {
+  bool is_success = 1;
+  Badge badge     = 2;
+}
+
+message AdvanceWordstrip {
+  int64 unique_id     = 1;
+  int64 wordstrip_id  = 2;
+  int64 wordstrip_idx = 3;
+}
+
+message DetachBadgeRequest {
+  int64 buddy_id    = 1;
+  int64 position_id = 2;
+}
+
+message DetachBadgeReply {}
+
+message EquipBadgeRequest {
+  int64 unique_id = 1;
+  int64 buddy_id  = 2;
+}
+
+message EquipBadgeReply {}
+
+message UsePlanRequest {
+  int64 buddy_id       = 1;
+  bool use_custom_plan = 2;
+}
+
+message UsePlanReply {}
+
+message GetBagRequest {
+  int64 buddy_id = 1;
+}
+
+message GetBagReply {
+  repeated Plan plans   = 1;  // 第一个是推荐方案，第二个是自定义方案
+  repeated Badge badges = 2;
+}
+
+message Badge {
+  int64 badge_id                   = 1;
+  int64 unique_id                  = 2;
+  int64 star                       = 3;
+  int64 advance_process_accumulate = 4;
+  repeated Wordstrip wordstrips    = 5;
+  bool is_equipped                 = 6;  // 当前方案下是否已穿戴
+  int64 quality                    = 7;
+  int64 score                      = 8;  // 词条评分的加和
+}
+
+message Wordstrip {
+  int64 wordstrip_id  = 1;
+  bool is_main        = 2;
+  int64 attr_id       = 3;
+  int64 value         = 4;
+  int64 wordstrip_idx = 5;
+  int64 score         = 6;
+}
+
+message Plan {
+  map<int64, Position> positions = 1;
+  bool is_used                   = 2;
+}
+
+message Position {
+  int64 position_id = 1;
+  Badge badge       = 2;
+}

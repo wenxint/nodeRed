@@ -1,0 +1,49 @@
+// cs protocol
+syntax = "proto3";
+
+import "corepb/common.proto";
+
+package zonepb.alloypb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/alloypb";
+
+service AlloyService {
+  rpc BagInfo(BagInfoRequest) returns (BagInfoReply);                 // 获取背包信息
+  rpc BatchResolve(BatchResolveRequest) returns (BatchResolveReply);  // 批量分解合金
+  rpc Lottery(LotteryRequest) returns (LotteryReply);                 // 抽奖
+}
+
+message Alloy {
+  int64 kind          = 1;  // 合金类型
+  int64 level         = 2;  // 合金等级
+  int64 alloy_id      = 3;  // 合金ID
+  int64 count         = 4;  // 合金数量
+  repeated Attr attrs = 5;  // 合金属性
+  int64 score         = 6;  // 合金分数
+}
+
+message Attr {
+  corepb.AttributeId attr_id = 1;
+  int64 num                  = 2;
+}
+
+message BagInfoRequest {}
+
+message BagInfoReply {
+  repeated Alloy items = 1;  // 所有背包中的合金
+  int64 max_level      = 2;  // 历史获取的最大等级合金
+}
+
+message BatchResolveRequest {
+  map<int64, int64> alloy_ids = 1;  // 各合金ID和数量
+}
+
+message BatchResolveReply {}
+
+message LotteryRequest {
+  int64 count = 1;  // 抽取数量
+  int64 level = 2;  // 抽取级别
+}
+
+message LotteryReply {
+  repeated int64 alloy_ids = 1;  // 抽到的合金
+}

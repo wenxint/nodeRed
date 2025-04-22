@@ -1,0 +1,124 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0055pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0055pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0055Service {
+  // BuildingReward 设施领奖
+  rpc BuildingReward(BuildingRewardRequest) returns (BuildingRewardReply);
+  // BuildingDonate 设施捐赠
+  rpc BuildingDonate(BuildingDonateRequest) returns (BuildingDonateReply);
+  // SetOffFireworks 点燃烟花
+  rpc SetOffFireworks(SetOffFireworksRequest) returns (SetOffFireworksReply);
+  // SendBarrage 发送弹幕
+  rpc SendBarrage(SendBarrageRequest) returns (SendBarrageReply);
+  // GetLuckyBagRecords 获取福袋记录
+  rpc GetLuckyBagRecords(GetLuckyBagRecordsRequest) returns (GetLuckyBagRecordsReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Building buildings               = 1;
+  int64 donate_count                        = 2;  // 累计捐赠数量
+  repeated actpb.commonpb.Task processes    = 3;  // 进度
+  repeated Broadcast broadcasts             = 4;  // 广播
+  repeated FireworkMsg firework_msgs        = 5;  // 烟花侧弹
+  repeated Barrage barrages                 = 6;  // 弹幕
+  repeated int64 new_completed_building_ids = 7;  // 新完成的设施id
+  bool new_entered                          = 8;  // 是否新进入
+}
+
+message Building {
+  int64 id = 1;
+  //  int64 donate_accumulated_count  = 2;  // 捐赠数量
+  actpb.commonpb.TaskStatus state = 3;  // 设施状态
+  int64 building_completed_need   = 4;  // 完成设施需要的捐赠数量
+}
+
+message BuildingRewardRequest {
+  int64 building_id = 1;
+}
+
+message BuildingRewardReply {
+  repeated corepb.Item awards = 1;  // 奖励
+}
+
+message BuildingDonateRequest {}
+
+message BuildingDonateReply {
+  repeated corepb.Item awards = 1;  // 奖励
+}
+
+enum LuckyBagType {
+  LUCKY_BAG_TYPE_UNKNOWN = 0;
+  LUCKY_BAG_TYPE_BIG     = 1;
+  LUCKY_BAG_TYPE_SMALL   = 2;
+}
+
+message SetOffFireworksRequest {}
+
+message SetOffFireworksReply {
+  repeated corepb.Item awards  = 1;  // 奖励
+  LuckyBagType lucky_bag_type  = 2;
+  repeated LuckyBag lucky_bags = 3;  // 福袋中奖列表
+}
+
+message LuckyBag {
+  int64 gid                   = 1;
+  string name                 = 2;
+  LuckyBagType lucky_bag_type = 3;
+  repeated corepb.Item awards = 4;  // 奖励
+  int64 created_at            = 5;
+}
+
+message Barrage {
+  int64 gid        = 1;
+  string name      = 2;
+  string content   = 3;
+  int64 created_at = 4;
+  int64 unique_id  = 5;
+  int64 msg_id     = 6;
+}
+
+message SendBarrageRequest {
+  int64 id = 1;
+}
+
+message SendBarrageReply {
+  repeated Barrage barrages = 1;
+}
+
+enum BroadcastType {
+  BROADCAST_TYPE_UNKNOWN   = 0;
+  BROADCAST_TYPE_BUILDING  = 1;
+  BROADCAST_TYPE_LUCKY_BAG = 2;
+}
+
+message Broadcast {
+  int64 gid          = 1;
+  string name        = 2;
+  string content     = 3;
+  BroadcastType type = 4;
+  int64 created_at   = 5;
+  int64 unique_id    = 6;
+}
+
+message FireworkMsg {
+  int64 gid        = 1;
+  string name      = 2;
+  string content   = 3;
+  int64 created_at = 4;
+  int64 unique_id  = 5;
+}
+
+message GetLuckyBagRecordsRequest {}
+
+message GetLuckyBagRecordsReply {
+  repeated LuckyBag my_lucky_bags   = 1;
+  repeated LuckyBag zone_lucky_bags = 2;
+}

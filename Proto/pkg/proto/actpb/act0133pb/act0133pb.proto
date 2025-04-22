@@ -1,0 +1,101 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0133pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0133pb";
+
+
+import "corepb/common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0133Service {
+  rpc RankRewardInfoQuery(RankRewardInfoQueryRequest) returns (RankRewardInfoQueryReply);
+  rpc BattleRecordQuery(BattleRecordQueryRequest) returns (BattleRecordQueryReply);
+}
+
+enum ScoreChange {
+  CHANGE_UNKNOWN = 0;  // 默认值 不使用
+  CHANGE_UP      = 1;  // 分数增加
+  CHANGE_DOWN    = 2;  // 分数减少
+}
+
+// ================== ActGetDetail begin ================== //
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 total_battle_count                                      = 1;  // 总共参与对局次数
+  int64 score                                                   = 2;  // 积分
+  int64 rank                                                    = 3;  // 积分排名 0表示未上榜
+  int64 daily_match_begin_time                                  = 4;  // 每天可匹配的开始时间 24小时制 值为小时数(0-24)
+  int64 daily_match_end_time                                    = 5;  // 每天可匹配的结束时间 24小时制 值为小时数(0-24)
+  int64 rank_battle_count_limit                                 = 6;  // 参与N场对局才可以上榜
+  actpb.commonpb.PvpTaskProgressConfig pvp_task_progress_config = 7;  // pvp任务进度配置
+  int64 win_count                                               = 8;  // 胜场数
+}
+// ================== ActGetDetail end ================== //
+
+message PersonRankInfo {
+  repeated corepb.LoadoutBuddyChoice buddies_choices = 1;  // 阵容信息 这里使用的是胜场最高的阵容 如果有胜场一样的阵容则选择最新的使用
+}
+
+// ================== BattleRecordQuery begin ================== //
+message BattleRecordQueryRequest {}
+
+message BattlePlayerInfo {
+  int64 gid                                          = 1;  // 对局的玩家ID
+  corepb.PersonalDisplayInfo player_info             = 2;  // 玩家信息
+  repeated corepb.LoadoutBuddyChoice buddies_choices = 3;  // 对局玩家选择的阵容
+}
+
+message BattleRecordInfo {
+  corepb.FightResultType battle_result = 1;  // 对局结果
+  ScoreChange score_change             = 2;  // 积分变化
+  int64 score                          = 3;  // 增加/减少的积分
+  BattlePlayerInfo self_player         = 4;  // 玩家自己的对局信息
+  BattlePlayerInfo rival_player        = 5;  // 对手的对局信息
+  int64 battle_end_time                = 6;  // 对局结束时间 秒级时间戳(s)
+  int64 result_param                   = 7;  // 如果result为win且result_param为1表示完胜 如果result为lose且result_param为1表示完败 其他情况则为普通的胜负平
+}
+
+message BattleRecordQueryReply {
+  repeated BattleRecordInfo battle_record_infos = 1;  // 战报信息
+}
+// ================== BattleRecordQuery begin ================== //
+
+// ================== RankRewardInfoQuery begin ================== //
+message RankRewardInfoQueryRequest {}
+
+message RankTaskInfo {
+  bool in_gear                 = 1;  // 是否在当前档位
+  string desc                  = 2;  // 描述信息
+  repeated corepb.Item rewards = 3;  // 对应的奖励信息
+}
+
+message RankRewardInfoQueryReply {
+  repeated RankTaskInfo ranks = 1;  // 排名信息
+}
+// ================== RankRewardInfoQuery begin ================== //
+
+message GameOverMsgCustomData {
+  map<int64, int64> score_info = 1;  // 分数信息 gid -> score
+}
+
+message PlayerGameOverMsgInfo {
+  ScoreChange score_change = 1;  // 分数变化
+  int64 score              = 2;  //  本次对局玩家的分数
+  int64 gid                = 3;  // 玩家的gid
+}
+
+message GameOverMsgCustomDataWithSettle {
+  PlayerGameOverMsgInfo self_info      = 1;  // 本次对局玩家自己的信息
+  PlayerGameOverMsgInfo op_info        = 2;  // 本次对局对手的信息
+  corepb.FightResultType battle_result = 3;  // 对局结果(相对玩家自己来说)
+  int64 result_param                   = 4;  // 如果result为win且result_param为1表示完胜 如果result为lose且result_param为1表示完败 其他情况则为普通的胜负平
+}
+
+message ActBriefInfo {
+  int64 score                     = 1;  // 玩家榜单积分
+  PersonRankInfo person_rank_info = 2;  // 玩家榜单其他数据
+}

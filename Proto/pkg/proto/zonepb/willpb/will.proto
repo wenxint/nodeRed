@@ -1,0 +1,152 @@
+// cs protocol
+syntax = "proto3";
+
+import "corepb/common.proto";
+
+package zonepb.willpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/willpb";
+
+service WillService {
+  // 获取所有篇章的简要信息
+  rpc ChapterProfiles(ChapterProfilesRequest) returns (ChapterProfilesReply);
+
+  // 获取指定篇章的详细信息
+  rpc ChapterInfo(ChapterInfoRequest) returns (ChapterInfoReply);
+
+  // 意志激活
+  rpc UnlockWill(UnlockWillRequest) returns (UnlockWillReply);
+
+  // 意志升星
+  rpc UpgradeWill(UpgradeWillRequest) returns (UpgradeWillReply);
+
+  // 意志觉醒
+  rpc AwakeWill(AwakeWillRequest) returns (AwakeWillReply);
+
+  // 意志背包
+  rpc WillItems(WillItemsRequest) returns (WillItemsReply);
+
+  // 分解意志道具
+  rpc BreakDownItem(BreakDownItemRequest) returns (BreakDownItemReply);
+}
+
+message ChapterProfilesRequest {}
+
+message ChapterProfilesReply {
+  map<int64, ChapterProfile> profiles = 1;  // 篇章简略信息
+  corepb.FightAttr attr               = 2;  // 意志系统总的属性加成
+  int64 fc                            = 3;  // 实力值
+}
+
+message ChapterInfoRequest {
+  int64 chapter_id = 1;
+}
+
+message ChapterInfoReply {
+  ChapterInfo chapter_info = 1;
+}
+
+message WillSystemInfo {
+  map<int64, ChapterInfo> chapters = 1;  // 篇章信息
+}
+
+message UnlockWillRequest {
+  int64 chapter_id = 1;  // 意志所在篇章
+  int64 group_id   = 2;  // 意志所在意志组合
+  int64 will_id    = 3;  // 意志ID
+}
+
+message UnlockWillReply {
+  ChapterInfo chapter                = 1;  // 意志解锁后的chapter信息
+  map<int64, bool> unlocked_chapters = 2;  // 已经开启的篇章
+  bool unlock_will_group             = 3;  // 本次是否解锁了意志组合
+}
+
+message UpgradeWillRequest {
+  int64 chapter_id = 1;  // 意志所在篇章
+  int64 group_id   = 2;  // 意志所在意志组合
+  int64 will_id    = 3;  // 意志ID
+}
+
+message UpgradeWillReply {
+  ChapterInfo chapter                = 1;  // 意志升星后的chapter信息
+  map<int64, bool> unlocked_chapters = 2;  // 已经开启的篇章
+}
+
+message AwakeWillRequest {
+  int64 chapter_id = 1;  // 篇章ID
+}
+
+message AwakeWillReply {
+  ChapterInfo chapter   = 1;  // 意志觉醒后的chapter信息
+  corepb.FightAttr attr = 2;  // 意志觉醒属性加成
+}
+
+message ItemInfo {
+  repeated corepb.Item items_needed = 1;  // 所需道具
+  repeated corepb.Item items_owned  = 2;  // 实际拥有道具
+}
+
+// 意志信息
+message WillInfo {
+  int64 will_id              = 1;
+  bool unlocked              = 2;  // 意志是否解锁
+  int64 stars                = 3;  // 意志星级
+  ItemInfo unlock_item_info  = 4;  // 若未解锁，解锁所需道具信息
+  ItemInfo upgrade_item_info = 5;  // 若已解锁，升星所需道具信息（若为空，则说明已经达到最大星级）
+}
+
+// 意志组合
+message WillGroup {
+  int64 group_id             = 1;
+  map<int64, WillInfo> wills = 2;  // 意志信息
+  corepb.FightAttr attr      = 3;  // 意志组合的属性加成
+  bool unlocked              = 4;  // 是否解锁
+}
+
+// 意志羁绊相关信息
+message KizunaInfo {
+  int64 will_value        = 1;  // 意志值
+  int64 kizuna_level      = 2;  // 羁绊等级
+  ItemInfo item_info      = 3;  // 升级道具信息（若为空，则说明已经满级）
+  int64 will_value_needed = 4;  // 升级所需意志值（若为 0，则说明已经满级）
+}
+
+// 意志篇章
+message ChapterInfo {
+  ChapterProfile profile            = 1;  // 篇章简略信息
+  map<int64, WillGroup> will_groups = 2;  // 意志组合
+  KizunaInfo kizuna_info            = 3;  // 意志羁绊相关信息
+  corepb.FightAttr attr             = 4;  // 篇章总的属性加成
+  int64 fc                          = 5;  // 篇章总的实力值
+}
+
+// 意志篇章的简略信息
+message ChapterProfile {
+  int64 chapter_id        = 1;  // 篇章ID
+  bool unlocked           = 2;  // 篇章是否解锁
+  int64 actual_will_value = 3;  // 篇章中实际的意志值
+  int64 actual_will_count = 4;  // 篇章中实际的意志数
+  int64 total_will_value  = 5;  // 篇章中总的意志值
+  int64 total_will_count  = 6;  // 篇章中总的意志数
+}
+
+message WillItemsRequest {}
+
+message WillItemInfo {
+  int64 item_id                = 1;  // 意志道具的ID
+  int64 count                  = 2;  // 意志道具的数量
+  map<int64, bool> will_groups = 3;  // 意志道具对应的意志组合们，是否已经解锁（key: will group id, value: unlocked）
+  bool all_max_star            = 4;  // 对应的意志都已经满星
+}
+
+message WillItemsReply {
+  repeated WillItemInfo will_item_infos = 1;  // 意志道具信息
+}
+
+message BreakDownItemRequest {
+  map<int64, corepb.Item> items = 1;  // 要分解的道具
+}
+
+message BreakDownItemReply {
+  map<int64, corepb.Item> items = 1;  // 分解得到的道具
+}

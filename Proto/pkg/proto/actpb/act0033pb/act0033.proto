@@ -1,0 +1,72 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0033pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0033pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0033Service {
+  // OpenDials 开启贝壳
+  rpc OpenDials(OpenDialsRequest) returns (OpenDialsReply);
+  // RefreshLevel 刷新层数
+  rpc RefreshLevel(RefreshLevelRequest) returns (RefreshLevelReply);
+  // BuyDialTicket 购买贝壳券
+  rpc BuyDialTicket(BuyDialTicketRequest) returns (BuyDialTicketReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  Level level                               = 1;
+  repeated Process processes                = 2;
+  int64 dial_ticket_buy_count               = 3;  // 贝壳券购买次数
+  int64 dial_open_count                     = 4;  // 贝壳开启次数
+  map<int64, int64> dial_quality_remain_num = 5;  // 贝壳品质剩余数量
+}
+
+message Level {
+  int64 level         = 1;  // 当前层数
+  repeated Slot slots = 2;  // 贝壳信息列表
+}
+
+message Slot {
+  int64 index      = 1;  // 索引
+  bool open        = 2;  // 是否开启
+  int64 dial_id    = 3;  // 空岛贝 id
+  int64 dial_count = 4;  // 空岛贝数量
+}
+
+message Process {
+  int64 id                        = 1;
+  int64 dial_open_count           = 2;  // 贝壳开启次数
+  actpb.commonpb.TaskStatus state = 3;  // 进度状态
+  repeated corepb.Item awards     = 4;  // 获得奖品
+}
+
+message RefreshLevelRequest {}
+
+message RefreshLevelReply {
+  Level level                               = 1;  // 当前层数信息
+  map<int64, int64> dial_quality_remain_num = 2;  // 贝壳品质剩余数量
+}
+
+message BuyDialTicketRequest {
+  int64 count = 1;
+}
+
+message BuyDialTicketReply {
+  repeated corepb.Item awards = 1;  // 获得物品
+}
+
+message OpenDialsRequest {
+  bool is_batch_open = 1;  // 是否批量开启
+  bool check_only    = 2;  // 是否只返回可以开启的贝壳信息
+  int64 slot_index   = 3;  // 开启的中心贝壳索引
+}
+
+message OpenDialsReply {
+  repeated Slot slots = 1;  // 抽中的贝壳信息列表
+  Level level         = 2;  // 当前层的全量信息
+}

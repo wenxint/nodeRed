@@ -1,0 +1,75 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.roompb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/roompb";
+
+import "google/protobuf/any.proto";
+import "corepb/fight_common.proto";
+
+service CSActRoomService {
+  // 创建活动组队房间
+  rpc NewTeamRoom(NewTeamRoomRequest) returns (NewTeamRoomReply) {}
+  // 创建活动PVP房间
+  rpc NewPVPRoom(NewPVPRoomRequest) returns (NewPVPRoomReply) {}
+  // 邀请玩家
+  rpc InvitePlayer(InvitePlayerRequest) returns (InvitePlayerReply);
+  // 进入房间
+  rpc EnterRoom(EnterRoomRequest) returns (EnterRoomReply);
+  // 开始匹配
+  rpc TryMatch(TryMatchRequest) returns (TryMatchReply);
+  // 开始战斗
+  rpc StartGame(StartGameRequest) returns (StartGameReply);
+}
+
+message InvitePlayerRequest {
+  int64 act_id                = 1;  // 活动 ID
+  int64 gid                   = 2;  // 被邀请人
+  corepb.FightType fight_type = 3;  // 玩法类型
+}
+
+message InvitePlayerReply {}
+
+message EnterRoomRequest {
+  int64 act_id                = 1;  // 活动 ID
+  corepb.FightType fight_type = 2;  // 玩法类型
+}
+
+message EnterRoomReply {
+  google.protobuf.Any room_info = 1;  // 必须用roomsvr的roompb.RoomInfo解析
+}
+
+message TryMatchRequest {
+  int64 act_id                = 1;  // 活动 ID
+  corepb.FightType fight_type = 2;  // 玩法类型
+}
+
+message TryMatchReply {}
+
+message StartGameRequest {
+  int64 act_id                = 1;  // 活动 ID
+  corepb.FightType fight_type = 2;  // 玩法类型
+}
+
+message StartGameReply {}
+
+message NewTeamRoomRequest {
+  int64 act_id                = 1;  // 活动 ID
+  bool single_match           = 2;  // 是否单人匹配
+  corepb.FightType fight_type = 3;  // 玩法类型
+}
+
+message NewTeamRoomReply {
+  string room_id                = 1;
+  google.protobuf.Any room_info = 2;  // 必须用roomsvr的roompb.RoomInfo解析
+}
+
+message NewPVPRoomRequest {
+  int64 act_id      = 1;  // 活动 ID
+  bool single_match = 2;  // 是否单人匹配
+}
+
+message NewPVPRoomReply {
+  string room_id                = 1;
+  google.protobuf.Any room_info = 2;  // 必须用roomsvr的roompb.RoomInfo解析
+}

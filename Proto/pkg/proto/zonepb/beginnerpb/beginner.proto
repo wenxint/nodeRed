@@ -1,0 +1,62 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.beginnerpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/beginnerpb";
+
+
+enum BypassGroup0Setting {
+  BYPASS_GROUP_0_SETTING_UNKNOWN = 0;
+  BYPASS_GROUP_0_SETTING_NOT_SET = 1;  // 还未设置过
+  BYPASS_GROUP_0_SETTING_KEEP    = 2;  // 选了引导教学
+  BYPASS_GROUP_0_SETTING_BYPASS  = 3;  // 选了自由探索
+}
+
+message Info {
+  LinearInfo linear_info                     = 1;
+  OpenInfo open_info                         = 2;
+  string version                             = 3;  // 玩家注册时的新手引导配置版本号
+  BypassGroup0Setting bypass_group_0_setting = 4;  // 强制引导方式设置
+}
+
+message LinearInfo {
+  reserved 1;
+
+  map<int64, int64> current_node_id_by_group = 2;
+}
+
+message OpenInfo {
+  repeated int64 done_node_ids = 1;
+}
+
+message NewLinearNodeNTF {
+  reserved 1;
+
+  map<int64, int64> current_node_id_by_group = 2;
+}
+
+service CSService {
+  rpc AddToOpenNodeIDs(AddToOpenNodeIDsRequest) returns (AddToOpenNodeIDsReply);                       // 设置开放引导 ID
+  rpc SkipCurrentPhase(SkipCurrentPhaseRequest) returns (SkipCurrentPhaseReply);                       // 跳过当前阶段
+  rpc SetBypassGroup0Beginner(SetBypassGroup0BeginnerRequest) returns (SetBypassGroup0BeginnerReply);  // 设置是否绕过强制引导（自由探索模式）
+}
+
+message AddToOpenNodeIDsRequest {
+  repeated int64 node_ids = 1;  // 要新设置的开放引导 ID 列表，已经设置过的会忽略
+}
+
+message AddToOpenNodeIDsReply {}
+
+message SkipCurrentPhaseRequest {
+  int64 group_id = 1;  // 要跳过的引导组 ID
+}
+
+message SkipCurrentPhaseReply {}
+
+message SetBypassGroup0BeginnerRequest {
+  bool toggle = 1;  // 是或否
+}
+
+message SetBypassGroup0BeginnerReply {
+  BypassGroup0Setting bypass_group_0_setting = 1;  // 新的强制引导方式设置
+}

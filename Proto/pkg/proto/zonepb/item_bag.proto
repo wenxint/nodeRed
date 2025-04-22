@@ -1,0 +1,12 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb";
+
+import "corepb/common.proto";
+
+message ItemBag {
+  map<uint32, corepb.Item> items = 1;
+  map<int64, int64> debts        = 2;  // 客户端无需关心，道具id -> 负债数量
+}

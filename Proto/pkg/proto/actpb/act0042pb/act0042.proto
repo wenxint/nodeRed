@@ -1,0 +1,65 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0042pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0042pb";
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0042Service {
+  // 解锁剧情
+  rpc UnlockStory(UnlockStoryRequest) returns (UnlockStoryReply);
+  // 看完剧情
+  rpc CompleteStory(CompleteStoryRequest) returns (CompleteStoryReply);
+  // 购买活动道具
+  rpc BuyActItem(BuyActItemRequest) returns (BuyActItemReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 current_day            = 1;  // 当前进行天数
+  map<int64, Story> storys     = 2;  // 剧情信息：剧情 ID -> 信息
+  int64 currency_count         = 3;  // 当前货币数量
+  repeated TaskInfo tasks_info = 4;  // 所有任务详情
+  int64 shop_unlock_day        = 5;  // 商店解锁日期
+  int64 remind_buy_count       = 6;  // 商店剩余可购买数量
+  corepb.Item cost             = 7;  // 购买活动道具需要的材料
+}
+
+message TaskInfo {
+  int64 id                         = 1;  // 任务ID
+  string name                      = 2;  // 任务名称
+  string desc                      = 3;  // 任务描述
+  repeated corepb.Item rewards     = 4;  // 任务奖励
+  actpb.commonpb.TaskStatus status = 5;  // 任务状态
+  int64 condition                  = 6;  // 完成条件
+}
+
+message Story {
+  bool unlocked   = 1;  // 是否已解锁
+  bool completed  = 2;  // 是否已看完剧情
+  bool unlockable = 3;  // 是否可解锁
+}
+
+message UnlockStoryRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message UnlockStoryReply {}
+
+message CompleteStoryRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message CompleteStoryReply {}
+
+message BuyActItemRequest {
+  int64 buy_count = 1;  //购买数量
+}
+
+message BuyActItemReply {
+  repeated corepb.Item awards = 1;  //获得的道具
+  int64 remind_buy_count      = 2;  //剩余可购买的数量
+}

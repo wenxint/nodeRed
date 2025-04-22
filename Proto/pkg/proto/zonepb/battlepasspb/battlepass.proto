@@ -1,0 +1,272 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.battlepasspb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/battlepasspb";
+
+
+import "corepb/common.proto";
+
+service BattlePassService {
+  // 查询宝典信息（进入宝典的时候）
+  rpc QueryBattlePassInfo(QueryBattlePassInfoRequest) returns (QueryBattlePassInfoReply);
+  // 查询宝典概览信息（主界面）
+  rpc QueryBattlePassBrifeInfo(QueryBattlePassBrifeInfoRequest) returns (QueryBattlePassBrifeInfoReply);
+  // 领取某一级的宝典奖励
+  rpc ClaimRewards(ClaimRewardsRequest) returns (ClaimRewardsReply);
+  // 领取额外奖励
+  rpc ClaimExtraRewards(ClaimExtraRewardsRequest) returns (ClaimExtraRewardsReply);
+  // 领取所有奖励（包括等级奖励和额外奖励）
+  rpc ClaimAllRewards(ClaimAllRewardsRequest) returns (ClaimAllRewardsReply);
+  // 进阶宝典（之后接入直购之后可能流程有变化，先按这样临时处理）
+  rpc AdvancingBattlePass(AdvancingBattlePassRequest) returns (AdvancingBattlePassReply);
+  // 购买等级
+  rpc BuyLevel(BuyLevelRequest) returns (BuyLevelReply);
+  // 查看兑换商店
+  rpc QueryExchangeShop(QueryExchangeShopRequest) returns (QueryExchangeShopReply);
+  // 兑换商品
+  rpc Exchange(ExchangeRequest) returns (ExchangeReply);
+  // 查看任务信息
+  rpc QueryTaskInfos(QueryTaskInfosRequest) returns (QueryTaskInfosReply);
+  // 完成任务
+  rpc CompleteTask(CompleteTaskRequest) returns (CompleteTaskReply);
+  // 刷新任务
+  rpc RefreshTask(RefreshTaskRequest) returns (RefreshTaskReply);
+  // 购买经验（经验追回）
+  rpc BuyExp(BuyExpRequest) returns (BuyExpReply);
+  // 排行榜点赞
+  rpc Like(LikeRequest) returns (LikeReply);
+  // 购买特惠礼包
+  rpc BuySpecialPack(BuySpecialPackRequest) returns (BuySpecialPackReply);
+  // 忽略特惠礼包红点
+  rpc IgnoreSpecialPackRedpoint(IgnoreSpecialPackRedpointRequest) returns (IgnoreSpecialPackRedpointReply);
+  // 领取补偿(赛季一临时处理)
+  rpc ClaimCompensation(ClaimCompensationRequest) returns (ClaimCompensationReply);
+}
+
+message ClaimCompensationRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message ClaimCompensationReply {
+  repeated corepb.Item items = 1;  // 领取的奖励
+}
+
+message IgnoreSpecialPackRedpointRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message IgnoreSpecialPackRedpointReply {}
+
+message BuySpecialPackRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message BuySpecialPackReply {
+  BattlePassInfo info        = 1;  // 宝典信息
+  repeated corepb.Item items = 2;  // 购买特惠礼包的奖励
+}
+
+message QueryBattlePassInfoRequest {}
+
+message QueryBattlePassInfoReply {
+  BattlePassInfo info = 1;
+}
+
+message BattlePassInfo {
+  int64 season_id                                 = 1;   // 赛季ID
+  int64 week                                      = 2;   // 当前是第几周
+  int64 level                                     = 3;   // 当前等级
+  int64 exp                                       = 4;   // 当前经验
+  int64 extra_rewards_count                       = 5;   // 可领取的额外奖励数目
+  int64 last_shown_level                          = 7;   // 上一次调用这个协议时的等级
+  bool is_advanced                                = 9;   // 是否是高级宝典
+  repeated int64 normal_rewarded                  = 10;  // 已经领取过的普通等级奖励
+  repeated int64 advanced_rewarded                = 11;  // 已经领取过的高级等级奖励
+  int64 fifty_level_can_buy_count                 = 12;  // 50级宝典等级可购买次数(只有50级档位有购买限制)
+  int64 fifty_level_can_buy_limit                 = 13;  // 50级宝典等级可购买上限(只有50级档位有购买限制)
+  bool need_to_show_guide                         = 14;  // 是否需要显示引导
+  BPType type                                     = 15;  // 宝典类型
+  int64 special_pack_can_buy_count                = 16;  // 特惠礼包可购买次数
+  int64 special_pack_already_buy_count            = 17;  // 特惠礼包已购买次数
+  corepb.Item special_pack_cost                   = 18;  // 特惠礼包购买消耗
+  repeated corepb.Item special_pack_rewards       = 19;  // 特惠礼包奖励
+  map<int64, LevelReward> level_rewards           = 20;  // 等级奖励
+  repeated corepb.Item special_bp_upgrade_rewards = 21;  // 特殊升级宝典的奖励(只有赛季一需要临时处理，之后会废弃)
+  repeated corepb.Item compensation_rewards       = 22;  // 赛季一补偿(只有赛季一需要临时处理，之后会废弃)
+}
+
+message LevelReward {
+  int64 bp_level                        = 1;  // 特典等级
+  repeated corepb.Item normal_rewards   = 2;  // 普通特典奖励道具ID
+  repeated corepb.Item advanced_rewards = 3;  // 高级特典奖励道具ID
+  bool is_special_reward                = 4;  // 是否阶段奖励
+}
+
+message QueryBattlePassBrifeInfoRequest {}
+
+message QueryBattlePassBrifeInfoReply {
+  BattlePassInfo info = 1;
+}
+
+message ClaimRewardsRequest {
+  int64 season_id = 1;  // 赛季ID
+  int64 level     = 2;  // 领取的等级
+}
+
+message ClaimRewardsReply {
+  repeated corepb.Item items = 1;  // 领取的奖励
+}
+
+message ClaimExtraRewardsRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message ClaimExtraRewardsReply {
+  repeated corepb.Item items = 1;  // 领取的奖励
+}
+
+message ClaimAllRewardsRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message ClaimAllRewardsReply {
+  repeated corepb.Item items = 1;  // 领取的奖励
+}
+
+message AdvancingBattlePassRequest {
+  int64 season_id = 1;  // 赛季ID
+  BPType type     = 2;  // 宝典类型（之后接入直购之后可能流程有变化，先按这样处理）
+}
+
+message AdvancingBattlePassReply {
+  repeated corepb.Item items = 1;  // 解锁高级宝典的奖励
+}
+
+enum BPType {
+  TYPE_UNKNOWN = 0;
+  NORMAL       = 1;  // 普通宝典
+  ADVANCED     = 2;  // 高级宝典
+  LUXURY       = 3;  // 豪华宝典（特殊的高级宝典）
+}
+
+message TaskInfo {
+  int64 id                       = 1;  // 任务ID
+  int64 current_progress         = 2;  // 当前进度
+  int64 need_progress            = 3;  // 每次完成任务需要的进度
+  int64 already_complete_times   = 4;  // 已经完成的次数
+  int64 can_complete_times_limit = 5;  // 可以完成的次数上限
+  int64 exp                      = 6;  // 完成任务的经验奖励
+  bool can_refresh               = 7;  // 是否可以刷新(只是针对这个任务是否可以刷新，不考虑每个周的刷新次数是否用完)
+}
+
+message BuyLevelRequest {
+  int64 season_id = 1;  // 赛季ID
+  int64 level     = 2;  // 购买的等级
+}
+
+message BuyLevelReply {
+  int64 current_level_can_buy_count = 1;  // 当前等级档位可购买次数(如果无限制为-1)
+}
+
+message QueryExchangeShopRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message QueryExchangeShopReply {
+  repeated ExchangeItemInfo exchange_item_infos = 1;  // 兑换商品列表
+}
+
+message ExchangeItemInfo {
+  int64 exchange_id            = 1;  // 兑换ID
+  corepb.Item product          = 2;  // 兑换商品
+  corepb.Item cost             = 3;  // 单次兑换消耗
+  int64 need_bp_level          = 4;  // 兑换所需宝典等级
+  int64 exchange_limit         = 5;  // 兑换道具数限制
+  int64 already_exchange_count = 6;  // 已经兑换得到道具数
+  int64 own_limit              = 7;   // 拥有数量限制
+  int64 own_count             = 8;   // 拥有数量
+  bool can_exchange           = 9;  // 是否可以兑换
+  repeated ExchangeCost costs = 10;  // 按道具数兑换消耗列表，第 i 个 cost 表示道具数在 [i-1].buy_count+1 至 [i].buy_count 区间的消耗，最后一个 cost 是无限购买的消耗
+}
+
+message ExchangeCost {
+  int64 buy_count  = 1;  // 在这个道具数以内
+  corepb.Item cost = 2;  // 兑换消耗
+}
+
+message ExchangeRequest {
+  int64 season_id   = 1;  // 赛季ID
+  int64 exchange_id = 2;  // 兑换ID
+  int64 count       = 3;  // 兑换数量
+}
+
+message ExchangeReply {
+  repeated corepb.Item gain_items               = 1;  // 兑换的商品
+  repeated ExchangeItemInfo exchange_item_infos = 2;  // 兑换商品列表
+}
+
+message QueryTaskInfosRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message QueryTaskInfosReply {
+  TaskSummaryInfo summary_info = 1;  // 任务概览信息
+}
+
+message TaskSummaryInfo {
+  repeated TaskInfo task_infos           = 1;   // 任务信息
+  int64 weekly_exp_gain                  = 2;   // 本周获得的经验
+  int64 weekly_exp_limit                 = 3;   // 本周获得经验的上限
+  int64 total_buy_exp_count              = 4;   // 可以购买经验的次数
+  int64 already_buy_exp_count            = 5;   // 已经购买经验的次数
+  bool need_to_show_exp_guide            = 7;   // 是否需要显示经验加速引导
+  int64 exp_per_buy                      = 8;   // 每次购买经验可以加的经验数目
+  int64 total_refresh_task_count         = 9;   // 可以刷新任务的次数
+  int64 already_refresh_task_count       = 10;  // 已经刷新任务的次数
+  corepb.Item refresh_cost               = 11;  // （这一次）刷新任务的消耗，如果不能刷新了，返回空
+  int64 acceleration_percentage          = 12;  // 经验加速百分比
+  int64 acceleration_weeks               = 13;  // 经验加速周数
+  int64 acceleration_estimate_level      = 14;  // 经验加速期间预计等级
+  corepb.Item buy_exp_cost               = 15;  // 购买经验的消耗
+  int64 lost_exp_acceleration_percentage = 16;  // 丢失经验中，可加速的百分比
+  int64 lost_exp_buy_percentage          = 17;  // 丢失经验中，可购买的百分比
+  int64 max_acceleration_percentage      = 18;  // 每周加速的最大百分比
+}
+
+message CompleteTaskRequest {
+  int64 season_id = 1;  // 赛季ID
+  int64 task_id   = 2;  // 任务ID
+}
+
+message CompleteTaskReply {
+  int64 exp                    = 1;  // 完成任务的经验奖励
+  TaskSummaryInfo summary_info = 2;  // 任务概览信息
+}
+
+message RefreshTaskRequest {
+  int64 season_id = 1;  // 赛季ID
+  int64 task_id   = 2;  // 任务ID
+}
+
+message RefreshTaskReply {
+  TaskSummaryInfo summary_info = 1;  // 任务概览信息
+}
+
+message BuyExpRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message BuyExpReply {
+  int64 exp                    = 1;  // 购买经验得到的经验
+  TaskSummaryInfo summary_info = 2;  // 任务概览信息
+}
+
+message LikeRequest {
+  int64 season_id = 1;  // 赛季ID
+  int64 gid       = 2;  // 点赞的gid
+}
+
+message LikeReply {
+  repeated corepb.Item items = 1;  // 点赞奖励
+}

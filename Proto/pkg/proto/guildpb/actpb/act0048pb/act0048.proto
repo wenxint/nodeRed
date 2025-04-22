@@ -1,0 +1,11 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.actpb.act0048pb;
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/actpb/act0048pb";
+
+// notify 新春装扮出现的通知
+message SpringFestivalDressAppearNotify {}
+
+// notify 新春活动开启通知
+message SpringFestivalDressOpenNotify {}

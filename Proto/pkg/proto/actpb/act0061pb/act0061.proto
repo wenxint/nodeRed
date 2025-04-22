@@ -1,0 +1,34 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0061pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0061pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0061Service {
+  rpc PlayNewbeeDesc(PlayNewbeeDescRequest) returns (PlayNewbeeDescReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 daily_gold_limit             = 1;  // 每日领取黄金上限
+  int64 cur_day_get_gold             = 2;  // 当前天获得的黄金数
+  int64 total_get_gold               = 3;  // 当前天累计获得的黄金数
+  repeated actpb.commonpb.Task tasks = 4;  // 任务详情
+  int64 daily_match_begin_hour       = 5;  // 每天可匹配的开始时间 24小时制
+  int64 daily_match_end_hour         = 6;  // 每天可匹配的结束时间 24小时制
+  bool play_newbee_desc              = 7;  // 是否播放新手说明
+}
+
+message DeliverActRewardRequest {}
+
+message DeliverActRewardReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 领取之后的任务详情
+}
+
+message PlayNewbeeDescRequest {}
+
+message PlayNewbeeDescReply {}

@@ -1,0 +1,190 @@
+// cs protocol
+// 厨房系统
+syntax = "proto3";
+
+package zonepb.kitchenpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/kitchenpb";
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/specialpackpb/specialpack.proto";
+
+service CSService {
+  // 查询厨房信息
+  rpc QueryKitchenInfo(QueryKitchenInfoRequest) returns (QueryKitchenInfoReply);
+  // 选中料理 (主界面栏选中，或者背包选中)
+  rpc ChooseCuisine(ChooseCuisineRequest) returns (ChooseCuisineReply);
+  // 选中食材, 后台去掉新标签
+  rpc ChooseIngredient(ChooseIngredientRequest) returns (ChooseIngredientReply);
+  // 烹饪
+  rpc Cooking(CookingRequest) returns (CookingReply);
+  // 打开背包
+  rpc QueryBagInfo(QueryBagInfoRequest) returns (QueryBagInfoReply);
+  // 打开食谱
+  rpc QueryCookbookInfo(QueryCookbookInfoRequest) returns (QueryCookbookInfoReply);
+  // 学习食谱
+  rpc StudyCookbook(StudyCookbookRequest) returns (StudyCookbookReply);
+  // 领取收集奖励（会一键领取同一页签下所有奖励）
+  rpc ClaimCollectionReward(ClaimCollectionRewardRequest) returns (ClaimCollectionRewardReply);
+}
+
+message QueryKitchenInfoRequest {}
+
+// 料理列表信息
+message CuisineMenuInfo {
+  int64 id                         = 1;  // 料理的ID
+  int64 status                     = 2;  // 制作状态  0-材料不足 1-可制作 2-未解锁
+  bool new_flag                    = 3;  // true-新习得
+  int64 owned_count                = 4;  // 拥有的个数
+  repeated corepb.Item ingredients = 5;  // 当前拥有的食材个数，烹饪需要的食材个数可以读表，可烹饪的最大个数客户端可以算
+  // int64 quality = 6; // 品质可以读表
+  // int64 type = 7; // 类型可以读表
+  corepb.Item ext_cost = 8;   // 烹饪需要的额外消耗
+  int64 eated_count    = 9;   // 已食用的个数，最大个数可读表，食用效果可读表
+  int64 cooked_count   = 10;  // 已经烹饪的次数
+}
+
+message QueryKitchenInfoReply {
+  // int64 cooking_level               = 1;  // [Deprecated]当前厨艺等级
+  // int64 current_cooking_exp         = 2;  // [Deprecated]当前厨艺经验
+  // int64 full_cooking_exp            = 3;  // [Deprecated]当前等级下升级所需总经验
+  repeated CuisineMenuInfo cuisines                       = 4;  // 料理信息
+  int64 default_chosed_cuisine_id                         = 5;  // 默认选中的料理ID
+  corepb.FightAttr attr                                   = 6;  // 料理加的属性
+  int64 fc                                                = 7;  // 料理加的战力
+  repeated zonepb.specialpackpb.SpecialPack special_packs = 8;  // 所拥有的限时礼包
+}
+
+message ChooseCuisineRequest {
+  int64 chosed_cuisine_id = 1;  // 选中的料理ID
+  int64 pos               = 2;  // 0-主界面栏  1-背包
+}
+message ChooseCuisineReply {
+  int64 chosed_cuisine_id = 1;  // 选中的料理ID
+  int64 pos               = 2;  // 0-主界面栏  1-背包
+}
+
+message ChooseIngredientRequest {
+  int64 chosed_ingredient_id = 1;  // 选中的食材ID
+}
+message ChooseIngredientReply {
+  int64 chosed_ingredient_id = 1;  // 选中的食材ID
+}
+
+message CookingRequest {
+  int64 cuisine_id = 1;  // 料理的ID
+  int64 count      = 2;  // 烹饪的个数
+}
+
+message CookingReply {
+  int64 cuisine_id    = 1;  // 料理的ID
+  int64 cooking_count = 2;  // 成功烹饪的个数
+  int64 eated_count   = 3;  // 属性料理已经食用的个数
+  // 厨艺等级相关
+  // int64 add_cooking_exp             = 4;   // [Deprecated] 增加的厨艺经验
+  // int64 current_cooking_level       = 5;   // [Deprecated] 当前厨艺等级
+  // int64 current_full_cooking_exp    = 6;   // [Deprecated] 当前等级下升级所需的全部厨艺经验
+  // int64 current_awarded_cooking_exp = 7;   // [Deprecated] 当前等级下已获取的厨艺经验
+  // int64 new_cooking_level           = 8;   // [Deprecated]  新的厨艺等级，如果 new_cooking_level 不等于 current_cooking_level 表示升级了
+  // int64 new_full_cooking_exp        = 9;   // [Deprecated] 新等级下的所需的全部厨艺经验 new_cooking_level 不等于 current_cooking_level 时有效
+  // int64 new_awarded_cooking_exp     = 10;  // [Deprecated] 新等级下已获得的厨艺经验 new_cooking_level 不等于 current_cooking_level 时有效
+  // 自动食用相关（烹饪属性料理有用， 非属性料理可以不用关注这里的字段）
+  int64 auto_eat_count          = 11;  // 自动吃的个数 如果小于请求包里的count，表示已达食用上限，多出部分不再自动食用
+  corepb.FightAttr attr         = 12;  // 当前增加的属性
+  corepb.FightAttr history_attr = 13;  // 食用前，历史上通过该料理获得属性
+  corepb.FightAttr max_attr     = 14;  // 通过该料理可以获得的最大属性
+}
+
+message QueryBagInfoRequest {}
+
+// 料理背包信息
+message CuisineBagInfo {
+  int64 id    = 1;  // 料理ID
+  int64 count = 2;  // 拥有个数
+  // bool redpoint_flag = 3;  // [Deprecated] 红点标记 true-为有红点
+  bool new_flag = 4;  // “新”标记 true-为有“新”
+  int64 type    = 5;  // 类型要下发（这个是后台的料理类型）
+  // 料理食用的效果可以读表
+  // 属性料理需要的字段
+  int64 eated_count = 6;  // 已食用的个数  最大可食用个数可读表
+  // 复活料理需要的字段
+  // map<int64, int64> revive_counts = 7;  // [Deprecated] fight_type (暂时只有4-主线和9-秘境) 对应的复活次数
+  // 组织料理需要的字段
+  // int64 herbs_count     = 8;  // 已捐献药草数量
+  // int64 max_herbs_count = 9;  // 总上限
+}
+
+// 食材背包信息
+message IngredientBagInfo {
+  int64 id      = 1;  // 食材ID
+  int64 count   = 2;  // 食材count
+  bool new_flag = 3;  // 新标志
+}
+
+message QueryBagInfoReply {
+  repeated CuisineBagInfo cuisines       = 1;  // 料理
+  repeated IngredientBagInfo ingredients = 2;  // 食材
+}
+
+enum CookbookStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCKED    = 0;  // 未解锁
+  CAN_STUDY = 1;  // 可学习
+  STUDIED   = 2;  // 已学习
+}
+// 食谱信息
+message CookbookInfo {
+  int64 id                           = 1;  // 食谱的ID
+  int64 status                       = 2;  // 【CookbookStatus】 0-未解锁 1-可习得 2-已习得
+  repeated corepb.Item study_rewards = 3;  // 学习奖励
+  int64 unlock_type                  = 4;  // 学习类型 1-默认 2-消耗道具
+  oneof unlock_cond {
+    // int64 cooking_level = 5;  // [Deprecated] 解锁等级
+    corepb.Item item = 6;  // 解锁的道具
+  }
+  int64 unlock_time           = 7;  // 学习（解锁）的时间 【时间戳，单位：秒】
+  corepb.FightAttr study_attr = 8;
+}
+
+message CollectionTask {
+  int64 id                     = 1;  // 任务id
+  int64 required_count         = 2;  // 需要收集的个数
+  bool award_flag              = 3;  // true-已领奖 false-未领奖
+  repeated corepb.Item rewards = 4;  // 奖励列表
+}
+
+message CookbookCollection {
+  int64 max_count               = 1;  // 最大可以收集的个数
+  int64 collected_count         = 2;  // 已收集的个数
+  repeated CollectionTask tasks = 3;  // 收集任务，为空表示没有收集任务
+}
+
+message QueryCookbookInfoRequest {}
+message QueryCookbookInfoReply {
+  // int64 cooking_level             = 1;  // [Deprecated] 厨艺等级
+  // int64 current_cooking_exp       = 2;  // [Deprecated] 当前厨艺经验
+  // int64 full_cooking_exp          = 3;  // [Deprecated] 升级到下一级需要的总经验
+  repeated CookbookInfo cookbooks = 4;  // 食谱列表
+  // map<int64, CookbookCollection> collections = 5;  // [Deprecated] type <--> CookbookCollection 收集进度和任务
+  CookbookCollection collection = 6;  // 收集进度和任务
+}
+
+message StudyCookbookRequest {
+  int64 id = 1;  // 学习食谱的ID
+}
+
+message StudyCookbookReply {
+  repeated CookbookInfo cookbooks = 4;  // 食谱
+  // map<int64, CookbookCollection> collections = 5; // [Deprecated] type <--> CookbookCollection 收集进度和任务
+  CookbookCollection collection = 6;  // 收集进度和任务
+  corepb.FightAttr attr         = 7;  // 获得的属性
+}
+
+message ClaimCollectionRewardRequest {
+  int64 id = 1;  // 任务id
+}
+
+message ClaimCollectionRewardReply {
+  // map<int64, CookbookCollection> collections = 1; // [Deprecated] 领取奖励以后的状态
+  repeated corepb.Item rewards  = 2;  // 领取到的奖励
+  CookbookCollection collection = 3;  // 收集进度和任务
+}

@@ -1,0 +1,174 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.islandsiegepb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/islandsiegepb";
+
+import "corepb/common.proto";
+
+// 海岛争夺战服务
+service IslandSiegeService {
+  // 查询主界面信息
+  rpc QueryMainInfo(QueryMainInfoRequest) returns (QueryMainInfoReply);
+  // 查询岛屿信息
+  rpc QueryIslandInfo(QueryIslandInfoRequest) returns (QueryIslandInfoReply);
+  // 奖励预览
+  rpc QueryRewardPreview(QueryRewardPreviewRequest) returns (QueryRewardPreviewReply);
+  // 查询对阵信息
+  rpc QueryMatchInfo(QueryMatchInfoRequest) returns (QueryMatchInfoReply);
+  // 报名
+  rpc SignUp(SignUpRequest) returns (SignUpReply);
+}
+
+enum ShowStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  SHOW_STATUS_NORMAL          = 0;  // 正常
+  SHOW_STATUS_SIGNUP_NOT_MEET = 1;  // 报名条件不满足
+}
+
+message IslandInfo {
+  int64 id                 = 1;  // 岛屿id
+  int64 occupy_guild_id    = 2;  // 占领的同盟ID
+  string occupy_guild_name = 3;  // 占领的同盟名称
+  int32 show_status        = 4;  // 显示状态 见ShowStatus
+  int64 occupy_guild_flag  = 5;  // 占领同盟旗帜
+}
+
+message StageInfo {
+  int32 stage      = 1;  // 阶段类型 参见StageType
+  int64 start_time = 2;  // 开始时间
+  int64 end_time   = 3;  // 结束时间
+}
+
+message QueryMainInfoRequest {}
+
+message QueryMainInfoReply {
+  // 同盟所处岛屿id
+  int64 guild_declare_island_id = 1;
+  // 同盟参与类型
+  int32 guild_declare_type = 2;  //见DeclareType 1-占领 2-宣战
+  // 同盟是否被动分配岛屿
+  bool guild_is_passive_declare = 3;
+  // 剩余报名次数
+  int32 remain_signup_times = 4;
+  // 当前阶段
+  int32 stage = 5;  // 参见StageType
+  // 活动阶段时间
+  repeated StageInfo stages = 6;
+  // 岛屿列表
+  repeated IslandInfo islands = 7;
+  // 对局id，开战阶段生效
+  string siege_id = 8;
+  // 赛季信息
+  int64 season_id    = 9;   // 赛季id
+  int32 season_index = 10;  // 第几赛季 从1开始
+  // 报名条件配置
+  SignUpConfig signup_cfg = 11;
+}
+
+message SignUpConfig {
+  int64 guild_level_need              = 1;  // 同盟报名等级条件
+  int64 current_week_bless_count_need = 2;  // 同盟报名祈福条件-本周
+  int64 last_week_bless_count_need    = 3;  // 同盟报名祈福条件-上周
+  int64 available_sign_up_times       = 4;  // 同盟可报名次数
+}
+
+message QueryIslandInfoRequest {
+  int64 id = 1;  // 岛屿id
+}
+
+enum DeclareType {
+  DECLARE_TYPE_UNKNOWN = 0;
+  DECLARE_TYPE_OCCUPY  = 1;  // 占领/防守
+  DECLARE_TYPE_FIGHT   = 2;  // 宣战/进攻
+}
+
+message DeclareGuildInfo {
+  int64 id           = 1;  // 同盟id
+  int64 fc           = 2;  // 战力
+  int64 rank         = 3;  // 排名
+  string guild_name  = 4;  // 同盟名称
+  int32 declare_type = 5;  // 1-占领 2-宣战 参见DeclareType
+  bool is_passive    = 6;  // 是否被动分配
+  int64 guild_flag   = 7;  // 同盟旗帜
+}
+
+message QueryIslandInfoReply {
+  // 岛屿id
+  int64 id = 1;
+  // 参与同盟列表
+  repeated DeclareGuildInfo declare_guilds = 2;
+  // 自身同盟信息
+  DeclareGuildInfo self_guild = 3;  // 报名阶段使用，只设置rank和fc
+  // 可报名同盟数量
+  int32 max_declare_guild_num = 4;
+  // 需要的排名
+  int32 guild_rank_need = 5;
+  // 岛屿奖励
+  IslandReward declare_reward = 6;
+}
+
+message IslandReward {
+  int64 id = 1;  // 岛屿id
+  // 占领奖励
+  repeated corepb.Item occupy_rewards = 2;
+  // 攻打奖励
+  repeated corepb.Item fight_rewards = 3;
+}
+
+message QueryRewardPreviewRequest {}
+
+message QueryRewardPreviewReply {
+  repeated IslandReward rewards = 1;
+}
+
+message QueryMatchInfoRequest {
+  int64 island_id = 1;  // 岛屿id 不填的话默认查询自己同盟报名岛屿对阵
+}
+
+message QueryMatchInfoReply {
+  // 对局id
+  string siege_id = 1;
+  // 岛屿id
+  int64 island_id = 2;
+  // 对阵同盟列表
+  repeated DeclareGuildInfo declare_guilds = 3;
+}
+
+message SignUpRequest {
+  int64 island_id = 1;  // 岛屿id
+}
+
+message SignUpReply {
+  int64 island_id           = 1;  // 岛屿id
+  int32 remain_signup_times = 2;  // 剩余报名次数
+}
+
+// 报名被踢出通知
+message SignUpKickOutNotify {
+  int64 island_id           = 1;  // 岛屿id
+  int32 remain_signup_times = 2;  // 剩余报名次数
+  int32 limit_signup_times  = 3;  // 最大报名次数
+}
+
+enum GuildState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  GUILD_STATE_NONE           = 0;
+  GUILD_STATE_ALREADY_SIGNUP = 1;  // 已报名
+  GUILD_STATE_CAN_SIGNUP     = 2;  // 可报名
+  GUILD_STATE_KICKED         = 3;  // 被踢出报名名单
+  // 除了已报名，其它状态也是未报名状态
+}
+
+// 同盟状态通知
+message GuildStateNotify {
+  int32 state = 1;  // 状态 见GuildState
+}
+
+// 海岛争夺战结算通知
+message SiegeSettlementNotify {
+  int64 island_id              = 1;  // 岛屿id
+  bool win                     = 2;  // 是否胜利
+  repeated corepb.Item rewards = 3;  // 结算奖励
+}

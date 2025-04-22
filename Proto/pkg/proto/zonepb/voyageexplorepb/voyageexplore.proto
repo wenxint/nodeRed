@@ -1,0 +1,1521 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.voyageexplorepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/voyageexplorepb";
+
+
+import "corepb/common.proto";
+
+service VoyageExploreService {
+  // 同步玩家船状态
+  rpc SyncPlayerShipState(SyncPlayerShipStateRequest) returns (SyncPlayerShipStateReply);
+  // 进入海域探险地图(根据super要求临时使用这个协议，下周改成协议EnterSea)
+  rpc EnterVoyageExplore(EnterVoyageExploreRequest) returns (EnterVoyageExploreReply);
+  // 玩家开启一段剧情的时候调用这个协议
+  rpc StartPlot(StartPlotRequest) returns (StartPlotReply);
+  // 客户端尝试完成事件
+  rpc FinishEvent(FinishEventRequest) returns (FinishEventReply);
+  // 航海日志任务列表
+  rpc SeaTaskInfo(SeaTaskInfoRequest) returns (SeaTaskInfoReply);
+  // 领取航海日志任务奖励
+  rpc ReceiveSeaTask(ReceiveSeaTaskRequest) returns (ReceiveSeaTaskReply);
+  // 追踪航海日志任务
+  rpc PinSeaTask(PinSeaTaskRequest) returns (PinSeaTaskReply);
+  // 取消追踪航海日志任务
+  rpc UnpinSeaTask(UnpinSeaTaskRequest) returns (UnpinSeaTaskReply);
+  // 取消航海日志任务「新」标记
+  rpc CancelSeaTaskNewFlag(CancelSeaTaskNewFlagRequest) returns (CancelSeaTaskNewFlagReply);
+  // 海域百科信息
+  rpc SeaEncyclopediaInfo(SeaEncyclopediaInfoRequest) returns (SeaEncyclopediaInfoReply);
+  // 激活海域百科天赋
+  rpc ActivateSeaEncyclopedia(ActivateSeaEncyclopediaRequest) returns (ActivateSeaEncyclopediaReply);
+  // 战斗扫荡
+  rpc RaidFight(RaidFightRequest) returns (RaidFightReply);
+  // 钓鱼扫荡
+  rpc RaidFishing(RaidFishingRequest) returns (RaidFishingReply);
+  // 处理某种大型玩法结束 (比如打捞小游戏等既不在海域探险发奖又没有单独系统承载的)
+  rpc CommonPlayEnd(CommonPlayEndRequest) returns (CommonPlayEndReply);
+  // 获取航行力基本信息
+  rpc InfoSailingPower(InfoSailingPowerRequest) returns (InfoSailingPowerReply);
+  // 页面请求购买航行力 (梯度与商城无关)
+  rpc QuerySailingPowerShop(QuerySailingPowerShopRequest) returns (QuerySailingPowerShopReply);
+  // 购买航行力
+  rpc BuySailingPower(BuySailingPowerRequest) returns (BuySailingPowerReply);
+  // 派遣系统信息
+  rpc DelegateInfo(DelegateInfoRequest) returns (DelegateInfoReply);
+  // 刷新派遣任务
+  rpc RefreshDelegateTask(RefreshDelegateTaskRequest) returns (RefreshDelegateTaskReply);
+  // 领取派遣系统奖励
+  rpc ReceiveDelegateReward(ReceiveDelegateRewardRequest) returns (ReceiveDelegateRewardReply);
+  // 派遣系统阵容信息
+  rpc DelegateLoadout(DelegateLoadoutRequest) returns (DelegateLoadoutReply);
+  // 推荐阵容
+  rpc RecommendLoadout(RecommendLoadoutRequest) returns (RecommendLoadoutReply);
+  // 开始派遣
+  rpc StartDelegate(StartDelegateRequest) returns (StartDelegateReply);
+  // 一键派遣
+  rpc OneClickDelegate(OneClickDelegateRequest) returns (OneClickDelegateReply);
+  // 移除派遣任务「新」标记
+  rpc RemoveDelegateNewFlag(RemoveDelegateNewFlagRequest) returns (RemoveDelegateNewFlagReply);
+  // 珍兽图鉴信息
+  rpc StrangeAnimalInfo(StrangeAnimalInfoRequest) returns (StrangeAnimalInfoReply);
+  // 激活珍兽
+  rpc ActivateStrangeAnimal(ActivateStrangeAnimalRequest) returns (ActivateStrangeAnimalReply);
+  // 请求小地图信息
+  rpc QueryMiniMapInfo(QueryMiniMapInfoRequest) returns (QueryMiniMapInfoReply);
+  // 小地图传送功能
+  rpc Teleport(TeleportRequest) returns (TeleportReply);
+  // 小地图切换地图功能
+  rpc ChangeMap(ChangeMapRequest) returns (ChangeMapReply);
+  // 小八章鱼烧详细信息
+  rpc HachiTakoyakiInfo(HachiTakoyakiInfoRequest) returns (HachiTakoyakiInfoReply);
+  // 升级小八章鱼烧厨艺等级
+  rpc LevelUpHachiCooking(LevelUpHachiCookingRequest) returns (LevelUpHachiCookingReply);
+  // 解锁小八章鱼烧槽位
+  rpc UnlockHachiTakoyakiSlot(UnlockHachiTakoyakiSlotRequest) returns (UnlockHachiTakoyakiSlotReply);
+  // 选择小八章鱼烧口味上阵
+  rpc UsingHachiTakoyaki(UsingHachiTakoyakiRequest) returns (UsingHachiTakoyakiReply);
+  // 取消小八章鱼烧口味「新」标签
+  rpc CancelNewHachiTakoyakiFlag(CancelNewHachiTakoyakiFlagRequest) returns (CancelNewHachiTakoyakiFlagiReply);
+  // 章节简要信息
+  rpc ChapterProfile(ChapterProfileRequest) returns (ChapterProfileReply);
+  // 海域巡航信息
+  rpc SeaCruiseInfo(SeaCruiseInfoRequest) returns (SeaCruiseInfoReply);
+  // 加速海域巡航
+  rpc SpeedupCruise(SpeedupCruiseRequest) returns (SpeedupCruiseReply);
+  // 领取海域巡航奖励
+  rpc ReceiveCruiseReward(ReceiveCruiseRewardRequest) returns (ReceiveCruiseRewardReply);
+  // 解锁海域
+  rpc UnlockMap(UnlockMapRequest) returns (UnlockMapReply);
+  // 巴基日记信息
+  rpc BuggyDiaryInfo(BuggyDiaryInfoRequest) returns (BuggyDiaryInfoReply);
+  // 请求巴基收集任务信息
+  rpc BuggyCollectionTaskInfo(BuggyCollectionTaskInfoRequest) returns (BuggyCollectionTaskInfoReply);
+  // 领取巴基收集任务奖励
+  rpc ReceiveBuggyCollectionTaskReward(ReceiveBuggyCollectionTaskRewardRequest) returns (ReceiveBuggyCollectionTaskRewardReply);
+  // GetCruiseSpeedupPowerAccumulated
+  rpc GetCruiseSpeedupPowerAccumulated(GetCruiseSpeedupPowerAccumulatedRequest) returns (GetCruiseSpeedupPowerAccumulatedReply);
+  // 前台触发重算阵容按钮红点，用于限定阵容章节
+  rpc CalcLoadoutButtonRedPoint(CalcLoadoutButtonRedPointRequest) returns (CalcLoadoutButtonRedPointReply);
+  // 改造手册查询
+  rpc ShipwrightTransformInfo(ShipwrightTransformInfoRequest) returns (ShipwrightTransformInfoReply);
+  // 天赋查询
+  rpc ShipwrightTalentInfo(ShipwrightTalentInfoRequest) returns (ShipwrightTalentInfoReply);
+  // 天赋激活
+  rpc ShipwrightTalentActivate(ShipwrightTalentActivateRequest) returns (ShipwrightTalentActivateReply);
+  // 天赋重置
+  rpc ShipwrightTalentReset(ShipwrightTalentResetRequest) returns (ShipwrightTalentResetReply);
+}
+
+message GetCruiseSpeedupPowerAccumulatedRequest {}
+
+message GetCruiseSpeedupPowerAccumulatedReply {
+  int64 accumulated_cruise_speedup_power = 1;  // 已累积的巡航加速点数
+}
+
+message ReceiveBuggyCollectionTaskRewardRequest {}
+
+message ReceiveBuggyCollectionTaskRewardReply {
+  repeated corepb.Item award               = 1;  // 奖励
+  repeated CollectionTask collection_tasks = 2;  // 收集任务列表
+}
+
+message BuggyCollectionTaskInfoRequest {}
+message BuggyCollectionTaskInfoReply {
+  repeated CollectionTask collection_tasks = 1;  // 收集任务列表
+}
+
+message CollectionTask {
+  int64 id                        = 1;  // 任务ID
+  int64 value                     = 2;  // 任务当前进度
+  int64 target                    = 3;  // 任务目标
+  int64 status                    = 4;  // 任务状态 (0未达成 1待领取 2已领取)
+  repeated corepb.Item task_award = 5;  // 任务奖励
+}
+
+message RefreshDelegateTaskRequest {
+  bool is_perfect_refresh = 1;  // 是否完美刷新
+}
+
+message RefreshDelegateTaskReply {
+  repeated DelegateTask tasks = 1;  // 新的任务列表
+}
+
+message CommonPlayEndRequest {
+  int64 play_type = 1;  // 玩法类型 (对应VoyageExploreEvent表格中的序号，比如打捞类型为11)
+  int64 play_id   = 2;  // 玩法里面的关卡ID （比如打捞游戏、遗迹石板就用 salvage_id、client_map_dungeon_id）
+  bool is_success = 3;  // 是否成功
+  oneof payload {
+    DungeonEndOption dungeon_end_option                     = 4;  // 副本结束选项
+    LadyBugOption lady_bug_option                           = 5;  // 小瓢虫商店选项
+    ClientMapDungeonEndOption client_map_dungeon_end_option = 6;  // 客户端大地图副本结束选项
+  };
+}
+
+message ClientMapDungeonEndOption {
+  int64 target_pos = 1;  // 结束后玩家需要传送到的位置
+}
+
+enum DungeonEndOptionType {
+  DUNGEON_END_OPTION_TYPE_UNKNOWN = 0;  // 未知
+  RESET                           = 1;  // 重置
+  EXIT                            = 2;  // 退出
+}
+
+message DungeonEndOption {
+  DungeonEndOptionType option = 1;  // 选项 (重置 / 退出等)
+}
+
+message LadyBugOption {
+  int64 buy_product_id = 1;                      // 购买的商品 ID
+  bool is_buy          = 2 [deprecated = true];  // 是否购买
+}
+
+message CommonPlayEndReply {
+  repeated corepb.Item awards = 1;  // 成功的奖励
+}
+
+message ChangeMapRequest {
+  int64 map_id                      = 1;  // 海域 ID
+  bool force_explore_unfinished_map = 2;  // 强制进入指定章节内探索度未到达100%的地图id最小的地图，忽略map_id参数
+  int64 chapter_id                  = 3;  //强制进入的章节
+}
+
+message ChangeMapReply {}
+
+message QueryMiniMapInfoRequest {}
+
+message ExploreDegree {
+  int64 chapter_id                 = 1;  // 章节 ID
+  int64 map_id                     = 2;  // 海域 ID
+  int64 total_degree               = 3;  // 总探索度 (万分比)
+  map<int64, int64> region_degrees = 4;  // 区域探索度（万分比）
+}
+
+message QueryMiniMapInfoReply {
+  int64 chapter_id                       = 1;  // 当前章节 ID
+  repeated ExploreDegree explore_degrees = 2;  // 不同的海域的探索度列表
+}
+
+message TeleportRequest {
+  int64 component_id = 1;  // 物件 ID
+  int64 target_pos   = 2;  // 目标地块的位置
+  bool use_item      = 3;  // 是否使用道具 (当使用道具传送的时候，需要填充 target_pos 字段)
+}
+
+message TeleportReply {
+  PlotResultPlayerTransfer transfer_result = 1;  // 传送结果
+}
+
+message MapState {
+  map<int32, ComponentState> component_states = 1;  // 部件ID -> 部件状态
+  repeated int32 unlocked_clouds              = 2;  // 解锁了的云ID
+}
+
+message ComponentState {
+  int32 value                              = 1;                      // 部件状态值
+  int32 pos                                = 2;                      // 新的位置信息
+  map<int32, int32> custom                 = 3 [deprecated = true];  // 部件上面绑的自定义数据
+  DynamicShipState ship_state              = 4;                      // 动态船状态
+  repeated SkillStateInfo skill_state_info = 5;                      // 技能状态信息
+  repeated BuffStateInfo buff_state_info   = 6;                      // BUFF状态信息
+}
+
+message DynamicShipState {
+  Direction direction = 1;  // 当前船的朝向
+  int64 ship_id       = 2;  // 动态船ID
+  string ship_name    = 3;  // 动态船的名称(玩家昵称)
+  int64 buddy_id      = 4;  // 动态船使用的伙伴
+  string pic          = 5;  // 动态船的头像
+}
+
+enum Direction {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UP         = 0;  // 上
+  RIGHT_UP   = 1;  // 右上
+  RIGHT_DOWN = 2;  // 右下
+  DOWN       = 3;  // 下
+  LEFT_DOWN  = 4;  // 左下
+  LEFT_UP    = 5;  // 左上
+}
+
+message EnterVoyageExploreRequest {}
+
+message EnterVoyageExploreReply {
+  reserved 9;
+
+  int64 map_id                                     = 1 [deprecated = true];  // 海域 ID (弃用，读入player_ship_state)
+  MapState map_state                               = 3;                      // 增量全地图状态
+  repeated Task sea_task                           = 4;                      // 航海日志任务列表
+  int64 mystery_shop_id                            = 6;                      // 当前海域神秘商店ID（非0表示本海域商店已经开启）
+  StrangeAnimalInfo strange_animal_info            = 7;                      // 珍兽图鉴信息
+  bool is_first_time_enter_map                     = 8;                      // 是否第一次进入此地图
+  PlayerShipState player_ship_state                = 12;                     // 玩家船状态
+  PlotInfo plot_info                               = 13;                     // 剧情信息
+  BaseInfoUpdate base_info_update                  = 14;                     // 基础信息的更新，变动会notify给客户端
+  DungeonInfo dungeon_info                         = 15;                     // 副本信息(如果玩家在某个副本中,使用这个信息同步给客户端)
+  PatrolInfo patrol_info                           = 18;                     // 巡逻信息
+  int64 sync_interval                              = 19;                     // SyncPlayerShipState协议的发送时间间隔(毫秒)
+  repeated int64 unlocked_mystery_shop_ids         = 20;                     // 所有已解锁海域神秘商店
+  RouteInfo route_info                             = 21;                     // 航线信息
+  ShipwrightTalentInfoReply shipwright_talent_info = 22;                     // 天赋信息
+}
+
+message BuggyDiaryInfoRequest {}
+message BuggyDiaryInfoReply {
+  BuggyInfo buggy_info = 1;  // 巴奇章信息
+}
+
+message BuggyDiaryFragment {
+  int64 fragment_id = 1;  // 日记碎片ID
+  bool is_new       = 2;  // 是否新的
+  bool is_unlocked  = 3;  // 是否解锁
+}
+
+// 航线信息
+message RouteInfo {
+  repeated Route routes = 1;  // 航线数据  (routeID -> 存储的航线状态)
+}
+
+message Route {
+  int64 id    = 1;
+  int64 value = 2;
+}
+
+message BuggyInfo {
+  repeated BuggyDiaryFragment buggy_diary_fragments = 1;  // 已获得的日记碎片
+}
+
+message PatrolInfo {
+  map<int32, PatrolData> patrol_data_map = 1;  // 巡逻数据  (componentID -> 存储的巡逻数据)
+}
+
+message PatrolData {
+  repeated int64 patrol_data = 1;  // 客户端存储的巡逻数据（len<5）
+}
+
+message DungeonInfo {
+  int64 dungeon_id     = 1;  // 副本ID
+  bool is_first_in     = 2;  // 是否第一次进入
+  int64 remaining_time = 3;  // 剩余时间
+  int64 pass_value     = 4;  // 通关变量值
+  int64 fail_value     = 5;  // 失败变量值
+}
+
+message PlotInfo {
+  map<int64, bool> plot_activated_map = 1;  // (增量)剧情ID是否被激活(只有与配置不一样的才下发)
+}
+
+message PlayerShipState {
+  int64 chapter_id                         = 1;   // 章节 ID
+  int64 map_id                             = 2;   // 海域 ID
+  GridPoint grid_point                     = 3;   // 所属格子
+  Direction direction                      = 4;   // 朝向
+  int64 angle                              = 5;   // 角度 360度
+  WorldPoint world_point                   = 6;   // 世界坐标
+  int64 current_carry_component_id         = 7;   // 当前运载的物体ID
+  int64 carry_icon_id                      = 8;   // 当前运载的物体icon
+  repeated int64 following_component_ids   = 9;   // 跟随的物体ID
+  int64 custom_ship_id                     = 10;  // 自定义船ID
+  repeated SkillStateInfo skill_state_info = 11;  // 技能状态信息
+  repeated BuffStateInfo buff_state_info   = 12;  // BUFF状态信息
+  int64 attached_component_id              = 13;  // 子体附着物体ID
+}
+
+message SkillStateInfo {
+  int64 skill_id        = 3;
+  int64 cd_start_ms     = 1;  // 技能CD起始时间，ms
+  int64 cd_ms           = 2;  // 技能CD，ms
+  int64 cd_remaining_ms = 4;  // 技能CD剩余时间，ms
+  int64 quota           = 5;  // 技能剩余可用次数
+}
+
+message BuffStateInfo {
+  int64 buff_id      = 3;
+  int64 start_ms     = 1;  // BUFF起始时间，ms
+  int64 duration_ms  = 2;  // 持续时间，ms
+  int64 remaining_ms = 4;  // BUFF剩余时间，ms
+}
+
+// 格子坐标
+message GridPoint {
+  int64 x = 1;  // 坐标 X
+  int64 y = 2;  // 坐标 Y
+}
+
+// 世界坐标
+message WorldPoint {
+  int64 x = 1;  // 坐标 X
+  int64 y = 2;  // 坐标 Y
+  int64 z = 3;  // 坐标 Z
+}
+
+message DynamicComponentPos {
+  int64 component_id             = 1;  // 物件 ID
+  GridPoint component_grid_point = 2;  // 所属格子
+  bool is_hide                   = 3;  // 是否需要隐藏
+  repeated int64 patrol_data     = 4;  // 客户端存储的巡逻数据（len<5）
+}
+
+message SyncPlayerShipStateRequest {
+  PlayerShipState player_ship_state                  = 1;  // 玩家的船状态
+  repeated DynamicComponentPos dynamic_component_pos = 2;  // 上报动态物件位置变更 (由客户端触发剧情逻辑，如果不能触发StartPlot进行触发事件的拦截)
+  PlayerDungeonState player_dungeon_state            = 3;  // 玩家在副本中的状态变更
+  repeated int64 unlock_pos_clouds                   = 4;  // 针对地块id数组消云
+}
+
+message PlayerDungeonState {
+  int64 remaining_time = 1;  // 剩余时间
+  bool is_force_sync   = 2;  // 是否强制同步 (当remaining_time为0或者其他非法值的时候进行强制同步)
+}
+
+message SyncPlayerShipStateReply {}
+
+message ShipStatePoints {
+  repeated int64 points = 1;  // 点列表
+}
+
+message StartPlotRequest {
+  StartPlotInfo start_plot_info                      = 1;  // 开始剧情的信息
+  SkillPlotInfo skill_plot_info                      = 2;  // 技能剧情的信息
+  PlayerShipState player_ship_state                  = 3;  // 玩家的船状态
+  repeated DynamicComponentPos dynamic_component_pos = 4;  // 上报动态物件位置变更 (由客户端触发剧情逻辑，如果不能触发StartPlot进行触发事件的拦截)
+}
+
+message StartPlotInfo {
+  int64 point_id             = 1;  // 物体所在的坐标
+  bool is_passive            = 2;  // 是否被动触发 (防止有些点撞上去和主动触发不一样表现)
+  int64 plot_id              = 3;  // 剧情 ID (玩家自选的剧情)
+  bool is_pursuit            = 4;  // 是否动态物体的追击剧情
+  int64 dynamic_component_id = 5;  // 动态物体 ID (动态物体客户端传 componentID)
+  int64 trigger_pawn         = 6;  // 触发主体ID （例如：0为主角，1为飞手...）
+  bool is_auto_voyage        = 7;  // 是否自动海域探险 (true: 自动海域探险, false: 非自动海域探险)
+}
+
+message SkillPlotInfo {
+  int64 skill_id            = 1;  // 技能 ID
+  int64 source_id           = 2;  // 技能释放者 ID
+  repeated int64 target_ids = 3;  // 技能目标 IDs
+}
+
+message StartPlotReply {
+  PlotDetail plot_detail = 1;  // 剧情详情
+}
+
+message PlotPreview {
+  int64 plot_id            = 1;  // 触发的剧情 ID (-1则没有任何剧情，或者玩家无法触发任何剧情)
+  int64 event_id           = 2;  // 事件 ID
+  EventType event_type     = 3;  // 事件类型
+  repeated int64 point_ids = 4;  // 可触发此事件的坐标点(点顺序保持与客户端生成的配置表一致)
+}
+
+message NewPlotNotify {
+  PlotDetail plot_detail = 1;  // 剧情详情
+}
+
+// 界面基础信息的更新notify
+message BaseInfoUpdateNotify {
+  BaseInfoUpdate base_info_update = 1;  // 界面基础信息的更新
+}
+
+enum CustomRedPointType {
+  CUSTOM_RED_POINT_TYPE_UNKNOWN = 0;  // 未知
+  LOADOUT_BUTTON                = 1;  // 阵容按钮
+}
+
+enum CustomRedPointStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NO_POINT      = 0;  // 无红点
+  HAVE_POINT    = 1;  // 有红点
+  HAVE_NEW_FLAG = 2;  // 有新标记    红点>新标记>正常
+}
+
+message CustomRedPoint {
+  CustomRedPointStatus status = 1;  // 自定义红点状态
+}
+
+message BaseInfoUpdate {
+  reserved 10;
+  ExploreDegree current_map_explore_degree     = 1;                      // 当前地图的探索度
+  repeated int64 unlocked_region_ids           = 2;                      // 当前地图解锁的区域ID
+  repeated int64 unlocked_cloud_ids            = 3;                      // 新解锁的云
+  bool can_unlock_new_map                      = 4 [deprecated = true];  // 是否可以解锁新的地图
+  bool is_delegate_open                        = 5;                      // 派遣系统是否开启
+  bool is_encyclopedia_open                    = 6;                      // 海域百科是否开启
+  bool is_fish_ground_open                     = 7;                      // 钓场功能是否开启
+  bool is_cruise_open                          = 8;                      // 巡航系统是否开启
+  map<int64, bool> minimap_red_points          = 9;                      // 小地图红点信息
+  map<int64, CustomRedPoint> custom_red_points = 11;                     // 自定义红点. CustomRedPointType -> 自定义红点
+  bool plot_consume_free                       = 12;                     // 免航行力开关打开，并且当前地图的探索度达到要求后，会免航行力
+  repeated bool can_unlock_new_maps = 13;  // 是否可以解锁新的地图. 数组为空，表示没有更新对应信息. 数组长度为1, 并且为true时, 表示有新地图可以解锁.
+  bool is_auto_explore_open         = 14;  // 自动探索功能是否开放 (true: 开放, false: 不开放, 开放后就不可能再关闭了)
+  map<int64, int64> special_hide_map_state_map = 15;  // 特殊隐藏地图状态 (key: 地图ID, value: 特殊隐藏地图状态, 1: 开启状态, 0: 关闭状态)
+}
+
+// 血量继承战斗信息
+message BloodInheritanceFightInfo {
+  int64 current_damage_sum = 1;  // 玩家本次造成的伤害
+  int64 hp_max             = 2;  // 怪物总血量
+  int64 remaining_hp       = 3;  // 本次扣完伤害，怪物还剩余的血量
+}
+
+// 剧情进行中涉及到的物件
+message PlotComponents {
+  repeated int64 component_ids = 1;  // 物件 ID
+  repeated int64 group_ids     = 2;  // 物件组 ID
+}
+
+message PlotDetail {
+  int64 plot_id                  = 1;  // 触发的剧情 ID (-1则没有任何剧情，或者玩家无法触发任何剧情)
+  int64 event_id                 = 2;  // 事件 ID
+  EventType event_type           = 3;  // 事件类型
+  PlotComponents plot_components = 4;  // 剧情进行中涉及到的物件
+  oneof event_detail {
+    QuestionEventDetail question_event                       = 6;   // 问题事件详情
+    MonsterEventDetail monster_event                         = 7;   // 小怪事件详情
+    RewardBoxEventDetail reward_event                        = 8;   // 遗留宝箱事件详情
+    FishEventDetail fish_event                               = 9;   // 钓鱼事件详情
+    CloudUnlockEventDetail cloud_event                       = 10;  // 消云事件详情
+    LadyBugEventDetail ladybug_event                         = 11;  // 小瓢虫商店事件详情
+    MoveEventDetail move_event                               = 12;  // 移动事件详情
+    CollectMapFragmentEventDetail collect_map_fragment_event = 13;  // 收集藏宝图碎片事件详情
+    SalvageEventDetail salvage_event                         = 14;  // 沉船打捞事件详情
+    RelicSlateEventDetail relic_slate_event                  = 15;  // 遗迹石板事件详情
+    DungeonEventDetail dungeon_event                         = 16;  // 副本事件详情
+    ShipRogueEventDetail ship_rogue_event                    = 17;  // 海战肉鸽事件详情
+  };
+}
+
+message DungeonEventDetail {
+  Results results = 1;  // 跟传送事件结果的处理方式一样，会有（PlotResultPlayerTransfer, 可能还会CLOUD_DISAPPEAR）
+}
+
+message RelicSlateEventDetail {
+  int64 relic_slate_id = 1;  // 遗迹石板ID
+}
+
+message SalvageEventDetail {
+  int64 salvage_id           = 1;  // 沉船打捞游戏关卡ID
+  bool active_auxiliary_line = 2;  // 是否激活辅助线
+}
+
+message CollectMapFragmentEventDetail {
+  repeated int64 owned_fragment_ids = 1;  // 已有碎片IDs 从1开始 (8个就是1、2、3、4、5、6、7、8)
+  int64 new_fragment_id             = 2;  // 本次新增碎片ID
+}
+
+message FishEventDetail {
+  int64 location_id         = 1;  // 钓点ID
+  int64 raid_fishing_coupon = 2;  // 钓鱼扫荡券数量
+}
+
+message ShipRogueEventDetail {
+  int64 chapter_id                        = 1;  // 章节 ID
+  int64 level                             = 2;  // 当前波次
+  repeated ShipRogueShip ship_rogue_ships = 3;  // 战船列表
+  int64 max_level                         = 4;  // 最大波次
+  bool enable_multi_genre                 = 5;  // 是否开启多流派
+  repeated int64 last_select_warship_ids  = 6;  // 上次选择的战船
+}
+
+message ShipRogueShip {
+  int64 ship_id = 1;
+  bool enable   = 2;
+}
+
+enum ProductStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNSOLD = 0;  // 未售出
+  SOLD   = 1;  // 已售出
+}
+
+message Product {
+  int64 product_id     = 1;  // 商品 id
+  corepb.Item awards   = 2;  // 商品奖励道具
+  corepb.Item costs    = 3;  // 商品消耗道具
+  ProductStatus status = 4;  // 商品状态
+}
+
+message LadyBugEventDetail {
+  reserved 2, 3;
+  repeated Product product_list = 1;  // 商店商品列表
+}
+
+message ComponentMoveDetail {
+  reserved 2;
+  int64 component_id = 1;  // 物件 ID
+  int64 point_id     = 3;  // 移动到的坐标点
+}
+
+message MoveEventDetail {
+  repeated ComponentMoveDetail component_move_detail = 1;  // 所有物件的移动路径
+}
+
+message QuestionEventDetail {
+  repeated int64 question_id = 1;  // 问题ID
+}
+
+message MonsterEventDetail {
+  int64 fight_type             = 1;  // 战斗类型（1为普通关卡战斗 2为BOSS血量继承战斗）
+  int64 dungeon_id             = 2;  // 副本ID
+  repeated corepb.Item rewards = 3;  // 战斗奖励
+  int64 raid_fight_coupon      = 4;  // 战斗扫荡券数量
+}
+
+// 宝箱事件详情
+message RewardBoxEventDetail {
+  int64 reward_type            = 1;  // 奖励类型
+  repeated corepb.Item rewards = 2;  // 道具奖励
+}
+
+message CloudUnlockEventDetail {
+  int64 point_id                    = 1;  // 移动路径点
+  repeated int64 unlocked_cloud_ids = 2;  // 新解锁的云
+}
+
+enum EventType {
+  EVENT_TYPE_UNKNOWN   = 0;   // 未知
+  MONSTER              = 1;   // 怪物
+  QUESTION_DIALOG      = 2;   // 问题对话
+  REWARD_BOX           = 3;   // 奖励宝箱
+  FISH                 = 4;   // 钓鱼事件
+  CLOUD_UNLOCK         = 5;   // 消云事件
+  LADYBUG              = 6;   // 小瓢虫商店事件
+  DIALOG               = 7;   // 对话分线剧情
+  TREASURE_MAP         = 8;   // 藏宝图事件
+  MOVE                 = 9;   // 移动事件
+  COLLECT_MAP_FRAGMENT = 10;  // 收集藏宝图碎片事件
+  SALVAGE              = 11;  // 沉船打捞事件
+  RELIC_SLATE          = 12;  // 遗迹石板事件
+  DUNGEON              = 13;  // 副本事件
+  SHIP_ROGUE           = 14;  // 海战肉鸽事件
+  MAP_DUNGEON_EVENT    = 15;  // 大地图副本事件 (纯客户端大副本)
+  GENERAL_EVENT        = 20;  // 通用事件 (客户端报使用100卡，临时修改为20)
+}
+
+message QuestionEvent {
+  map<int64, int64> answers = 1;  // 玩家回答(question id -> answer id)
+}
+
+message LadyBugEvent {
+  reserved 2;
+  int64 buy_product_id = 1;  // 购买的商品 ID
+}
+
+message DialogEvent {
+  repeated int64 selected_dialog_ids = 1;  // 玩家选择的对话分线剧情IDs (按顺序, 用于服务器校验)
+}
+
+message FinishEventRequest {
+  EventType event_type = 1;  // 事件类型
+  int64 plot_id        = 2;  // 剧情 ID
+  oneof payload {
+    QuestionEvent quesion_event = 4;  // 事件类型为 QUESTION_DIALOG 时，需要填写此字段
+    LadyBugEvent ladybug_event  = 5;
+    DialogEvent dialog_event    = 6;
+  };
+  int64 open_node_id  = 7;  // 激活的新手引导节点 ID
+  bool is_auto_voyage = 8;  // 是否自动海域探险 (true: 自动海域探险, false: 非自动海域探险)
+}
+
+message FinishEventReply {
+  int64 finished_plot_id = 1;  // 完成的剧情 ID ( -1 表示没有剧情被完成，或者玩家无法完成任何剧情)
+  Results results        = 2;  // 事件完成后，可能会有一些变化
+}
+
+message ResultsNotify {
+  Results results = 1;  // 事件完成后，可能会有一些变化
+}
+
+message Results {
+  reserved 2, 4;
+  repeated PlotResult plot_results = 1;  // 如果剧情完成了，会产生剧情结果
+  bool is_success                  = 3;  // 是否成功 (成功则会走到结果部分)
+  bool has_next_plot               = 5;  // 是否有下一个剧情 (走notify)
+}
+
+enum PlotResultType {
+  PLOR_RESULT_TYPE_UNKNOWN         = 0;   // 未知
+  REWARD                           = 1;   // 发奖
+  STATE_MODIFY                     = 2;   // 状态变更
+  ARG_MODIFY                       = 3;   // 参数值变更
+  PLAYER_MOVE                      = 4;   // 玩家移动
+  COMPONENT_MOVE                   = 5;   // 组件移动
+  ITEMS_CONSUME                    = 6;   // 道具消耗
+  BOSS_HP_SAVE                     = 7;   // BOSS剩余血量存入
+  CLOUD_DISAPPEAR                  = 8;   // 消除云雾
+  SEA_TASK_ACCEPT                  = 9;   // 接取航海日志任务
+  RECEIVE_TASK_REWARD              = 10;  // 领取航海日志任务奖励
+  TRANSFER_PLAYER                  = 11;  // 开启并且传送至新地图
+  LADYBUG_REWARD                   = 12;  // 小瓢虫商店获得道具
+  DELEGATE_TASK_ACCEPT             = 13;  // 接取派遣任务
+  UNLOCK_FISH_POINT                = 14;  // 解锁渔场
+  MYSTERY_SHOP_UNLOCKED            = 15;  // 神秘商店解锁
+  MYSTERY_PRODUCT_GROUP_UNLOCKED   = 16;  // 神秘商店商品解锁
+  GOURP_STATE_MODIFY               = 17;  // 分组状态变更
+  OPEN_ACHIEVEWAY                  = 18;  // 打开界面
+  ANIMAL_UNLOCK                    = 20;  // 解锁珍兽
+  CARRY_DROP_COMPONENT             = 21;  // 运载物件
+  CONSUME_CARRY_COMPONENT          = 22;  // 消耗携带的物件
+  ADD_HACHI_PROGRESS               = 23;  // 增加章鱼烧护送进度
+  UNLOCK_DELEGATE                  = 24;  // 解锁派遣系统
+  UNLOCK_ENCYCLOPEDIA              = 25;  // 解锁海域百科
+  UNLOCK_REGION                    = 26;  // 解锁区域
+  ACTIVATE_PLOT                    = 27;  // 激活剧情
+  DEACTIVATE_PLOT                  = 28;  // 隐藏剧情
+  DUNGEON_PASS_VAR_CHANGE          = 29;  // 副本通关变量变更
+  DUNGEON_FAIL_VAR_CHANGE          = 30;  // 副本失败变量变更
+  DUNGEON_TIME_CHANGE              = 31;  // 副本时间变更
+  BIND_FOLLOW                      = 32;  // 绑定跟随
+  UNBIND_FOLLOW                    = 33;  // 解除跟随
+  PLOT_RESULT_COLLECT_MAP_FRAGMENT = 34;  // 收集藏宝图事件结果
+  BUGGY_DIARY_FRAGMENT             = 35;  // 获得buggy日记片段
+  ACTIVATE_SKILL                   = 36;  // 激活技能
+  DEACTIVATE_SKILL                 = 37;  // 隐藏技能
+  ADD_BUFF                         = 38;  // 添加buff
+  DEL_BUFF                         = 39;  // 移除buff
+  DEL_BUFF_GROUP                   = 40;  // 移除buff组
+  BUGGY_ATTACHMENT                 = 41;  // 巴基附身
+  ATTACHMENT_CANCEL                = 42;  // 取消附身
+  CAN_UNLOCK_MAP                   = 43;  // 可以解锁新地图
+  ARG_MULTIPLY                     = 44;  // deprecated, 参数值乘算，已废弃，作为返回给客户端的结果使用ARG_MODIFY即可
+  STATE_TOGGLE                     = 45;  // 状态切换
+  CHANGE_SHIP                      = 46;  // 更换船ID
+  GROUP_DEACTIVATE_SKILL           = 47;  // 隐藏物件组技能
+  GROUP_ACTIVATE_SKILL             = 48;  // 激活物件组技能
+  SHIP_ROGUE_UNLOCK                = 49;  // 解锁肉鸽
+  TALENT_TAB_UNLOCK                = 50;  // 解锁天赋页签
+  ROUTE_STATE_MODIFY               = 51;  // 航线状态变更
+  ADD_SKILL_QUOTA                  = 52;  // 增加技能配额
+  SET_SPECIAL_HIDE_MAP_STATE       = 53;  // 设置特殊地图状态
+}
+
+// 完成事件，剧情结果
+message PlotResult {
+  PlotResultType type = 1;                                                      // 结果类型
+  oneof payload {                                                               // 结果
+    PlotResultReward reward                                              = 2;   // 奖励
+    PlotResultStateModify state_modify                                   = 3;   // 状态变更
+    PlotResultArgModify arg_modify                                       = 4;   // 参数变更
+    PlotResultPlayerMove player_move                                     = 5;   // 玩家移动
+    PlotResultComponentMove component_move                               = 6;   // 组件移动
+    PlotResultItemsConsume items_consume                                 = 7;   // 道具消耗
+    PlotResultPlayerTransfer player_transfer                             = 8;   // 玩家被传送到某一地图某一地点
+    PlotResultCloudUnlock cloud_unlock                                   = 9;   // 云解锁
+    PlotResultSeaTaskAccept sea_task_accept                              = 10;  // 接取航海日志任务
+    PlotResultReceiveTaskReward receive_task_reward                      = 11;  // 领取航海日志任务奖励
+    PlotResultLadyBugReward ladybug_reward                               = 12;  // 小瓢虫商店获得道具
+    PlotResultDelegateTaskAccept delegate_task_accept                    = 13;  // 接取派遣任务
+    PlotResultUnlockFishPoint unlock_fish_point                          = 14;  // 解锁钓点
+    PlotResultMysteryShopUnlocked mystery_shop_unlocked                  = 15;  // 神秘商店解锁
+    PlotResultMysteryProductGroupUnlocked mystery_product_group_unlocked = 16;  // 神秘商店商品解锁
+    PlotResultGroupStateModify group_state_modify                        = 17;  // 分组状态变更
+    PlotResultOpenAchieveWay open_achieveway                             = 18;  // 打开界面
+    PlotResultCarryDropComponent carry_drop_component                    = 19;  // 运载物件
+    PlotResultAnimalUnlock unlock_animal                                 = 20;  // 解锁珍兽
+    PlotResultUnlockRegion unlock_region                                 = 21;  // 解锁区域
+    PlotResultActivatePlot activate_plot                                 = 22;  // 激活剧情
+    PlotResultDeactivatePlot deactivate_plot                             = 23;  // 隐藏剧情
+    PlotResultDungeonPassVarChange dungeon_pass_var_change               = 29;  // 副本通关变量变更
+    PlotResultDungeonFailVarChange dungeon_fail_var_change               = 30;  // 副本失败变量变更
+    PlotResultDungeonTimeChange dungeon_time_change                      = 31;  // 副本时间变更
+    PlotResultBindFollow bind_follow                                     = 32;  // 绑定跟随
+    PlotResultUnbindFollow unbind_follow                                 = 33;  // 解除跟随
+    PlotResultCollectMapFragment collect_map_fragment                    = 34;  // 收集藏宝图事件结果
+    PlotResultBuggyDiaryFragment buggy_diary_fragment                    = 35;  // 获得buggy日记片段
+    PlotResultActivateSkill activate_skill                               = 36;  // 激活技能
+    PlotResultDeactivateSkill deactivate_skill                           = 37;  // 隐藏技能
+    PlotResultAddBuff add_buff                                           = 38;  // 添加buff
+    PlotResultDelBuff del_buff                                           = 39;  // 移除buff
+    PlotResultDelBuffGroup del_buff_group                                = 40;  // 移除buff组
+    PlotResultBugAttachment buggy_attachment                             = 41;  // 巴基附身
+    PlotCanUnlockMap can_unlock_map                                      = 42;  // 可以解锁新地图
+    PlotResultArgMultiply arg_multiply                                   = 43;  // 参数值乘算
+    PlotResultStateToggle state_toggle                                   = 44;  // 状态切换
+    PlotResultChangeShip change_ship                                     = 45;  // 更换自定义船ID
+    PlotResultGroupDeactivateSkill group_deactivate_skill                = 46;  // 隐藏物件组技能
+    PlotResultGroupActivateSkill group_activate_skill                    = 47;  // 激活物件组技能
+    PlotResultShipRogueUnlock ship_rogue_unlock                          = 48;  // 解锁肉鸽
+    PlotResultTalentTabUnlock talent_tab_unlock                          = 49;  // 解锁天赋页签
+    PlotResultRouteStateModify route_state_modify                        = 50;  // 航线状态变更
+    PlotResultModifySkillQuota modify_skill_quota                        = 51;  // 修改技能配额后的数值，用于返回增/减后的数值
+    PlotResultSetSpecialHideMapState set_special_hide_map_state          = 52;  // 设置特殊地图状态
+  };
+}
+
+message PlotResultSetSpecialHideMapState {
+  map<int64, int64> special_hide_map_state_map = 1;  // 特殊地图状态 (key: 地图ID, value: 特殊地图状态, 1: 开启状态, 0: 关闭状态)
+}
+
+message PlotResultShipRogueUnlock {
+  int64 warship_id                     = 1 [deprecated = true];  // 战船ID
+  bool enable_multi_genre              = 2 [deprecated = true];  // 是否开启多流派
+  int64 item_id                        = 3 [deprecated = true];  // 物品ID
+  repeated ShipRogueUnlock unlock_list = 4;                      // 解锁的战船
+}
+
+message ShipRogueUnlock {
+  int64 warship_id        = 1;  // 战船ID
+  bool enable_multi_genre = 2;  // 是否开启多流派
+  int64 item_id           = 3;  // 物品ID
+}
+
+message PlotResultTalentTabUnlock {
+  int64 talent_actor_id = 1;  // 天赋页签ID
+}
+
+message PlotResultRouteStateModify {
+  int64 route_id = 1;  // 航线ID
+  int64 value    = 2;  // 状态值
+}
+
+message PlotResultModifySkillQuota {
+  int64 skill_id = 1;  // 技能ID
+  int64 quota    = 2;  // 配额
+}
+
+message PlotResultChangeShip {
+  int64 ship_id = 1;  // 自定义的船ID
+}
+
+message PlotCanUnlockMap {
+  int64 can_unlock_map_id = 1;  // 可以解锁新地图的ID
+}
+
+message PlotResultBugAttachment {
+  int64 component_id = 1;  // 附身的物件 ID
+}
+
+message PlotResultActivateSkill {
+  int64 component_id       = 1;
+  repeated int64 skill_ids = 2;  // 技能ID
+}
+
+message PlotResultDeactivateSkill {
+  int64 component_id       = 1;
+  repeated int64 skill_ids = 2;  // 技能ID
+}
+
+message PlotResultGroupDeactivateSkill {
+  int64 component_group    = 1;  // 物件组
+  repeated int64 skill_ids = 2;  // 技能ID
+}
+
+message PlotResultGroupActivateSkill {
+  int64 component_group    = 1;  // 物件组
+  repeated int64 skill_ids = 2;  // 技能ID
+}
+
+message PlotResultAddBuff {
+  int64 component_id      = 1;
+  repeated int64 buff_ids = 2;  // buff ID
+}
+
+message PlotResultDelBuff {
+  int64 component_id               = 1;
+  map<int64, int64> buff_layer_cnt = 2;  // buff层数
+}
+
+message PlotResultDelBuffGroup {
+  int64 component_id         = 1;
+  repeated int64 buff_groups = 2;  // buff组
+}
+
+message PlotResultBuggyDiaryFragment {
+  int64 diary_fragment_id = 1;  // 日记碎片ID
+}
+
+message PlotResultCollectMapFragment {
+  MapState map_state = 1;  // 增量全地图状态
+  int64 map_id       = 2;  // 新的地图 ID
+}
+
+message PlotResultBindFollow {
+  repeated int64 follow_ids = 1;  // 现在的跟随IDs(按数组顺序)
+}
+
+message PlotResultUnbindFollow {
+  repeated int64 follow_ids = 1;  // 现在的跟随IDs(按数组顺序)
+  int64 unbind_id           = 2;  // 本次解绑的ID (如果为0则全部解除)
+}
+
+message PlotResultDungeonPassVarChange {
+  int64 current_value = 1;  // 最新值(变更后的)
+  int64 change        = 2;  // 本次变更值
+}
+
+message PlotResultDungeonFailVarChange {
+  int64 current_value = 1;  // 最新值(变更后的)
+  int64 change        = 2;  // 本次变更值
+}
+
+message PlotResultDungeonTimeChange {
+  int64 current_value = 1;  // 最新值(变更后的)
+  int64 change        = 2;  // 本次变更值
+}
+
+message PlotResultActivatePlot {
+  repeated int64 plot_ids = 1;  // 激活的剧情ID
+}
+
+message PlotResultDeactivatePlot {
+  repeated int64 plot_ids = 1;  // 隐藏的剧情ID
+}
+
+message PlotResultUnlockRegion {
+  int64 map_id    = 1;  // 地图ID
+  int64 region_id = 2;  // 解锁的区域ID
+}
+
+// 运载物件结果
+message PlotResultCarryDropComponent {
+  int64 carry_component_id = 1;  // 当前玩家运载的物件ID
+  int64 carry_icon         = 2;  // 运载的物件的icon
+}
+
+message PlotResultGroupStateModify {
+  int64 group_id    = 1;  // 分组 ID
+  int64 state_value = 2;  // 状态值
+}
+
+message PlotResultOpenAchieveWay {
+  repeated int64 achieve_way_args = 1;  // 透传参数
+}
+
+message PlotResultAnimalUnlock {
+  int64 unlocked_animal = 1;  // 被解锁的珍兽 ID
+}
+
+message PlotResultUnlockFishPoint {
+  int64 point_id = 1;  // 解锁的钓点ID
+}
+
+message PlotResultReward {
+  repeated corepb.Item rewards = 1;  // 奖励
+  int64 id                     = 2;  // 奖励引用的ID
+}
+
+message PlotResultStateModify {
+  int64 component_id = 1;  // 物件 ID
+  int64 state_value  = 2;  // 状态值
+}
+
+message PlotResultArgModify {
+  int64 component_id = 1;  // 物件 ID
+  int64 arg_id       = 2;  // 参数 ID
+  int64 value        = 3;  // 参数值
+}
+
+message PlotResultPlayerMove {
+  int64 point_id = 1;  // 移动到的坐标点
+}
+
+message PlotResultComponentMove {
+  int64 component_id = 1;  // 物件 ID
+  int64 point_id     = 2;  // 移动到的坐标点
+}
+
+message PlotResultItemsConsume {
+  repeated corepb.Item items = 1;  // 道具
+}
+
+// 玩家被传送到某一地图某一地点
+message PlotResultPlayerTransfer {
+  int64 map_id   = 1;  // 地图ID
+  int64 point_id = 2;  // 移动到的坐标点
+  int64 arg      = 3;  // 透传效果参数
+}
+
+message PlotResultCloudUnlock {
+  bool has_unlocked = 1;  // 是否有解锁的云
+}
+
+message PlotResultSeaTaskAccept {
+  int64 task_id = 1;  // 接取的任务
+}
+
+message PlotResultDelegateTaskAccept {}
+
+message PlotResultReceiveTaskReward {
+  int64 task_id               = 1;  // 接取的任务
+  repeated corepb.Item awards = 2;  // 任务奖励
+}
+
+message PlotResultLadyBugReward {
+  repeated corepb.Item awards = 1;  // 小瓢虫商店获得道具
+}
+
+message PlotResultMysteryShopUnlocked {
+  int64 shop_id = 1;  // 神秘商店ID
+}
+
+message PlotResultMysteryProductGroupUnlocked {
+  // 目前没有数据需要下发
+}
+
+message PlotResultArgMultiply {
+  int64 component_id = 1;  // 物件 ID
+  int64 arg_id       = 2;  // 参数 ID
+  int64 value        = 3;  // 参数值
+}
+
+message PlotResultStateToggle {
+  int64 component_id = 1;  // 物件 ID
+  int64 state_value  = 2;  // 状态值
+}
+
+message SeaTaskInfoRequest {}
+
+enum TaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNDONE   = 0;  // 未完成
+  REWARDED = 1;  // 可领奖
+  DONE     = 2;  // 已完成
+  UNKNOWN  = 3;  // 未知
+}
+
+message Task {
+  int64 id                    = 1;  // 任务 ID
+  int64 curr                  = 2;  // 当前完成度
+  int64 target                = 3;  // 目标完成度，0 表示被销毁
+  int64 pinned_time           = 4;  // 追踪时间（Unix timestamp），0 表示未追踪
+  bool is_new                 = 5;  // 是否存在「新」标签
+  TaskStatus status           = 6;  // 任务状态
+  repeated corepb.Item awards = 7;  // 任务奖励
+  bool is_visible             = 8;  // 任务是否显示
+}
+
+message SeaTaskInfoReply {
+  repeated Task sea_task = 1;  // 航海日志任务列表
+}
+
+message ReceiveSeaTaskRequest {
+  int64 task_id = 1;  // 领取任务 ID
+}
+
+message ReceiveSeaTaskReply {
+  Task task                                = 1;  // 领取完后的任务信息
+  repeated corepb.Item awards              = 2;  // 任务奖励
+  ExploreDegree current_map_explore_degree = 3;  // 当前地图的探索度
+}
+
+message PinSeaTaskRequest {
+  int64 task_id = 1;  // 追踪任务 ID
+}
+
+message PinSeaTaskReply {
+  Task task = 1;  // 追踪后的任务信息
+}
+
+message UnpinSeaTaskRequest {
+  int64 task_id = 1;  // 取消追踪任务 ID
+}
+
+message UnpinSeaTaskReply {
+  Task task = 1;  // 取消追踪后的任务信息
+}
+
+message CancelSeaTaskNewFlagRequest {
+  int64 task_id = 1;  // 取消「新」标记任务 ID
+}
+
+message CancelSeaTaskNewFlagReply {
+  Task task = 1;  // 取消「新」标记后的任务信息
+}
+
+// 航海日志任务变更 notify
+message SeaTaskNotify {
+  repeated Task changed_task     = 1;  // 进度变更的任务
+  repeated Task accepted_task    = 2;  // 新接取的任务
+  repeated Task done_task        = 3;  // 刚刚完成任务，用于展示任务奖励
+  repeated int64 destroy_task_id = 4;  // 刚刚被销毁的任务列表
+}
+
+message SeaEncyclopediaInfoRequest {}
+
+message Talent {
+  int64 talent_id                  = 1;  // 天赋 ID
+  bool is_actived                  = 2;  // 是否被激活
+  repeated corepb.Item cost_items  = 3;  // 激活所消耗道具
+  repeated corepb.Item award_items = 4;  // 激活后获得奖励
+  bool can_activated               = 5;  // 是否满足被激活条件
+}
+
+message SeaEncyclopediaInfoReply {
+  int64 last_activate_talent           = 1;  // 最后一次升级的天赋 ID
+  repeated Talent all_talent           = 2;  // 该海域下的所有天赋信息
+  map<int64, bool> already_open_map_id = 3;  // 已经打开过海域百科的海域 ID
+}
+
+message ActivateSeaEncyclopediaRequest {
+  int64 talent_id = 1;  // 激活的天赋 ID
+}
+
+message ActivateSeaEncyclopediaReply {
+  repeated corepb.Item awards = 1;  // 激活后获得的具体奖励
+  repeated Talent all_talent  = 2;  // 该海域下的所有天赋信息
+}
+
+message RaidFightRequest {}
+
+message RaidFightReply {
+  repeated corepb.Item awards = 1;  // 战斗奖励
+}
+
+message RaidFishingRequest {}
+
+message RaidFishingReply {
+  repeated corepb.Item awards = 1;  // 钓鱼奖励
+}
+
+// 查询购买航行力商店请求
+message QuerySailingPowerShopRequest {}
+
+// 查询购买航行力商店回复
+message QuerySailingPowerShopReply {
+  int64 daily_buy_count_limit    = 1;  // 每日购买次数上限
+  int64 daily_buy_count          = 2;  // 当日已购买次数
+  repeated corepb.Item cost_list = 6;  // 购买消耗配置表
+}
+
+// 购买航行力请求
+message BuySailingPowerRequest {
+  int64 buy_count = 1;  // 本次购买次数
+}
+
+// 购买航行力回复
+message BuySailingPowerReply {
+  int64 auto_trans_cruise_speedup_power = 1;  // 自动转化的加速能量
+}
+
+// 查询航行力信息请求
+message InfoSailingPowerRequest {}
+
+// 查询航行力信息回复
+message InfoSailingPowerReply {
+  UpdateSailingPowerInfo update_info               = 1;  // 航行力挂机更新信息
+  CruiseSpeedupPowerInfo cruise_speedup_power_info = 2;  // 加速能量信息
+}
+
+// 航行力挂机更新信息
+message UpdateSailingPowerInfo {
+  int64 accumulated_time_seconds      = 1;  // 当前恢复周期内已积累的时间(秒) 0 <= accumulated_time_seconds <= period_seconds
+  int64 period_seconds                = 2;  // 恢复周期(秒) 每达到周期时间，恢复一次航行力
+  int64 period_recovery_sailing_power = 3;  // 每个周期恢复的航行力点数
+  int64 recovery_sailing_power_limit  = 4;  // 可恢复的航行力点数上限
+  int64 owned_sailing_power_limit     = 5;  // 拥有的航行力点数上限
+}
+
+// 航行力挂机更新 notify
+message UpdateSailingPowerNotify {
+  UpdateSailingPowerInfo update_info = 1;  // 航行力挂机更新信息
+}
+
+message DelegateInfoRequest {
+  reserved 1;
+}
+
+enum DelegateTaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCK           = 0;  // 未解锁
+  CAN_DELEGATE   = 1;  // 可派遣
+  IN_DELEGATION  = 2;  // 派遣中
+  CAN_REWARDED   = 3;  // 可领取奖励
+  COLLECTION_END = 4;  // 采集已经结束
+}
+
+enum DelegateTaskType {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NORMAL    = 0;  // 常规任务
+  COLLECTED = 1;  // 采集任务
+}
+
+message DelegateTask {
+  reserved 3;
+  DelegateTaskStatus status     = 1;   // 派遣任务状态
+  DelegateTaskType type         = 2;   // 派遣任务类型
+  int64 task_id                 = 4;   // 任务 ID
+  int64 delegate_pool_id        = 5;   // 派遣任务池 ID
+  int64 position_id             = 6;   // 位置 ID（客户端显示用）
+  int64 delegate_start_time     = 7;   // 派遣开始时间戳
+  int64 delegate_end_time       = 8;   // 派遣结束时间戳
+  repeated int64 ship_id        = 9;   // 战船 ID
+  repeated int64 buddy_id       = 10;  // 伙伴 ID
+  int64 init_progress           = 11;  // 初始采集进度
+  int64 total_progress          = 12;  // 总采集进度
+  int64 total_efficiency        = 13;  // 采集总效率（分钟）
+  repeated corepb.Item awards   = 14;  // 奖励列表
+  bool is_new                   = 15;  // 是否为「新」派遣任务
+  int64 current_time            = 16;  // 查看派遣任务时间
+  int64 current_progress        = 17;  // 查看派遣任务时的采集进度
+  bool meet_delegate_conditions = 18;  // 是否满足所有的可派遣条件
+  int64 quality                 = 19;  // 任务品质
+}
+
+message DelegateInfoReply {
+  reserved 4, 5;
+  int64 delegate_times                                    = 1;  // 今日派遣次数
+  int64 total_delegate_times                              = 2;  // 每次派遣次数上限
+  repeated DelegateTask tasks                             = 3;  // 任务列表
+  repeated corepb.Item refresh_delegate_task_cost         = 6;  // 刷新派遣任务消耗
+  bool perfect_refresh_open                               = 7;  // 是否刷新了新的派遣任务
+  repeated corepb.Item perfect_refresh_delegate_task_cost = 8;  // 完美刷新派遣任务消耗
+}
+
+message ReceiveDelegateRewardRequest {
+  int64 map_id  = 1;  // 海域 ID
+  int64 task_id = 2;  // 领取奖励的任务 ID（如果为 -1 表示全部领取）
+}
+
+message ReceiveDelegateRewardReply {
+  repeated corepb.Item received_awards = 1;  // 领取奖励列表
+}
+
+message DelegateLoadoutRequest {
+  int64 map_id  = 1;  // 海域 ID
+  int64 task_id = 2;  // 任务 ID
+}
+
+enum LoadoutStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  INSUFFICIENT_CONDITIONS = 0;  // 条件不足
+  ABLE_DELEGATE           = 1;  // 可派遣
+  ON_DELEGATION           = 2;  // 派遣中
+  IN_DRIVING              = 3;  // 正在驾驶中
+}
+
+message ShipInfo {
+  int64 ship_id          = 1;  // 战船 ID
+  int64 passenger_number = 2;  // 载人数量
+  LoadoutStatus status   = 3;  // 战船状态
+}
+
+message BuddyInfo {
+  int64 buddy_id       = 1;  // 伙伴 ID
+  LoadoutStatus status = 2;  // 伙伴状态
+}
+
+message DelegateLoadoutReply {
+  repeated ShipInfo ship_info     = 1;  // 战船信息
+  repeated BuddyInfo buddy_info   = 2;  // 伙伴信息
+  repeated int64 buddy_efficiency = 3;  // 不同品质伙伴效率(B;A;S;SS)
+}
+
+message RecommendLoadoutRequest {
+  int64 map_id  = 1;  // 海域 ID
+  int64 task_id = 2;  // 任务 ID
+}
+
+message RecommendLoadoutReply {
+  repeated int64 ship_id      = 1;  // 推荐的战船 ID
+  repeated int64 buddy_id     = 2;  // 推荐的伙伴 ID
+  repeated corepb.Item awards = 3;  // 奖励内容
+  int64 delegate_remain_time  = 4;  // 派遣剩余时长（秒）
+  int64 total_efficiency      = 5;  // 采集总效率（分钟）
+}
+
+message StartDelegateRequest {
+  int64 map_id            = 1;  // 海域 ID
+  int64 task_id           = 2;  // 任务 ID
+  repeated int64 ship_id  = 3;  // 选择的战船 ID
+  repeated int64 buddy_id = 4;  // 选择的伙伴 ID
+}
+
+message StartDelegateReply {
+  repeated int64 show_route = 1;  // 表演路线（用于派遣完成后，客户端表现）
+  DelegateTask task         = 2;  // 开始派遣后的任务详情
+}
+
+message OneClickDelegateRequest {
+  int64 map_id = 1;  // 海域 ID
+}
+
+message OneClickDelegateReply {
+  repeated DelegateTask received_delegate_tasks = 1;  // 一键派遣成功的派遣任务列表
+}
+
+// 派遣接取新任务 notify
+message AcceptDelegateTaskNotify {
+  repeated DelegateTask tasks    = 1;  // 接取的任务列表
+  int64 accept_wait_tasks_number = 2;  // 新添加到等待派遣任务队列的数量
+}
+
+message RemoveDelegateNewFlagRequest {
+  int64 map_id  = 1;  // 海域 ID
+  int64 task_id = 2;  // 任务 ID
+}
+
+message RemoveDelegateNewFlagReply {}
+
+message StrangeAnimalInfo {
+  repeated int64 unlocked_animal_ids  = 1;  // 已经被解锁的珍兽 ID
+  repeated int64 activated_animal_ids = 2;  // 已经被激活的珍兽 ID
+}
+
+message StrangeAnimalInfoRequest {}
+
+message StrangeAnimalInfoReply {
+  StrangeAnimalInfo strange_animal_info = 1;  // 珍兽图鉴信息
+}
+
+message ActivateStrangeAnimalRequest {
+  int64 animal_id    = 1;  // 激活的珍兽 ID
+  int64 open_node_id = 2;  // 激活的新手引导节点 ID
+}
+
+message ActivateStrangeAnimalReply {}
+
+message HachiTakoyakiInfoRequest {}
+
+message TakoyakiSlot {
+  int64 slot_id           = 1;  // 章鱼烧槽位 ID
+  bool is_unlocked        = 2;  // 是否已经解锁
+  int64 using_takoyaki_id = 3;  // 正在使用的章鱼烧口味 ID，0 表示未使用
+  int64 current_progress  = 4;  // 当前解锁的进度
+  int64 needed_progress   = 5;  // 解锁所需要的进度
+}
+
+message HachiTakoyakiInfoReply {
+  int64 cooking_level                  = 1;  // 厨艺等级
+  corepb.Item levelup_have_item        = 2;  // 厨艺升级已经拥有道具
+  corepb.Item levelup_cost_item        = 3;  // 厨艺升级所需道具
+  repeated int64 unlocked_old_takoyaki = 4;  // 已经解锁的「旧」章鱼烧口味
+  repeated int64 unlocked_new_takoyaki = 5;  // 已经解锁的「新」章鱼烧口味
+  repeated TakoyakiSlot takoyaki_slot  = 6;  // 章鱼烧槽位信息
+}
+
+message LevelUpHachiCookingRequest {}
+
+message LevelUpHachiCookingReply {
+  int64 cooking_level                  = 1;  // 厨艺等级
+  corepb.Item levelup_have_item        = 2;  // 厨艺升级已经拥有道具
+  corepb.Item levelup_cost_item        = 3;  // 厨艺升级所需道具
+  repeated int64 unlocked_old_takoyaki = 4;  // 已经解锁的「旧」章鱼烧口味
+  repeated int64 unlocked_new_takoyaki = 5;  // 已经解锁的「新」章鱼烧口味
+}
+
+message UnlockHachiTakoyakiSlotRequest {
+  int64 slot_id = 1;  // 解锁的章鱼烧槽位 ID
+}
+
+message UnlockHachiTakoyakiSlotReply {
+  repeated TakoyakiSlot takoyaki_slot = 1;  // 章鱼烧槽位信息
+}
+
+message ChooseTakoyakiSlot {
+  int64 slot_id     = 1;  // 章鱼烧槽位 ID
+  int64 takoyaki_id = 2;  // 章鱼烧口味 ID
+}
+
+message UsingHachiTakoyakiRequest {
+  repeated ChooseTakoyakiSlot choose_takoyaki_slot = 1;  // 每个章鱼烧槽位选择的章鱼烧口味详情
+  int64 open_node_id                               = 2;  // 激活的新手引导节点 ID
+}
+
+message UsingHachiTakoyakiReply {
+  repeated TakoyakiSlot takoyaki_slot = 1;  // 章鱼烧槽位信息
+}
+
+message CancelNewHachiTakoyakiFlagRequest {
+  int64 takoyaki_id = 1;  // 章鱼烧口味 ID
+}
+
+message CancelNewHachiTakoyakiFlagiReply {}
+
+enum MapStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  MAP_LOCKED           = 0;  // 地图未解锁
+  MAP_CAN_UNLOCKED     = 1;  // 地图可解锁
+  MAP_ALREADY_UNLOCKED = 2;  // 地图已解锁
+}
+
+enum CollectionType {
+  COLLECTION_TYPE_UNKNOWN     = 0;  // 未知类型
+  COLLECTION_WOODEN_BARREL    = 1;  // 木桶
+  COLLECTION_OBSTACLE_TERRAIN = 2;  // 障碍地形
+  COLLECTION_REWARD_BOX       = 3;  // 宝箱
+  COLLECTION_MU_MU            = 4;  // 海牛
+  COLLECTION_NORMAL_MONSTER   = 5;  // 小怪
+  COLLECTION_STRANGE_ANIMAL   = 6;  // 珍兽
+}
+
+message CollectionProfile {
+  CollectionType collection_type = 1;  // 收集类型
+  int64 current                  = 2;  // 当前进度
+  int64 target                   = 3;  // 总进度
+}
+
+message MapProfile {
+  int64 chapter_id                                = 1;   // 章节 ID
+  int64 map_id                                    = 2;   // 地图 ID
+  int64 map_exploration                           = 3;   // 地图探索度
+  MapStatus map_status                            = 4;   // 地图状态
+  int64 previous_needed_exploration               = 5;   // 前一海域所需要的海域探索度
+  int64 previous_exloration                       = 6;   // 前一海域当前的海域探索度
+  int64 needed_unlock_map_item_count              = 7;   // 解锁道具所需要的数量
+  corepb.Item unlock_map_item                     = 8;   // 解锁道具信息
+  repeated CollectionProfile collection_profile   = 9;   // 收集信息简介
+  int64 previous_necessary_finish_task_id         = 10;  // 前一海域解锁下一个地图需要完成的任务 ID
+  bool is_previous_necessary_finish_task_finished = 11;  // 前一海域解锁下一个地图需要完成的任务是否已经完成
+}
+
+message ChapterProfileRequest {}
+
+message ChapterProfileReply {
+  int64 chapter_id                                    = 1;  // 当前巡航的章节 ID
+  int64 map_id                                        = 2;  // 当前巡航的地图 ID
+  int64 current_map_id                                = 3;  // 当前所在的地图 ID
+  repeated MapProfile map_profile                     = 4;  // 地图简要信息
+  repeated CruiseDisplayReward cruise_display_rewards = 5;  // 巡航展示奖励
+}
+
+message CruiseDisplayReward {
+  int64 chapter_id             = 1;  // 章节 ID
+  int64 map_id                 = 2;  // 地图 ID
+  repeated corepb.Item rewards = 3;  // 展示奖励
+  bool is_map_unlocked         = 4;  // 地图是否已解锁
+}
+
+message SeaCruiseInfoRequest {
+  bool is_refresh_info = 1;  // 是否为刷新巡航信息
+}
+
+message DisplayItem {
+  bool is_new      = 1;  // 是否「新」道具
+  corepb.Item item = 2;  // 道具信息
+}
+
+message SeaCruiseInfoReply {
+  int64 chapter_id                                            = 1;   // 章节 ID
+  int64 map_id                                                = 2;   // 地图 ID
+  int64 cruise_duration                                       = 3;   // 当前的巡航时间（秒）
+  int64 cruise_duration_limit                                 = 4;   // 巡航时间限制（秒）
+  repeated corepb.Item cruise_reward                          = 5;   // 巡航等待领取的奖励
+  repeated DisplayItem new_map_display_reward                 = 6;   // 巡航新海域的展示奖励
+  repeated int64 fishing_slot                                 = 7;   // 钓鱼点
+  corepb.Item special_item                                    = 8;   // 特殊道具信息
+  int64 special_item_limit                                    = 9;   // 特殊道具获取上限
+  repeated int64 dungeon_ids                                  = 10;  // 副本 ID
+  CruiseSpeedupPowerInfo cruise_speedup_power_info            = 11;  // 加速能量信息
+  int64 special_item_need_count                               = 12;  // 特殊道具所需数量
+  bool is_necessary_finish_task_finished                      = 13;  // 解锁下一个地图需要完成的任务是否已经完成
+  bool is_exloration_enough                                   = 14;  // 探索度是否足够
+  repeated int64 super_captain_active_cruise_rewards_item_ids = 15;  // 超级船长加成的巡航奖励道具 ID
+  repeated int64 super_captain_active_accumulate_cruise_rewards_item_ids =
+      16;  // 当前累积的巡航奖励受到超级船长加成的道具id列表，不同于上面的字段，巡航是累积奖励，可能前面一段时间包含加成的奖励物品，也要在这个字段里
+}
+
+message CruiseSpeedupPowerInfo {
+  int64 accumulated_time_seconds      = 1;  // 当前恢复周期内已积累的时间(秒) 0 <= accumulated_time_seconds <= period_seconds
+  int64 period_seconds                = 2;  // 恢复周期(秒) 每达到周期时间，恢复一次加速能量
+  int64 period_recovery_sailing_power = 3;  // 每个周期恢复的加速能量点数
+  int64 recovery_sailing_power_limit  = 4;  // 可恢复的加速能量点数上限
+  int64 owned_sailing_power_limit     = 5;  // 拥有的加速能量点数上限
+}
+
+message SpeedupCruiseRequest {
+  int64 cost_sailing_power = 1;  // 花费的航行力
+  bool is_preview          = 2;  // 是否仅预览（预览仅会返回奖励列表供查看，不扣除航行力）
+  int64 open_node_id       = 3;  // 激活的新手引导节点 ID
+  int64 speedup_seconds    = 4;  // 加速的秒数
+}
+
+message SpeedupCruiseReply {
+  repeated corepb.Item rewards = 1;  // （获取/预览）奖励列表
+  bool is_preview              = 2;  // 是否仅预览（预览仅会返回奖励列表供查看，不扣除航行力）
+}
+
+message ReceiveCruiseRewardRequest {
+  int64 open_node_id = 1;  // 激活的新手引导节点 ID
+}
+
+message ReceiveCruiseRewardReply {
+  repeated corepb.Item cruise_reward = 1;  // 获取巡航奖励列表
+}
+
+message UnlockMapRequest {
+  int64 map_id = 1;  // 解锁地图 ID
+}
+
+message UnlockMapReply {}
+
+message CalcLoadoutButtonRedPointRequest {}
+
+message CalcLoadoutButtonRedPointReply {}
+
+// 天赋查询协议
+message ShipwrightTalentInfoRequest {}
+
+message ShipwrightTalentInfoReply {
+  repeated ShipwrightTalentActor actors = 1;  // 天赋页签角色
+  bool new_transform_unlock             = 2;  // 是否有新改造指南解锁
+}
+
+// TalentInfo包含多个页签，每个页签包含多个天赋
+message ShipwrightTalentActor {
+  int64 actor_id                    = 1;  // 天赋页签角色 ID
+  repeated ShipwrightTalent talents = 2;  // 天赋信息
+  ShipwrightActorState state        = 3;
+}
+
+enum ShipwrightActorState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  ACTORSTATE_LOCKED   = 0;  // 未解锁
+  ACTORSTATE_UNLOCKED = 1;  // 已解锁
+}
+
+// 每个天赋赋存在未解锁、可激活、已激活三种状态
+message ShipwrightTalent {
+  int64 id                    = 1;  // 天赋 ID
+  ShipwrightTalentState state = 2;  // 天赋状态
+  corepb.Item cost_item       = 3;  // 激活天赋消耗
+}
+
+// 天赋激活协议
+message ShipwrightTalentActivateRequest {
+  int64 talent_id    = 1;  // 天赋 ID
+  int64 open_node_id = 2;  // 激活的新手引导节点 ID
+}
+
+message ShipwrightTalentActivateReply {
+  repeated ShipwrightTalentActor actors = 1;  // 天赋页签角色
+  bool new_transform_unlock             = 2;  // 是否有新改造指南解锁
+}
+
+// 天赋状态
+enum ShipwrightTalentState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  TALENTSTATE_LOCKED    = 0;  // 未解锁
+  TALENTSTATE_UNLOCKED  = 1;  // 已解锁，待激活
+  TALENTSTATE_ACTIVATED = 2;  // 已激活
+}
+
+// 重置角色天赋
+message ShipwrightTalentResetRequest {
+  int64 actor_id = 1;  // 角色 ID
+}
+
+message ShipwrightTalentResetReply {
+  repeated ShipwrightTalentActor actors = 1;  // 天赋页签角色
+  bool new_transform_unlock             = 2;  // 是否有新改造指南解锁
+}
+
+// 改造指南查询协议
+message ShipwrightTransformInfoRequest {}
+
+message ShipwrightTransformInfoReply {
+  repeated int64 past_unlocked_item_ids = 1;  // 已解锁改造指南的物品 ID
+  repeated int64 new_unlocked_item_ids  = 2;  // 新解锁改造指南的物品 ID
+}
+
+message AttrInfo {
+  corepb.AttributeId attr = 1;  // 属性ID
+  int64 val               = 2;  // 属性值
+}
+
+// 当前某些大事件已完成但剧情还未Finish的notify; 接到此通知后，客户端发送FinishEvent请求
+message CurrentPlotNotFinishNotify {
+  int64 plot_id        = 1;  // 剧情 ID
+  EventType event_type = 2;  // 事件类型
+}

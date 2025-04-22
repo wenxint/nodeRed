@@ -1,0 +1,53 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0073pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0073pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/common.proto";
+
+service CSAct0073Service {
+
+  // RecordGlassShowed 记录玻璃动画是否展示
+  rpc RecordGlassShowed(RecordGlassShowedRequest) returns (RecordGlassShowedReply) {}
+}
+
+message RecordGlassShowedRequest {
+  int64 big_season_id = 1;
+}
+
+message RecordGlassShowedReply {}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated int64 season_ids          = 1;
+  int64 last_pvpladder_score         = 4;
+  int64 last_bountygame_score        = 5;
+  int64 last_fc_score                = 6;
+  BattlepassInfo battlepass_info     = 7;   // 特典通行证信息
+  int64 latest_unlock_big_season_id  = 8;   // 最新解锁的大赛季ID
+  bool need_show_glass               = 9;   // 是否要播放玻璃动画
+  int64 first_big_season_unlock_time = 10;  // 第一个大赛季解锁时间
+  actpb.commonpb.Share share         = 11;  // 分享信息
+  int64 current_big_season_id        = 12;  // 当前大赛季ID
+  int64 current_season_id            = 13;  // 当前小赛季ID
+}
+
+message BattlepassInfo {
+  int64 level                       = 1;  // 等级
+  int64 complete_tasks              = 2;  // 完成任务数
+  int64 total_daily_score           = 3;  // 总活跃
+  repeated corepb.Item reward_items = 4;  // 奖励物品
+  BPType bp_type                    = 5;  // 特典类型
+}
+
+enum BPType {
+  TYPE_UNKNOWN = 0;
+  NORMAL       = 1;  // 普通特典
+  ADVANCED     = 2;  // 高级特典
+  LUXURY       = 3;  // 豪华特典（特殊的高级特典）
+}

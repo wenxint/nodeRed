@@ -1,0 +1,40 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0070pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0070pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0070Service {
+  // 分享活动
+  rpc ShareAct(ShareActRequest) returns (ShareActReply);  // 待废弃
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  reserved 2, 3, 4;
+  repeated ActInfo act_infos = 1;  // 活动信息
+  actpb.commonpb.Share share = 5;  // 分享信息
+}
+
+message ActInfo {
+  int64 act_id                = 1;  // 活动ID
+  int64 template_id           = 2;  // 模板ID
+  string title                = 3;  // 主题名称
+  string desc                 = 4;  // 描述
+  int64 path                  = 5;  // 前往路径
+  int64 start_time            = 6;  // 开启时间
+  repeated corepb.Item awards = 7;  // 奖励预览
+  int64 type                  = 8;  // 按钮类型(0弹窗 1跳转)
+  string button_name          = 9;  // 按钮文字
+}
+
+message ShareActRequest {}
+
+message ShareActReply {
+  bool shared = 1;
+}

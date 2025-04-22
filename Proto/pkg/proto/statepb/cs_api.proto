@@ -1,0 +1,29 @@
+// cs protocol
+syntax = "proto3";
+
+package statepb;
+
+import "pkg/proto/statepb/comm.proto";
+option go_package = "git.woa.com/red/statesvr/pkg/proto/statepb";
+
+// 玩家状态管理服务---用于客户端查询玩家状态
+service StateService {
+  // QueryStatus 查询玩家状态，支持批量，返回的数值可能有几秒延迟
+  rpc QueryStatus(QueryStatusRequest) returns (QueryStatusReply);
+}
+
+// 查询玩家状态
+message QueryStatusRequest {
+  int64 sys_id        = 1;  // 哪个系统来查询
+  repeated int64 gids = 2;  // 玩家列表
+}
+
+message GidActiveDoing {
+  int64 gid         = 1;
+  DoingInfo doing   = 2;  // 当前正在参与的玩法。不要通过这里认为是否在线
+  OnlineInfo online = 3;  // 当前的在线状态，包括上线或下线的时间戳，如果你要展示状态或具体时间读这里
+}
+
+message QueryStatusReply {
+  repeated GidActiveDoing gids_doing = 1;  // 玩家状态列表
+}
