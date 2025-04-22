@@ -38,10 +38,7 @@
       "name": "代码抽象规则",
       "description": "公共代码应放在common目录下，按功能模块划分文件"
     },
-    {
-      "name": "Proto文件组织",
-      "description": "Proto文件按包名组织，支持动态查找和解析protobuf数据"
-    },
+
     {
       "name": "中间件规则",
       "description": "自定义中间件放在middleware目录，统一导出并在app.js中注册"
