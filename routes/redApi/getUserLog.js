@@ -30,12 +30,21 @@ router.post('/getUserLog', async (req, res, next) => {
       return next(new AppError(400, '缺少openId参数'));
     }
 
-    try {
-      // 临时文件存储路径
-      const tempDir = path.join(__dirname, '../../temp');
+    // 为每个请求生成唯一ID，避免并发冲突
+    const requestId = Date.now() + '_' + Math.random().toString(36).slice(2, 10);
 
-      // 下载并解压ZIP文件（强制重新下载）
-      const extractDir = await downloadAndExtractZip(openId, true);
+    try {
+      // 临时文件存储路径（加入请求ID，避免并发冲突）
+      const tempDir = path.join(__dirname, '../../temp');
+      const extractDir = path.join(tempDir, `UserLog_${openId}_${requestId}`);
+
+      // 确保临时目录存在
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      // 下载并解压ZIP文件（强制重新下载，指定目录）
+      await downloadAndExtractZip(openId, true, extractDir);
 
       // 获取解压后的文件列表
       let extractedFiles = fs.readdirSync(extractDir);
@@ -127,6 +136,10 @@ router.post('/getUserLog', async (req, res, next) => {
       return; // 已经发送响应，直接返回
     } catch (error) {
       console.log(error,'error');
+      // 清理临时目录
+      const extractDir = path.join(__dirname, '../../temp', `UserLog_${openId}_${requestId}`);
+      deleteDirectoryAsync(extractDir, 0);
+
       // 处理网络错误
       let message = '获取日志文件失败';
       let statusCode = 500;
@@ -174,42 +187,61 @@ router.get('/checkLogFiles/:openId', async (req, res, next) => {
       return next(new AppError(400, '缺少openId参数'));
     }
 
-    // 检查解压目录
-    const extractDir = path.join(__dirname, '../../temp', `UserLog_${openId}`);
+    // 为了兼容性，检查整个temp目录下所有与该openId相关的目录
+    const tempDir = path.join(__dirname, '../../temp');
+    const logDirPrefix = `UserLog_${openId}`;
 
-    if (fs.existsSync(extractDir)) {
-      // 获取文件列表
-      const files = fs.readdirSync(extractDir).map(file => {
-        const filePath = path.join(extractDir, file);
-        const stats = fs.statSync(filePath);
-        return {
-          name: file,
-          path: filePath,
-          size: stats.size,
-          isDirectory: stats.isDirectory(),
-          createdAt: stats.birthtime
-        };
-      });
-
-      // 查找所有.redlog结尾的文件
-      const allRedlogFiles = findRedlogFiles(extractDir, extractDir);
-
-      // 过滤掉包含RedFSPProfiler的文件
-      const redlogFiles = allRedlogFiles.filter(item => !item.file.includes('RedFSPProfiler'));
-
-      // 使用统一响应格式返回结果
-      return ResponseHelper.success(res, {
-        exists: true,
-        extractPath: extractDir,
-        files,
-        redlogFiles
-      }, '日志文件已存在');
-    } else {
-      // 使用统一响应格式返回结果
+    // 检查temp目录是否存在
+    if (!fs.existsSync(tempDir)) {
       return ResponseHelper.success(res, {
         exists: false
       }, '日志文件不存在，需要下载');
     }
+
+    // 获取temp目录下所有文件和目录
+    const tempDirContents = fs.readdirSync(tempDir);
+
+    // 查找与openId相关的目录（支持新旧命名格式）
+    const matchingDirs = tempDirContents.filter(item =>
+      item.startsWith(logDirPrefix) &&
+      fs.statSync(path.join(tempDir, item)).isDirectory()
+    );
+
+    if (matchingDirs.length === 0) {
+      return ResponseHelper.success(res, {
+        exists: false
+      }, '日志文件不存在，需要下载');
+    }
+
+    // 使用找到的第一个目录（通常是最新的）
+    const extractDir = path.join(tempDir, matchingDirs[0]);
+
+    // 获取文件列表
+    const files = fs.readdirSync(extractDir).map(file => {
+      const filePath = path.join(extractDir, file);
+      const stats = fs.statSync(filePath);
+      return {
+        name: file,
+        path: filePath,
+        size: stats.size,
+        isDirectory: stats.isDirectory(),
+        createdAt: stats.birthtime
+      };
+    });
+
+    // 查找所有.redlog结尾的文件
+    const allRedlogFiles = findRedlogFiles(extractDir, extractDir);
+
+    // 过滤掉包含RedFSPProfiler的文件
+    const redlogFiles = allRedlogFiles.filter(item => !item.file.includes('RedFSPProfiler'));
+
+    // 使用统一响应格式返回结果
+    return ResponseHelper.success(res, {
+      exists: true,
+      extractPath: extractDir,
+      files,
+      redlogFiles
+    }, '日志文件已存在');
   } catch (error) {
     console.error('检查日志文件错误:', error);
     return next(new AppError(500, '系统错误，请稍后重试'));

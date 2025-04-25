@@ -131,9 +131,10 @@ async function decompressRedLog(logFilePath, returnContent = false) {
  * 下载并解压特定OpenId的日志文件
  * @param {string} openId - 用户openId
  * @param {boolean} forceRedownload - 是否强制重新下载，即使目录已存在
+ * @param {string} customExtractDir - 自定义解压目录，用于防止并发冲突
  * @returns {Promise<string>} - 解析为解压目录路径
  */
-async function downloadAndExtractZip(openId, forceRedownload = false) {
+async function downloadAndExtractZip(openId, forceRedownload = false, customExtractDir = null) {
   // 日志文件的URL
   const logUrl = `http://diagnose.test.red.woa.com/Logstore/${openId}/`;
   console.log(`准备从URL下载文件: ${logUrl}`);
@@ -147,8 +148,10 @@ async function downloadAndExtractZip(openId, forceRedownload = false) {
   const zipFileName = `UserLog${openId}.zip`;
   const zipFilePath = path.join(tempDir, zipFileName);
 
+  // 确定解压目录（使用自定义目录或默认目录）
+  const extractDir = customExtractDir || path.join(tempDir, `UserLog_${openId}`);
+
   // 检查解压目录是否已存在
-  const extractDir = path.join(tempDir, `UserLog_${openId}`);
   if (fs.existsSync(extractDir) && !forceRedownload) {
     console.log(`解压目录已存在: ${extractDir}`);
     return extractDir; // 如果目录已存在且不强制重新下载，直接返回

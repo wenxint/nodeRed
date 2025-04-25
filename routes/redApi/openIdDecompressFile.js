@@ -42,13 +42,21 @@ router.post('/openIdDecompressFile', async (req, res, next) => {
       return next(new AppError(400, '只支持解压.log和.redlog文件'));
     }
 
-    try {
-      // 第一步：下载并解压ZIP文件
-      await downloadAndExtractZip(openId);
+    // 为每个请求生成唯一ID，避免并发冲突
+    const requestId = Date.now() + '_' + Math.random().toString(36).slice(2, 10);
 
-      // 构建文件路径
+    try {
+      // 构建临时目录（加入请求ID，避免并发冲突）
       const tempDir = path.join(__dirname, '../../temp');
-      const userLogDir = path.join(tempDir, `UserLog_${openId}`);
+      const userLogDir = path.join(tempDir, `UserLog_${openId}_${requestId}`);
+
+      // 确保临时目录存在
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      // 第一步：下载并解压ZIP文件（传入请求ID参数指定目录）
+      await downloadAndExtractZip(openId, false, userLogDir);
 
       // 处理dir参数，替换可能的Windows路径分隔符
       const normalizedDir = dir.replace(/\\/g, path.sep);
@@ -57,6 +65,8 @@ router.post('/openIdDecompressFile', async (req, res, next) => {
 
       // 检查文件是否存在
       if (!fs.existsSync(filePath)) {
+        // 清理临时目录然后返回错误
+        deleteDirectoryAsync(userLogDir, 0);
         return next(new AppError(404, `文件不存在: ${filePath}`));
       }
 
@@ -78,6 +88,9 @@ router.post('/openIdDecompressFile', async (req, res, next) => {
 
     } catch (error) {
       console.error('解压文件失败:', error);
+      // 尝试清理临时目录
+      const userLogDir = path.join(__dirname, '../../temp', `UserLog_${openId}_${requestId}`);
+      deleteDirectoryAsync(userLogDir, 0);
       return next(new AppError(500, `解压文件失败: ${error.message}`));
     }
 
