@@ -135,7 +135,7 @@ async function decompressRedLog(logFilePath, returnContent = false) {
  */
 async function downloadAndExtractZip(openId, forceRedownload = false) {
   // 日志文件的URL
-  const logUrl = `https://diagnose.test.red.woa.com/Logstore/${openId}/`;
+  const logUrl = `http://diagnose.test.red.woa.com/Logstore/${openId}/`;
   console.log(`准备从URL下载文件: ${logUrl}`);
 
   // 临时文件存储路径
