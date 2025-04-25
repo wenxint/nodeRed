@@ -3,6 +3,7 @@
   "watch": [
     "routes/",
     "services/",
+    "common/",
     "app.js",
     "bin/"
   ],
