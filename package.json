@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "cross-env NODE_ENV=production babel-node ./bin/www",
-    "dev": "cross-env NODE_ENV=development DEBUG=* nodemon ./bin/www",
+    "dev": "cross-env NODE_ENV=development DEBUG=app:* nodemon --quiet ./bin/www",
     "deploy": "node deploy.js",
     "build": "babel src -d dist"
   },
