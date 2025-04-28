@@ -182,8 +182,9 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
 
 /**
  * 解析sendStr格式的请求
- * 格式: packageIndex, packageName, methodName, ..., base64Data
- * 例如: 2, actpb.act0152pb.CSAct0152Service, GameEnd, 188, 227, 0: base64Data
+ * 旧格式: packageIndex, packageName, methodName, ..., base64Data
+ * 新格式: [timestamp] packageIndex, packageName, methodName, ..., base64Data
+ * 例如: [34031872.000000]        2, actpb.actbasepb.CSActService, ActEntranceDetail, 58, 74, 0:        base64Data
  */
 router.post("/proto/submit", async (req, res, next) => {
   try {
@@ -193,15 +194,29 @@ router.post("/proto/submit", async (req, res, next) => {
       throw new AppError(400, "缺少sendStr参数");
     }
 
+    // 初始化变量
+    let headerPart;
+    let timestamp = null;
+
+    // 检查是否是新格式（带有时间戳）
+    const timestampMatch = sendStr.match(/^\s*\[([\d\.]+)\]\s*/);
+    let processedStr = sendStr;
+
+    // 如果找到时间戳格式，提取时间戳并移除这部分
+    if (timestampMatch) {
+      timestamp = parseFloat(timestampMatch[1]);
+      // 移除时间戳部分，保留剩余字符串
+      processedStr = sendStr.substring(timestampMatch[0].length);
+    }
+
     // 解析sendStr字符串
-    // 格式: packageIndex, packageName, methodName, ..., base64Data
-    const colonIndex = sendStr.indexOf(":");
+    const colonIndex = processedStr.indexOf(":");
     if (colonIndex === -1) {
       throw new AppError(400, "sendStr格式不正确，缺少冒号分隔符");
     }
 
     // 提取冒号前的部分并按逗号分割
-    const headerPart = sendStr.substring(0, colonIndex).trim();
+    headerPart = processedStr.substring(0, colonIndex).trim();
     const parts = headerPart.split(",").map((part) => part.trim());
 
     if (parts.length < 3) {
@@ -210,10 +225,10 @@ router.post("/proto/submit", async (req, res, next) => {
 
     // 提取包名和方法名
     const packageName = parts[1]; // 例如: actpb.act0152pb.CSAct0152Service
-    const methodName = parts[2]; // 例如: GameEnd
+    const methodName = parts[2]; // 例如: GameEnd 或 ActEntranceDetail
 
     // 提取base64数据（冒号后的所有内容）
-    const base64Data = sendStr.substring(colonIndex + 1).trim();
+    const base64Data = processedStr.substring(colonIndex + 1).trim();
 
     // 使用findProtoFileByPackage查找proto文件
     const protoFilePath = findProtoFileByPackage(packageName);
@@ -234,6 +249,7 @@ router.post("/proto/submit", async (req, res, next) => {
 
     // 使用统一响应格式返回结果
     return ResponseHelper.success(res, {
+      timestamp, // 添加时间戳到返回结果
       packageName,
       methodName,
       protoFile: protoFilePath,
