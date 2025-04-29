@@ -1,0 +1,305 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.fishpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/fishpb";
+
+import "corepb/common.proto";
+
+service CSService {
+  // GetFishLocation 获取钓点信息
+  rpc GetFishLocation(GetFishLocationRequest) returns (GetFishLocationReply);
+
+  // GetFishGround 获取渔场信息
+  rpc GetFishGround(GetFishGroundRequest) returns (GetFishGroundReply);
+
+  // SetShowedUnlockAnimationLocationIDs 设置显示过解锁动画的钓点id
+  rpc SetShowedUnlockAnimationLocationIDs(SetShowedUnlockAnimationLocationIDsRequest) returns (SetShowedUnlockAnimationLocationIDsReply);
+
+  // StartFishing 开始钓鱼
+  rpc StartFishing(StartFishingRequest) returns (StartFishingReply);
+
+  // EndFishing 结束钓鱼
+  rpc EndFishing(EndFishingRequest) returns (EndFishingReply);
+
+  // StartFishingNet 开始渔网捕鱼
+  rpc StartFishingNet(StartFishingNetRequest) returns (StartFishingNetReply);
+
+  // EndFishingNet 结束渔网捕鱼
+  rpc EndFishingNet(EndFishingNetRequest) returns (EndFishingNetReply);
+
+  // GetFishBooks 获取图鉴
+  rpc GetFishBooks(GetFishBooksRequest) returns (GetFishBooksReply);
+
+  // GetUnLockedFishBookLocations 获取所有解锁钓点信息，图鉴下拉列表用
+  rpc GetUnLockedFishBookLocations(GetUnLockedFishBookLocationsRequest) returns (GetUnLockedFishBookLocationsReply);
+
+  // UnlockFishBook 图鉴解锁
+  rpc UnlockFishBook(UnlockFishBookRequest) returns (UnlockFishBookReply);
+
+  // TransformBaits 兑换鱼饵
+  rpc TransformBaits(TransformBaitsRequest) returns (TransformBaitsReply);
+
+  // BuyBaits 购买鱼饵
+  rpc BuyBaits(BuyBaitsRequest) returns (BuyBaitsReply);
+
+  // GetBaitsPrice 获取鱼饵价格
+  rpc GetBaitsPrice(GetBaitsPriceRequest) returns (GetBaitsPriceReply);
+
+  // GetFishingRewards 获取钓鱼任务奖励
+  rpc GetFishingRewards(GetFishingRewardsRequest) returns (GetFishingRewardsReply);
+
+  // ReceiveFishingReward 领取钓鱼任务奖励
+  rpc ReceiveFishingReward(ReceiveFishingRewardRequest) returns (ReceiveFishingRewardReply);
+
+  // 获取钓鱼能力信息
+  rpc GetFishingAbilities(GetFishingAbilitiesRequest) returns (GetFishingAbilitiesReply);
+
+  // SetShowedAbilityNewPointLevels 设置显示过钓鱼能力"新"标识的词条id
+  rpc SetShowedAbilityNewPointLevels(SetShowedAbilityNewPointLevelsRequest) returns (SetShowedAbilityNewPointLevelsReply);
+
+  // RaidFishing 扫荡钓鱼
+  rpc RaidFishing(RaidFishingRequest) returns (RaidFishingReply);
+}
+
+message RaidFishingRequest {
+  int64 location_id = 1;  // 钓点id
+}
+
+message RaidFishingReply {
+  repeated corepb.Item awards = 1;  // 奖励
+}
+
+message GetFishLocationRequest {
+  int64 location_id = 1;  // 钓点id
+}
+
+message GetFishLocationReply {
+  FishLocation location      = 1;  // 钓点信息
+  int64 line_range_up        = 2;  // 增加的收线范围
+  bool is_fishing_net_unlock = 3;  // 是否解锁渔网捕鱼
+  int32 bait_buy_cnt         = 4;  // 鱼饵已经购买的次数
+  int32 rod_bait_cost_cnt    = 5;  // 鱼竿鱼饵消耗次数
+  int32 net_bait_cost_cnt    = 6;  // 渔网鱼饵消耗次数
+}
+
+message FishLocation {
+  int64 location_id                 = 1;   // 钓点id
+  int32 location_type               = 2;   // 钓点类型
+  int32 location_random_type        = 3;   // 钓点随机类型
+  bool is_cost_bait                 = 4;   // 是否消耗鱼饵
+  bool is_unlock                    = 5;   // 是否解锁，用于渔场显示。渔场钓点一直显示
+  bool is_able                      = 6;   // 钓点是否可用，解锁的基础上检查次数和剩余鱼数是否满足
+  bool can_fish                     = 7;   // 是否可钓鱼。is_able 满足的情况下，鱼饵也满足条件。用于红点
+  int32 fishing_count               = 8;   // 已经钓鱼的次数
+  int32 show_shadow_fish_count      = 9;   // 显示黑影鱼的条数
+  repeated int64 specialty_fish_got = 10;  // 已获得的特产鱼
+  int32 remain_fishes_count         = 11;  // 剩余鱼数
+  int32 remain_fishing_count        = 12;  // 剩余钓鱼次数
+}
+
+message GetFishGroundRequest {}
+
+message GetFishGroundReply {
+  repeated FishLocation locations                        = 1;  // 钓点信息
+  int32 bait_buy_cnt                                     = 2;  // 鱼饵已经购买的次数
+  repeated int64 need_show_unlock_animation_location_ids = 3;  // 需要显示解锁动画的钓点id
+  bool is_unlock                                         = 4;  // 渔场是否解锁
+}
+
+message SetShowedUnlockAnimationLocationIDsRequest {
+  repeated int64 location_ids = 1;  // 钓点id
+}
+
+message SetShowedUnlockAnimationLocationIDsReply {}
+
+message StartFishingRequest {
+  int64 location_id = 1;  // 钓点id
+}
+
+message StartFishingReply {
+  int64 fish_id      = 1;  // 鱼类id
+  int32 fish_quality = 2;  // 鱼类品质
+}
+
+message EndFishingRequest {
+  bool is_succ = 1;  // 是否钓到鱼
+}
+
+message EndFishingReply {
+  FishBook fish_book          = 1;  // 鱼类图鉴信息
+  repeated corepb.Item awards = 2;  // 奖励
+  bool is_new_get             = 3;  // 是否新获得
+  bool show_rice_rice_shop    = 4;  // 是否要显示莱斯莱斯商店
+  NoFishBook no_fish_book     = 5;  // 不登录图鉴的特殊鱼
+
+  int64 level      = 6;  // 玩家当前钓鱼等级
+  int64 exp        = 7;  // 玩家当前钓鱼经验
+  int64 prev_level = 8;  // 玩家上一次钓鱼等级
+  int64 prev_exp   = 9;  // 玩家上一次钓鱼经验
+
+  FishLocation location = 10;  // 钓点信息
+}
+
+message StartFishingNetRequest {
+  int64 location_id = 1;  // 钓点id
+}
+
+message StartFishingNetReply {}
+
+message EndFishingNetRequest {
+  bool is_succ = 1;  // 是否捕到鱼
+}
+
+message EndFishingNetReply {
+  repeated FishBook fish_books      = 1;  // 鱼类图鉴信息
+  repeated NoFishBook no_fish_books = 2;  // 不登录图鉴的特殊鱼
+  repeated corepb.Item awards       = 3;  // 奖励
+  bool show_rice_rice_shop          = 4;  // 是否要显示莱斯莱斯商店
+
+  int64 level      = 5;  // 玩家当前钓鱼等级
+  int64 exp        = 6;  // 玩家当前钓鱼经验
+  int64 prev_level = 7;  // 玩家上一次钓鱼等级
+  int64 prev_exp   = 8;  // 玩家上一次钓鱼经验
+
+  FishLocation location = 9;  // 钓点信息
+}
+
+message FishBook {
+  int64 fish_id           = 1;   // 鱼类id
+  int32 fish_quality      = 2;   // 鱼类品质
+  int64 first_time        = 3;   // 第一次钓到时间
+  int32 fish_count        = 4;   // 累计获得数量
+  int32 latest_size       = 5;   // 最新尺寸
+  int32 max_size          = 6;   // 最大尺寸
+  int32 min_size          = 7;   // 最小尺寸
+  FishBookState state     = 8;   // 是否获得
+  bool max_size_trophy    = 9;   // 最大尺寸是否获得奖杯
+  bool min_size_trophy    = 10;  // 最小尺寸是否获得奖杯
+  bool is_new_get         = 11;  // 是否新获得
+  int32 size_record_state = 12;  // 尺寸记录状态
+  int64 fish_item_id      = 13;  // 鱼类道具id, 只有系统鱼类有
+  int64 treasure_score    = 14;  // 鱼类藏品值
+}
+
+message NoFishBook {
+  int64 fish_id               = 1;  // 鱼类id
+  repeated corepb.Item awards = 2;  // 钓到的奖励
+}
+
+enum FishBookState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NOT_GOT          = 0;  // 未获得
+  GOT_NOT_UNLOCKED = 1;  // 获得未解锁
+  UNLOCKED         = 2;  // 已解锁
+}
+
+message FishBookLocation {
+  int64 location_id            = 1;  // 钓点id
+  int64 fish_book_count        = 2;  // 钓点图鉴数量
+  int64 fish_book_unlock_count = 3;  // 钓点图鉴解锁数量
+}
+
+message GetFishBooksRequest {
+  int64 location_id = 1;  // 钓点id
+}
+
+message GetFishBooksReply {
+  repeated FishBook fish_books = 1;  // 鱼类图鉴信息
+  bool can_receive_rewards     = 2;  // 是否可以领取奖励，红点用
+}
+
+message GetUnLockedFishBookLocationsRequest {}
+
+message GetUnLockedFishBookLocationsReply {
+  repeated FishBookLocation locations = 1;  // 钓点信息
+}
+
+message UnlockFishBookRequest {
+  int64 fish_id = 1;  // 鱼类id
+}
+
+message UnlockFishBookReply {
+  FishBook fish_book          = 1;  // 鱼类图鉴信息
+  repeated corepb.Item awards = 2;  // 奖励
+}
+
+message TransformBaitsRequest {
+  int32 count = 1;
+}
+
+message TransformBaitsReply {}
+
+message BuyBaitsRequest {
+  int64 count = 1;
+}
+
+message BuyBaitsReply {
+  repeated corepb.Item awards = 1;  // 奖励
+  int64 buy_cnt               = 2;  // 已经购买的次数
+}
+
+message GetBaitsPriceRequest {
+  int64 count = 1;
+}
+
+message GetBaitsPriceReply {
+  repeated corepb.Item cost = 1;  // 消耗
+}
+
+message FishingReward {
+  int64 id                     = 1;  // 奖励id
+  int32 reward_type            = 2;  // 奖励类型
+  int32 tag                    = 3;  // 页签
+  int32 condition              = 4;  // 完成值
+  repeated corepb.Item rewards = 5;  // 奖励
+  FishingRewardState state     = 6;  // 奖励状态
+  int32 process                = 7;  // 进度
+}
+
+enum FishingRewardState {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  CANNOT_RECEIVE = 0;  // 不可领取
+  CAN_RECEIVE    = 1;  // 可领取
+  RECEIVED       = 2;  // 已领取
+}
+
+message GetFishingRewardsRequest {}
+
+message GetFishingRewardsReply {
+  repeated FishingReward fishing_rewards = 1;  // 钓鱼任务奖励
+}
+
+message ReceiveFishingRewardRequest {
+  int64 id = 1;
+}
+
+message ReceiveFishingRewardReply {
+  FishingReward fishing_reward = 1;
+  repeated corepb.Item rewards = 2;  // 奖励
+}
+
+message GetFishingAbilitiesRequest {}
+
+message GetFishingAbilitiesReply {
+  repeated FishingAbility fishing_abilities = 1;  // 钓鱼能力信息
+  int64 level                               = 2;  // 玩家当前钓鱼等级
+  int64 exp                                 = 3;  // 玩家当前钓鱼经验
+  repeated int64 wordstrip_ids              = 4;  // 玩家激活的钓鱼效果的词条
+  repeated int64 need_show_new_point_levels = 5;  // 需要显示"新"标识
+}
+
+message FishingAbility {
+  int64 level    = 1;  // 钓鱼等级
+  bool is_unlock = 2;  // 是否解锁
+}
+
+message FishInfo {
+  repeated FishBook fish_books = 1;  // 鱼类图鉴信息
+}
+
+message SetShowedAbilityNewPointLevelsRequest {
+  repeated int64 levels = 1;  // 钓鱼能力等级
+}
+
+message SetShowedAbilityNewPointLevelsReply {}

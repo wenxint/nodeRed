@@ -1,0 +1,120 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0140pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0140pb";
+
+import "corepb/loadout_comm.proto";
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  message QuestInfo {
+    int64 quest_id               = 1;
+    int64 level_id               = 2;   // 对应level表中id
+    repeated int64 pre_quest_ids = 3;   // 前置关卡id
+    bool is_boss                 = 4;   // 是否是boss关
+    int64 history_score          = 5;   // 历史最高得分(为0表示未通关)
+    int64 buff_type_limit        = 6;   // 可选buff类型限制
+    int64 buff_count_limit       = 7;   // 可选buff总量限制
+    map<int64, int64> buffs      = 8;   // 上次选择的buff, id -> count
+    int64 unlock_unix            = 9;   // 解锁时间
+    string name                  = 10;  // 关卡名称
+    repeated int64 ban_buff_ids  = 11;  // 禁止选择的buff id
+  }
+  message BuffInfo {
+    int64 id           = 1;
+    int64 buff_id      = 2;  // 对应buff表中id
+    int64 score        = 3;  // 单层得分
+    int64 count_limit  = 4;  // 层数限制
+    int64 unlock_unix  = 5;  // 解锁时间
+    int64 unlock_score = 6;  // 解锁得分
+  }
+  message RankInfo {
+    int64 rank_id                       = 1;
+    int64 rank_param                    = 2;  // 排名参数 排名小于等于rank_param的归为此档
+    repeated corepb.Item settle_rewards = 3;  // 结算奖励
+    bool in_rank                        = 4;  // 是否在此排名内
+  }
+
+  repeated QuestInfo quests          = 1;  // 所有关卡信息
+  repeated BuffInfo buffs            = 2;  // 所有buff信息
+  repeated RankInfo ranks            = 3;  // 所有排名配置信息
+  repeated actpb.commonpb.Task tasks = 4;  // 所有任务详细信息(目前只是用于客户端计算红点, 页签和活动入口红点由后台计算)
+
+  int64 rank                                 = 5;  // 当前排名(-1表示未上榜, 从1开始)
+  string rank_instance                       = 6;  // 排行榜实例
+  corepb.PersonalDisplayInfo top_player_info = 7;  // 排名第一玩家信息
+  int64 top_player_score                     = 8;  // 排名第一玩家得分
+}
+
+service CSAct0140Service {
+  rpc SelectBuff(SelectBuffRequest) returns (SelectBuffReply);  // 选择buff
+
+  // 战斗相关
+  rpc GameStart(GameStartRequest) returns (GameStartReply);  // 进入单局战斗
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);        // 结算
+
+  // 阵容协议复刻
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);     // 获取阵容信息
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);  // 设置阵容
+}
+
+message SelectBuffRequest {
+  int64 quest_id          = 1;  // 关卡id
+  map<int64, int64> buffs = 2;  // buff id -> 层数
+}
+message SelectBuffReply {}
+
+message GameStartRequest {
+  int64 quest_id          = 1;  // 关卡id
+  map<int64, int64> buffs = 2;  // buff id -> 层数
+}
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡id
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+  bytes dungeon_record_bytes    = 4;  // 战斗对局数据，校验用
+  int64 score                   = 5;  // 基础得分
+  map<int64, int64> buffs       = 6;  // buff id -> 层数, (检查用，应该和开战时一致)
+  int64 pass_seconds            = 7;  // 通关时间
+}
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;
+  int64 score                         = 2;  // 最终得分
+  int64 old_rank                      = 3;  // 旧排名
+  int64 new_rank                      = 4;  // 新排名
+  int64 history_score                 = 5;  // 历史最高得分
+  map<int64, int64> buffs             = 6;  // buff id -> 层数
+  int64 pass_seconds                  = 7;  // 通关时间
+}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 阵容类型。具体有哪些值由玩法系统确定
+}
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+  bool valid                    = 3;  // 当前阵容是否合法
+  bool adjusted                 = 4;  // 当前阵容检验时是否有过不合法的项目但已经被自动调整
+}
+
+message ApplyLoadoutRequest {
+  string loadout_type    = 1;  // 阵容类型。具体有哪些值由玩法系统确定
+  corepb.Loadout loadout = 2;  // 阵容
+}
+message ApplyLoadoutReply {
+  // 若要设置的阵容不合法，会通过 rpc 错误告知。
+}
+
+// 排行榜自定义数据
+message RankPayload {
+  map<int64, int64> buffs = 1;  // buff id -> 层数
+}

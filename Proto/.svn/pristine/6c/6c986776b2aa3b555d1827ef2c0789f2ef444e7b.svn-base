@@ -1,0 +1,27 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.rankingpb.ssrankingpb;
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/rankingpb/ssrankingpb";
+
+import "pkg/proto/guildpb/api.proto";
+
+// 排行榜查询服务(服务间)
+service SSRankingService {
+  // GuildView 获取同盟展示类数据(由于同盟缺失 infosvr 类似存储数据，故需使用 ssapi 获取跨区的数据)
+  rpc GuildView(GuildViewRequest) returns (GuildViewReply);
+}
+
+message GuildViewRequest {
+  repeated int64 guild_ids = 1;  // 需要查询的同盟列表
+  string rank_type         = 2;  // 排行榜类型
+}
+
+message GuildView {
+  guildpb.GuildBriefInfo basic_info = 1;  // 基础信息
+  guildpb.MemberInfo leader_info    = 2;  // 会长信息
+}
+
+message GuildViewReply {
+  map<int64, GuildView> views = 1;  // 查询到的玩家展示类数据(guild id -> view 数据)
+}

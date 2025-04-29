@@ -1,0 +1,43 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.bellypb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/bellypb";
+import "corepb/common.proto";
+
+// 贝里系统
+service BellyService {
+  // 查询贝里信息
+  rpc QueryBellyShop(QueryBellyShopRequest) returns (QueryBellyShopReply);
+  // 购买贝里
+  rpc BuyBelly(BuyBellyRequest) returns (BuyBellyReply);
+}
+
+message QueryBellyShopRequest {
+  int64 buy_count = 1;  // 玩家选择的购买次数.
+}
+
+message QueryBellyShopReply {
+  int64 daily_buy_count_limit    = 1;  // 每日购买次数上限
+  int64 daily_buy_count          = 2;  // 当日已购买次数
+  int64 next_belly_count         = 3;  // 下次购买得到的贝里数量
+  repeated corepb.Item next_cost = 4;  // 下次购买消耗, 随当天购买次数逐步提升消耗
+  repeated Cost costs            = 5;  // 购买次数对应的消耗
+}
+
+message Cost {
+  int64 bought_count        = 1;  // 已购买次数
+  repeated corepb.Item cost = 2;  // 消耗
+}
+
+message BuyBellyRequest {
+  int64 buy_count = 1;  // 玩家选择的购买次数
+}
+
+message BuyBellyReply {
+  int64 daily_buy_count_limit    = 1;  // 每日购买次数上限
+  int64 daily_buy_count          = 2;  // 当日已购买次数
+  int64 next_belly_count         = 3;  // 下次购买得到的贝里数量(下次选择购买1次的贝里数)
+  repeated corepb.Item next_cost = 4;  // 下次购买消耗, 随当天购买次数逐步提升消耗(下次选择购买1次的金币等道具)
+}

@@ -1,0 +1,15 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0018pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0018pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0018Service {}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+}

@@ -1,0 +1,57 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0010pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0010pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0010Service {
+  // 领取活动奖励
+  rpc DeliverActReward(DeliverActRewardRequest) returns (DeliverActRewardReply);
+}
+
+enum DataVersion {
+  VERSION_0 = 0;  // 版本号 0（表示2025年4月2日大版本前）
+  VERSION_1 = 1;  // 版本号 1（表示2025年4月2日大版本后）
+}
+
+message ActGetDetailRequest {}
+
+message BuffDetail {
+  int64 buff_id                   = 1;   // Buff ID
+  int64 achieveway_id             = 2;   // 跳转路径 ID
+  int64 accumulate_reward_times   = 3;   // 累计奖励次数
+  int64 expired_time              = 4;   // Buff 过期时间
+  string buff_title               = 5;   // Buff 标题
+  actpb.commonpb.Task task        = 6;   // Buff 任务信息
+  corepb.FightAttr bonus_attr     = 7;   // Buff 属性加成
+  int64 order_id                  = 8;   // 排序 ID
+  DataVersion version             = 9;   // 数据版本号
+  corepb.Item cost_item           = 10;  // 消耗道具
+  repeated corepb.Item item_bonus = 11;  // 道具加成比例（道具Count为加成比例）
+}
+
+message ActGetDetailReply {
+  repeated BuffDetail buff_detail = 1;  // Buff 信息
+  int64 act_lost_day              = 2;  // 回流活动流失天数
+}
+
+message DeliverActRewardRequest {
+  int64 buff_id                                       = 1;  // Buff ID
+  repeated corepb.GiftSelectedItem gift_selected_item = 2;  // 可选礼包选中道具信息
+}
+
+message SystemDisplayBuffs {
+  repeated BuffDetail buff_detail = 1;  // Buff 信息
+}
+
+message ActCustomDetail {
+  map<int64, SystemDisplayBuffs> system_display_buffs = 1;  // 系统 ID -> 各系统 Buff 列表
+}
+
+message DeliverActRewardReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+}

@@ -1,0 +1,106 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0052pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0052pb";
+
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/loadout_comm.proto";
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Quest quests                    = 1;  // 关卡信息
+  repeated actpb.commonpb.Task reward_info = 2;  // 任务列表
+  int64 buddy_id                           = 3;  // 已选择的伙伴
+  bool dial_detail                         = 4;  // 空岛贝界面是否开启详情描述,默认未开启
+}
+
+message Quest {
+  int64 quest_id                  = 1;   // 关卡id
+  int64 status                    = 2;   // 关卡情况（0=未开启，1=未完成，2=已完成）
+  bool new                        = 3;   // “新”标记
+  int64 max_damage                = 4;   // 历史最大伤害
+  int64 max_star                  = 5;   // 最大星数
+  int64 dial_id                   = 6;   // 已选择的空岛贝id
+  repeated int64 suggest_dial_id  = 7;   // 推荐空岛贝id
+  repeated int64 suggest_buddy_id = 8;   // 推荐伙伴
+  string rank_type                = 9;   // 排行榜类型
+  string rank_instance            = 10;  // 排行榜实例名
+  bool is_unlock_show             = 11;  // 关卡解锁动画是否播放
+}
+
+message ActDeliverRewardRequest {}
+
+message ActDeliverRewardReply {}
+
+service CSAct0052Service {
+  rpc ChoiceDetail(ChoiceDetailRequest) returns (ChoiceDetailReply);  // 空岛贝界面选择详情描述
+  rpc ChoiceDialID(ChoiceDialIDRequest) returns (ChoiceDialIDReply);  // 选择空岛贝强化方向
+  rpc GameStart(GameStartRequest) returns (GameStartReply);           // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);                 // 结算
+
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);     // 获取阵容信息
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);  // 设置阵容
+  rpc UnlockShow(UnlockShowRequest) returns (UnlockShowReply);        // 设置关卡解锁动画为已播放状态
+}
+
+message ChoiceDetailRequest {
+  bool is_open = 1;  // 开启详情描述
+}
+
+message ChoiceDetailReply {}
+
+message ChoiceDialIDRequest {
+  int64 quest_id = 1;  // 关卡 ID
+  int64 dial_id  = 2;  // 空岛贝id
+}
+
+message ChoiceDialIDReply {}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+  int64 cur_damage              = 4;  // 本局造成的伤害
+  int64 cur_star                = 5;  // 本局获得星数
+  bytes dungeon_record_bytes    = 6;  // 战斗对局数据，校验用
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 通用战斗结算消息
+  int64 previous_max_damage           = 2;  // 之前最高伤害
+  int64 this_max_damage               = 3;  // 当前最高伤害，不小于之前最高伤害
+  int64 previous_rank                 = 4;  // 之前排名(0表示未上榜)
+  int64 this_rank                     = 5;  // 当前排名
+}
+
+message LoadoutInfoRequest {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+}
+
+message ApplyLoadoutRequest {
+  corepb.Loadout loadout = 1;  // 阵容
+}
+
+message ApplyLoadoutReply {}
+
+message UnlockShowRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message UnlockShowReply {}

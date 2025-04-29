@@ -1,0 +1,39 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0093pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0093pb";
+
+import "corepb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  map<int64, Position> positions = 1;
+}
+
+service CSAct0093Service {
+  rpc EatMeat(EatMeatRequest) returns (EatMeatReply) {}
+  rpc BakeMeat(BakeMeatRequest) returns (BakeMeatReply) {}
+}
+
+message EatMeatRequest {
+  int64 position_id = 1;
+  int64 stage       = 2;
+}
+message EatMeatReply {
+  repeated corepb.Item awards = 1;
+  int64 add_happy_score       = 2;
+}
+
+message BakeMeatRequest {
+  int64 position_id = 1;
+}
+
+message BakeMeatReply {}
+
+message Position {
+  int64 id       = 1;
+  bool is_baking = 2;
+}

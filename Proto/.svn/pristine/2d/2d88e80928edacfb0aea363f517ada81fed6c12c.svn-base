@@ -1,0 +1,44 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.giftpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/giftpb";
+
+import "corepb/common.proto";
+
+/* 可选礼包选择道具.
+ * 这个选择道具和领奖分开的方案，是在做了很多限定条件的情况下适用的方案
+ * 这里只是实现了这个方案，暂时还未使用
+ * 具体情况，参见https://iwiki.woa.com/pages/viewpage.action?pageId=533936813
+ */
+service GiftService {
+  // 查询可选礼包的展示信息，前端也可以自己导表读取
+  rpc QuerySelectableGiftInfo(QuerySelectableGiftInfoRequest) returns (QuerySelectableGiftInfoReply);
+  // 可选礼包选择道具.
+  rpc SelectGiftItem(SelectGiftItemRequest) returns (SelectGiftItemReply);
+}
+
+message SelectableGiftConfig {
+  int64 gift_id               = 1;  // 礼包id
+  int64 level_min             = 2;  // 领取最低等级
+  int64 level_max             = 3;  // 领取最高等级
+  int64 begin_time            = 4;  // 当前时间小于该字段，选择道具领取将不获得任何东西
+  int64 end_time              = 5;  // 当前时间大于该字段，选择道具领取将不获得任何东西
+  int64 selectable_num        = 6;  // 可选道具个数
+  repeated corepb.SItem items = 7;  // 可选道具列表
+}
+
+message QuerySelectableGiftInfoRequest {
+  repeated int64 gift_id = 1;  // 需要查询的礼包id，可以传多个
+}
+
+message QuerySelectableGiftInfoReply {
+  map<int64, SelectableGiftConfig> gift_info = 1;  // 礼包的详细信息
+}
+
+message SelectGiftItemRequest {
+  string select_gift_uid                = 1;  // 可选礼包唯一 ID
+  corepb.GiftSelectedItem selected_info = 2;  // 可选礼包选择的信息
+}
+
+message SelectGiftItemReply {}

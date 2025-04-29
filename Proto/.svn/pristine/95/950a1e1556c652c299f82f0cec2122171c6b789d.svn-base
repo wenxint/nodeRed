@@ -1,0 +1,112 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.islandexplorepb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/islandexplorepb";
+
+import "corepb/common.proto";
+
+// IslandExploreService 为岛屿探索系统
+service IslandExploreService {
+  // 获取所有岛屿信息
+  rpc IslandInfos(IslandInfosRequest) returns (IslandInfosReply);
+  // 探索指定区域
+  rpc Explore(ExploreRequest) returns (ExploreReply);
+  // 根据探索目的，获取区域信息
+  rpc AreaInfosWithPurpose(AreaInfosWithPurposeRequest) returns (AreaInfosWithPurposeReply);
+  // 默认探索区域
+  rpc DefaultArea(DefaultAreaRequest) returns (DefaultAreaReply);
+}
+
+// IslandInfoRequest 获取所有岛屿信息请求
+message IslandInfosRequest {}
+
+// IslandInfoReply 获取岛屿信息响应
+message IslandInfosReply {
+  map<int64, IslandInfo> island_infos = 1;  // 岛屿信息
+}
+
+message IslandInfo {
+  int64 island_id                 = 1;  // 岛屿ID
+  map<int64, AreaInfo> area_infos = 2;  // 区域信息
+}
+
+message AreaInfo {
+  int64 area_id                       = 1;  // 区域ID
+  int64 explored_times                = 2;  // 已探索次数
+  int64 type                          = 3;  // 类型
+  AreaStatus status                   = 4;  // 状态
+  repeated corepb.Item display_reward = 5;  // 展示的奖励道具列表
+}
+
+enum AreaStatus {
+  AREA_STATUS_UNKNOWN                     = 0;  // 未定义
+  PLAYABLE                                = 1;  // 可玩
+  UNPLAYABLE_PREVIOUS_AREA_NOT_COMPLETED  = 2;  // 未完成前置区域
+  UNPLAYABLE_PREVIOUS_LEVEL_NOT_COMPLETED = 3;  // 前置主线关卡未完成
+  COMPLETED                               = 4;  // 已完成 (有探索次数限制的区域)
+}
+
+// ExploreRequest 探索指定区域请求
+message ExploreRequest {
+  int64 area_id          = 1;  // 区域ID
+  int64 times            = 2;  // 探索次数
+  ExplorePurpose purpose = 3;  // 探索目的
+}
+
+// ExploreReply 探索指定区域响应
+message ExploreReply {
+  repeated ExploreResult explore_results = 1;  // 探索结果
+  EndExplorationReason reason            = 2;  // 探索结束原因
+  map<int64, AreaInfo> area_infos        = 3;  // 区域信息
+  int64 target_count                     = 4;  // 目标道具/经验数量
+}
+
+// EndExplorationReason 探索结束原因
+enum EndExplorationReason {
+  REASON_UNKNOWN     = 0;  // 未定义
+  NORMAL             = 1;  // 正常结束
+  MATERIAL_ENOUGH    = 2;  // 材料已足够，提前结束
+  NEW_AREA_UNLOCKED  = 3;  // 新区域解锁，提前结束
+  FATIGUE_NOT_ENOUGH = 4;  // 疲劳值不足，提前结束
+  SEAGULL_COIN_FULL  = 5;  // 海鸥币已满，提前结束
+}
+
+// ExploreResult 探索结果
+message ExploreResult {
+  repeated corepb.Item items = 1;  // 探索获得的物品
+  int64 cur_count            = 2;  // 当前道具/经验数量
+}
+
+message ExplorePurpose {
+  oneof target {
+    int64 facility_id = 1;  // 目标设施ID
+    int64 factory_id  = 3;  // 目标工厂ID
+  }
+  int64 item_id = 4;  // 目标是升星的话，需要带上升星道具ID
+}
+
+enum ExplorePurposeType {
+  EXPLORE_PURPOSE_UNKNOWN = 0;  // 未定义
+  LEVEL                   = 1;  // 升级
+  STAR                    = 2;  // 升星
+  FACOTRY_UNLOCK          = 3;  // 工厂解锁
+  NONE                    = 4;  // 没有目标
+}
+
+message AreaInfosWithPurposeRequest {
+  ExplorePurpose purpose = 1;
+}
+
+message AreaInfosWithPurposeReply {
+  map<int64, AreaInfo> area_infos = 1;  // 区域信息
+  int64 cur_count                 = 2;  // 当前道具/经验数量
+  int64 target_count              = 3;  // 目标道具/经验数量
+}
+
+message DefaultAreaRequest {}
+
+message DefaultAreaReply {
+  AreaInfo default_area_info = 1;  // 默认区域
+}

@@ -1,0 +1,72 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.achievepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/achievepb";
+
+import "corepb/common.proto";
+
+service CSService {
+  // 请求成就信息
+  rpc QueryAchieveTask(QueryAchieveTaskRequest) returns (QueryAchieveTaskReply);
+  // 发任务奖励
+  rpc DeliverReward(DeliverRewardRequest) returns (DeliverRewardReply);
+  // 批量发任务奖励
+  rpc BatchDeliverReward(BatchDeliverRewardRequest) returns (BatchDeliverRewardReply);
+  // 看过隐藏"新"任务
+  rpc VisitHiddenNewTask(VisitHiddenNewTaskRequest) returns (VisitHiddenNewTaskReply);
+}
+
+message TaskFinishedNotify {
+  int64 task_id = 1;
+  int64 step    = 2;
+}
+
+message VisitHiddenNewTaskRequest {
+  repeated int64 task_ids = 1;  // 看过的新发现的隐藏任务id
+}
+
+message VisitHiddenNewTaskReply {}
+
+message QueryAchieveTaskRequest {}
+
+message QueryAchieveTaskReply {
+  repeated Task tasks = 1;  // 所有成就任务, 包含隐藏任务
+}
+
+message DeliverRewardRequest {
+  int64 task_id = 1;  // 任务id
+}
+
+message DeliverRewardReply {
+  repeated corepb.Item items = 1;  // 本次领取的奖励
+}
+
+message BatchDeliverRewardRequest {
+  int64 task_id = 1;  // 任务id
+  int32 tab     = 2;  // 任务类型
+}
+
+message BatchDeliverRewardReply {
+  repeated corepb.Item items = 1;  // 本次领取的奖励
+  repeated int64 awarded_ids = 2;  // 本次领取的奖励的id列表
+  repeated Task tasks        = 3;  // 所有成就任务, 包含隐藏任务
+}
+
+message Task {
+  int64 id                 = 1;   // 任务id
+  bool is_chained          = 2;   // 是否是链式任务
+  int64 step               = 3;   // 当前成就链任务的步骤
+  int32 condition_type     = 4;   // 任务条件枚举
+  repeated Process process = 5;   // 任务进度 用数组兼容多个成就参数多个进度
+  bool is_hidden           = 6;   // 是否是隐藏任务
+  bool is_finished         = 7;   // 是否完成
+  int64 complete_time      = 8;   // 完成时间
+  bool is_rewarded         = 9;   // 是否领取奖励
+  bool is_hidden_new       = 10;  // 是否是新发现的隐藏任务
+}
+
+message Process {
+  int64 count    = 1;  // 当前积累的数量, 逻辑用0、1
+  int64 required = 2;  // 当前枚举条件的要求值，达到了可以领取奖励
+}

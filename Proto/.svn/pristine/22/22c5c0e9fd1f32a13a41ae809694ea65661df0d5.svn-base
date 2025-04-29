@@ -1,0 +1,78 @@
+// cs protocol
+syntax = "proto3";
+
+package vkeypb;
+option go_package = "git.woa.com/red/fightsvr/pkg/proto/vkeypb";
+
+//定义了一些vkey，用于战斗中同步某些关键行为。
+enum PVPVkey {
+  PVP_VKEY_UNKNOWN = 0;  // vkey=0服务器未使用，但客户端有用，pb要求枚举从0开始，这里定义一下
+
+  LOAD_START     = 2000;  // 客户端主动发开始上来，服务器收集到所有人的START包，再广播START
+  LOAD_PROGRESS  = 2001;  // 加载进度
+  ROUND_BEGIN    = 2002;  // [关键]收集到所有玩家的BEGIN再广播BEGIN
+  ROUND_END      = 2003;  // [关键]收集所在玩家的END，再广播END
+  BATTLE_END     = 2004;  // [关键]收集所在玩家的END，再广播END, 游戏结束
+  AUTH           = 2005;  // [关键]用于建立连接，身份鉴权
+  BATTLE_INVALID = 2006;  // 无效的请求（游戏已经结束，或者身份鉴权失败等）
+  OP_BEGIN       = 2007;  // [关键]开始可以操作角色了
+  ROUND_CLEAR    = 2008;  // 回合清理。。
+
+  SEND_PING               = 2020;  // 探测包, 不再使用，新的使用PING_DIRECT和PING_BROADCAST
+  HEARTBEAT               = 2021;  // 心跳包
+  PING_DIRECT             = 2022;  // 直接探测,立刻返回
+  PING_BROADCAST          = 2023;  // 缓存并广播的玩家延迟帧
+  PING_SERVER_LATENCY     = 2024;  // 剔除RTT的实际延迟
+  PING_LATENCY_STAT       = 2025;  // FSP延迟统计
+  REPORT_FPS              = 2026;  // 客户端FPS统计上报
+  REPORT_FIGHT_EXPERIENCE = 2027;  // 玩家战斗体验，对局结束上报，0-100的数值，代表玩家在本次战斗中的综合体验
+
+  BATTLE_TERMINAL      = 2030;  // 中途退出
+  PLAYER_STATUS_CHANGE = 2031;  // 玩家状态改变通知。 参数有1个：状态(主动离开1; 掉线2）
+
+  GAME_HASH     = 2040;  // 同步本局游戏内多要素计算的hash值
+  GAME_HASH_ERR = 2041;  // Hash检验出错消息(参数1-不一致的FrameID)
+
+  // 业务通用
+  REPORT_DAMAGE_VALUE = 2120;  // 上报伤害量
+  REPORT_COMMON_VALUE = 2121;  // 通用上报数值等，比如pve的积分，pvp的道具数量等
+  REPORT_KILL         = 2122;  // 同步击杀和死亡
+  REPORT_DESTRUCTION  = 2123;  // 上报地图破坏
+  REPORT_SETTLE       = 2124;  // 上报结算
+  REPORT_GEM_VALUE    = 2125;  // 上报宝石总数量
+  REPORT_SCORE_GROUP  = 2126;  // 莫利亚玩法上报玩家得分和分组
+
+  REPORT_STAMPEDE_PLAYER_INFO      = 2127;  // 夺宝行动上报玩家信息
+  REPORT_STAMPEDE_MONSTER_INFO     = 2128;  // 夺宝行动上报怪物信息
+  REPORT_STAMPEDE_ITEM_OP          = 2129;  // 夺宝行动上报道具操作
+  REPORT_STAMPEDE_LEAVE            = 2130;  // 夺宝行动上报玩家离开当前小地图（进入新的小地图或成功撤离）
+  REPORT_STAMPEDE_KILL_MONSTER     = 2131;  // 夺宝行动上报玩家击杀怪物
+  REPORT_STAMPEDE_ITEM_DROP_STATUS = 2132;  // 夺宝行动上报该关卡道具掉落状态（宝箱状态）
+  REPORT_STAMPEDE_BUFF             = 2133;  // 夺宝行动上报buff
+
+  // 关联战斗
+  REPORT_RELATEDGAMES_ADD = 2151;  // 累加值
+  REPORT_RELATEDGAMES_SET = 2152;  // 当前值
+  REPORT_RELATEDGAMES_MAX = 2153;  // 最大值
+
+  // 以下vkey用于战斗中同步网络状态
+  CLIENT_UDP_DROP_REPORT  = 2200;  // client udp丢包统计
+  CLIENT_BUFFERING_REPORT = 2201;  // client buffering统计
+  CLIENT_BOOL_REPORT      = 2202;  // client上报的一些开关，如是否wifi/4G， 是否使用了加速，
+                                   // 是否开启了Qos
+
+  // 以下vkey用于玩家的操作，需要服务器有逻辑校验的
+  PVP_VKEY_CTRL_REVIVE = 2300;  // 复活
+
+  // pb vkey 2400～2500
+  PBVKEY_BEGIN             = 2399;
+  REPORT_ROUND_PLAYER_INFO = 2400;  // 上报玩家信息 ValidRoundInfo
+  PBVKEY_END               = 2501;
+
+  // 前后台交互的控制帧定义不能超过MAX_PVP_CONTROL_VKEY
+  MAX_PVP_CONTROL_VKEY = 2999;  // 最大控制帧ID
+
+  // 前台 UI Vkey 范围，在 op begin 前也需要同步
+  UI_VKEY_BEGIN = 3000;
+  MAX_UI_VKEY   = 5999;  // 最大UI帧ID
+}

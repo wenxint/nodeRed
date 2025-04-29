@@ -1,0 +1,54 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0124pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0124pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0124Service {
+  rpc SignIn(SignInRequest) returns (SignInReply);  // 签到/补签(共用一个接口)
+}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  repeated DayRewardInfo all_day_info = 1;  // 每日签到奖励信息
+  repeated actpb.commonpb.Task tasks  = 2;  // 累计签到任务详细信息
+  int64 now_active                    = 3;  // 当前活跃度
+  int64 need_active                   = 4;  // 补签所需活跃度
+  bool can_sign_history               = 5;  // 是否有补签机会
+  bool signed_today                   = 6;  // 今日是否已签到
+  bool signed_history_today           = 7;  // 今日是否已补签
+  actpb.commonpb.Share share          = 8;  // 分享信息
+  bool finished                       = 9;  // 是否完成所有签到
+}
+
+message DayRewardInfo {
+  int32 day_index                   = 1;  // 活动登录的第N天
+  repeated corepb.Item daily_reward = 2;  // 签到奖励信息
+  bool received                     = 3;  // 是否已领取
+}
+
+message SignInRequest {
+  Action action = 1;  // 签到/补签
+}
+
+message SignInReply {
+  repeated corepb.Item rewards        = 1;  // 领取的奖励
+  int64 now_active                    = 2;  // 当前活跃度
+  bool can_sign_history               = 3;  // 是否有补签机会
+  repeated DayRewardInfo all_day_info = 4;  // 每日签到奖励信息
+  repeated actpb.commonpb.Task tasks  = 5;  // 累计签到任务详细信息
+  bool finished                       = 6;  // // 是否完成所有签到
+}
+
+enum Action {
+  SIGN_UNKNOWN = 0;  // 未知类型
+  SIGN_IN      = 1;  // 签到
+  SIGN_HISTORY = 2;  // 补签
+}

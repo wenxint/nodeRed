@@ -1,0 +1,76 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0100pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0100pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0100Service {
+  // 答题
+  rpc AnswerQuestion(AnswerQuestionRequest) returns (AnswerQuestionReply);
+  // 看完剧情
+  rpc CompleteStory(CompleteStoryRequest) returns (CompleteStoryReply);
+  // 消去答题按钮“新”标签
+  rpc ClearQuestionNewTag(ClearQuestionNewTagRequest) returns (ClearQuestionNewTagReply);
+  // 播放解锁动画
+  rpc PlayUnlockAnim(PlayUnlockAnimRequest) returns (PlayUnlockAnimReply);
+}
+
+message ActGetDetailRequest {}
+
+enum StoryStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCKED   = 0;  // 未解锁
+  UNLOCKED = 1;  // 已解锁
+  PASSED   = 2;  // 已观看
+}
+
+message StoryInfo {
+  int64 story_id           = 1;  // 剧情 ID
+  StoryStatus story_status = 2;  // 剧情状态
+  int64 open_at            = 3;  // 开启时间戳
+  bool unlock_anim_played  = 4;  // 是否播放过解锁动画
+}
+
+message ActGetDetailReply {
+  repeated StoryInfo stories         = 1;  // 所有剧情详细信息
+  repeated actpb.commonpb.Task tasks = 2;  // 所有任务详细信息
+  Question question                  = 3;  // 打开答题界面展示的题目信息
+  bool question_new_tag              = 4;  // 答题按钮是否显示 “新” 标签
+}
+
+message AnswerQuestionRequest {
+  int64 question_id = 1;  // 题目 ID
+}
+
+message AnswerQuestionReply {
+  Question question = 1;  // 题目信息
+}
+
+message Question {
+  int64 question_id            = 1;  // 题目 ID
+  int64 story_id               = 2;  // 关联剧情 ID
+  string question_name         = 3;  // 题目名称
+  string question_answer       = 4;  // 题目答案
+  repeated string choice_list  = 5;  // 题目选项
+  int64 current_question_index = 6;  // 当前第几题
+  int64 total_question_count   = 7;  // 总题数
+}
+
+message CompleteStoryRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message CompleteStoryReply {}
+
+message ClearQuestionNewTagRequest {}
+
+message ClearQuestionNewTagReply {}
+
+message PlayUnlockAnimRequest {
+  int64 story_id = 1;  // 剧情 ID
+}
+
+message PlayUnlockAnimReply {}

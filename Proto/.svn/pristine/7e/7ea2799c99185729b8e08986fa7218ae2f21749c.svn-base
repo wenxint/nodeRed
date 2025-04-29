@@ -1,0 +1,64 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.bestlineuppb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/bestlineuppb";
+
+import "corepb/common.proto";
+
+// 最强伙伴阵容系统
+service BestLineupService {
+  // 调整最强伙伴阵容
+  rpc AdjustBestLineup(AdjustBestLineupRequest) returns (AdjustBestLineupResponse);
+  // 获取最强伙伴阵容加成详情
+  rpc BestLineupAdditionDetail(BestLineupAdditionDetailRequest) returns (BestLineupAdditionDetailResponse);
+  // 获取最强伙伴阵容的战力
+  rpc QueryBestLineupFc(QueryBestLineupFcRequest) returns (QueryBestLineupFcResponse);
+}
+
+message BestLineupBuddyInfo {
+  int64 id      = 1;  // 伙伴ID
+  int64 quality = 2;  // 伙伴品质
+  int64 star    = 3;  // 伙伴星级
+  int64 pos     = 4;  // 伙伴位置
+}
+
+message BestLineupInfo {
+  int64 star_sum                       = 1;  // 总星级
+  repeated BestLineupBuddyInfo buddies = 2;  // 上阵伙伴
+  corepb.FightAttr addition            = 3;  // 属性加成信息（合计）
+  int64 fc                             = 4;  // 战力
+}
+
+enum AdjustType {
+  TYPE_UNKNOWN = 0;  // 未知类型
+  ENTER_CHECK  = 1;  // 检查是否存在已上阵伙伴升星情况
+  ONE_CLICK    = 2;  // 一键上阵
+  MANUAL       = 3;  // 手动调整
+}
+
+message AdjustBestLineupRequest {
+  AdjustType type                      = 1;  // 类型
+  repeated BestLineupBuddyInfo buddies = 2;  // 手动调整的上阵伙伴
+}
+
+message AdjustBestLineupResponse {
+  BestLineupInfo info     = 1;  // 当前阵容信息
+  BestLineupInfo pre_info = 2;  // 调整前阵容信息
+  string pos_can_replace  = 3;  // 可替换的位置, 逗号分隔, 如: "1,2,3"
+}
+
+message BestLineupAdditionDetailRequest {}
+
+message BestLineupAdditionDetailResponse {
+  map<int64, corepb.FightAttr> details = 1;  // quality -> 属性加成信息
+}
+
+message QueryBestLineupFcRequest {
+  repeated BestLineupBuddyInfo buddies = 1;
+}
+
+message QueryBestLineupFcResponse {
+  int64 fc = 1;  //战力
+}

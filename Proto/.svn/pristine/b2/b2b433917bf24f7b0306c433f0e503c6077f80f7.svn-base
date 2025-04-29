@@ -1,0 +1,34 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0059pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0059pb";
+
+import "corepb/common.proto";
+
+service CSAct0059Service {
+  // 购买次数
+  rpc BuyTicket(BuyTicketRequest) returns (BuyTicketReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 match_begin_hour                     = 1;  // 匹配开始的小时
+  int64 match_end_hour                       = 2;  // 匹配结束的小时(包含)
+  int64 max_day_ticket_count                 = 3;  // 每日最大ticket个数
+  int64 ticket_item_id                       = 4;  // ticket的道具ID，可以通过从背包获取拥有的ticket个数
+  int64 max_day_buy_ticket_count             = 5;  // 每日最大可买ticket的次数
+  int64 current_day_buy_ticket_count         = 6;  // 当天已买ticket次数
+  repeated ChallengeReward challenge_rewards = 7;  // 挑战奖励
+  repeated corepb.Item buy_costs             = 8;  // 购买次数需要消耗的货币，每个数组对应当次购买需要消耗的货币，数组长度应该等于max_day_buy_ticket_count
+}
+
+message ChallengeReward {
+  int64 star                 = 1;  // 星数
+  int64 score                = 2;  // 分数
+  repeated corepb.Item items = 3;  // 奖励道具
+}
+
+message BuyTicketRequest {}
+message BuyTicketReply {}

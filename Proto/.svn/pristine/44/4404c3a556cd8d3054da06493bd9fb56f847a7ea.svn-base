@@ -1,0 +1,167 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0030pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0030pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+// CSAct0030Service 热血争霸赛活动服务.
+service CSAct0030Service {
+  // Tasks 获取玩家当前的任务列表.
+  rpc Tasks(TasksRequest) returns (TasksReply);
+  // Shops 获取玩家当前的商城列表.
+  rpc Shops(ShopsRequest) returns (ShopsReply);
+  // QuickBuy 商品快捷购买.
+  rpc QuickBuy(QuickBuyRequest) returns (QuickBuyReply);
+  // DeliverExchangeReward 领取兑换币兑换的奖励.
+  rpc DeliverExchangeReward(DeliverExchangeRewardRequest) returns (DeliverExchangeRewardReply);
+  // FollowShopItem 关注指定商品红点推送.
+  rpc FollowShopItem(FollowShopItemRequest) returns (FollowShopItemReply);
+  // QueryExchangeItem 查询兑换币, 包括本轮活动累计兑换币
+  rpc QueryExchangeItem(QueryExchangeItemRequest) returns (QueryExchangeItemReply);
+  // BuyExchangeCoin 购买兑换币, 区别于兑换商城中的 QuickBuy.
+  rpc BuyExchangeCoin(BuyExchangeCoinRequest) returns (BuyExchangeCoinReply);
+}
+
+// BuyExchangeCoinRequest 购买兑换币请求
+message BuyExchangeCoinRequest {
+  int64 task_id   = 1;  // 任务ID;
+  int64 buy_count = 2;  // 购买兑换币次数.
+}
+
+// BuyExchangeCoinReply 购买兑换币响应.
+message BuyExchangeCoinReply {
+  Task task                    = 1;  // 任务列表.
+  int64 buy_cnt                = 2;  // 购买数量.
+  repeated corepb.Item rewards = 3;  // 实际得到的物品
+}
+
+// QueryExchangeItemRequest 查询兑换币请求
+message QueryExchangeItemRequest {}
+
+// QueryExchangeItemReply 查询兑换币请求响应
+message QueryExchangeItemReply {
+  int64 acc_item_count  = 1;  // 累计兑换币总数量
+  int64 curr_item_count = 2;  // 当前兑换币数量
+  bool porche_rewarded  = 3;  // 波尔琪是否已领取.
+}
+
+// QuickBuyRequest 快捷购买请求
+message QuickBuyRequest {
+  int64 shop_item_id  = 1;  // 商品ID;
+  int64 buy_cnt       = 2;  // 购买数量.
+  repeated Cost costs = 3;  // 消耗道具列表.
+}
+
+// QuickBuyReply 快捷购买响应信息.
+message QuickBuyReply {
+  int64 shop_item_id           = 1;  // 商品ID;
+  int64 buy_cnt                = 2;  // 购买数量.
+  repeated corepb.Item rewards = 3;  // 实际得到的物品
+}
+
+// FollowShopItemRequest 关注指定商品红点请求
+message FollowShopItemRequest {
+  map<int64, bool> follow_shop_item_ids = 1;  // 商品ID列表的关注/取消关注.
+}
+
+// FollowShopItemReply  关注指定商品红点响应信息.
+message FollowShopItemReply {}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  repeated Act acts          = 1;  // 活动状态列表
+  actpb.commonpb.Share share = 2;  // 分享信息
+}
+
+message Act {
+  int64 id         = 1;  // 活动ID
+  ActState state   = 2;  // 活动状态
+  string name      = 3;  // 活动名称
+  int64 begin_time = 4;  // 活动开启时间
+  int64 end_time   = 5;  // 活动结束时间
+}
+// TasksRequest 任务列表请求.
+message TasksRequest {}
+
+// TasksRequest 任务列表响应信息.
+message TasksReply {
+  repeated Task tasks                 = 1;
+  ExchangeCoinInfo exchange_coin_info = 2;  // 购买兑换币信息
+}
+
+message Task {
+  int64 id                   = 1;  // 任务ID.
+  TaskStatus status          = 2;  // 任务状态
+  repeated corepb.Item items = 3;  // 任务奖励列表.
+  repeated int64 parameters  = 4;  // 任务通关关卡3/12 共12关已通关3个关卡
+}
+
+// ExchangeCoinInfo 购买兑换币信息.
+message ExchangeCoinInfo {
+  int64 bought_count    = 1;  // 已购买次数
+  int64 buy_limit_count = 2;  // 限制总购买次数
+  repeated Cost costs   = 3;  // 购买一次兑换币所需要的消耗道具列表.
+}
+
+// ShopsRequest 获取玩家商城列表请求.
+message ShopsRequest {}
+
+// ShopsReply 获取玩家商城列表响应信息.
+message ShopsReply {
+  repeated ShopItem items = 1;  // 商品列表.
+}
+
+message ShopItem {
+  int64 shop_item_id  = 1;  // 商品id
+  int64 buy_cnt       = 2;  // 已购买次数
+  bool follow         = 3;  // 是否已关注
+  repeated Cost costs = 4;  // 消耗道具列表.
+}
+
+message Cost {
+  int64 buy_cnt         = 1;  // 消耗-购买次数
+  int64 item_id         = 2;  // 消耗-道具ID
+  int64 item_num        = 3;  // 消耗-价格
+  int64 item_num_origin = 4;  // 消耗-原价
+  int64 discount        = 5;  // 消耗-折扣(万分比)
+}
+
+// DeliverActRewardRequest 领取兑换币兑换的奖励请求.
+message DeliverExchangeRewardRequest {}
+
+// DeliverExchangeRewardReply 领取兑换币兑换的奖励响应信息.
+message DeliverExchangeRewardReply {
+  repeated corepb.Item awards = 1;  // 领取到的奖励
+}
+
+// TaskType 任务类型.
+enum TaskType {
+  TYPE_UNKNOWN            = 0;  // 未知类型
+  DAILY_SIGNUP            = 1;  // 每日签到
+  DAILY_ACT_PARTICIPATION = 2;  // 每日参与活动
+}
+
+// TaskStatus 任务状态
+enum TaskStatus {
+  STATE_UNKNOWN               = 0;  // 未知类型
+  UNPARTICIPATED              = 1;  // 活动未参与
+  PARTICIPATED_AND_UNREWARDED = 2;  // 活动已参与, 且奖励未领取
+  PARTICIPATED_AND_REWARDED   = 3;  // 活动已参与, 且奖励已领取
+  UNOPENED                    = 4;  // 活动未开启
+  CLOSED                      = 5;  // 活动已结束
+}
+
+// ActState 活动状态.
+enum ActState {
+  ACT_STATE_UNKNOWN = 0;  // 未知状态
+  UNOPEN            = 1;  // 未开启.
+  OPENING           = 2;  // 已开启.
+  END               = 3;  // 已结束
+}

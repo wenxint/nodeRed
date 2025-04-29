@@ -1,0 +1,149 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.voyagepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/voyagepb";
+
+import "corepb/common.proto";
+
+service VoyageService {
+  // 更新船队信息
+  rpc UpdateFleet(UpdateFleetRequest) returns (UpdateFleetReply);
+
+  // 客户端上报玩家坐标
+  rpc UploadPosition(UploadPositionRequest) returns (UploadPositionReply);
+
+  // 提升声望等级
+  rpc UpgradeReputation(UpgradeReputationRequest) returns (UpgradeReputationReply);
+
+  // 领取声望奖励
+  rpc ReceiveReward(ReceiveRewardRequest) returns (ReceiveRewardReply);
+
+  // 拉取大航海信息，包括区域解锁信息、玩家坐标、玩家船队信息、玩家声望信息等
+  rpc VoyageInfo(VoyageInfoRequest) returns (VoyageInfoReply);
+}
+
+message Coordination {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Rotation {
+  float w = 1;
+  float x = 2;
+  float y = 3;
+  float z = 4;
+}
+
+message Scale {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Position {
+  Coordination coordination = 1;  // 坐标，三个 double
+  Rotation rotation         = 2;  // 旋转，四个 float
+  Scale scale               = 3;  // 缩放，三个 float
+}
+
+message UploadPositionRequest {
+  Position position = 1;  // 玩家位置
+}
+
+message UploadPositionReply {}
+
+message UpdateFleetRequest {
+  Fleet fleet = 1;  // 船队信息
+}
+
+message UpdateFleetReply {
+  Fleet result = 1;  // 船队创建结果
+}
+
+message UpgradeReputationRequest {}
+
+message UpgradeReputationReply {
+  Reputation reputaion = 1;  // 升级后的声望信息
+}
+
+message ReceiveRewardRequest {}
+
+message ReceiveRewardReply {
+  repeated corepb.Item rewards = 1;  // 领取到的奖励列表
+}
+
+message VoyageInfoRequest {}
+
+message AreaUnlockInfo {
+  map<int64, bool> unlocked_areas = 1;  // 已经解锁的海域ID
+}
+
+message Fleet {
+  string name = 1;  // 船队名称
+}
+
+message Reputation {
+  int64 level      = 1;  // 声望等级
+  int64 exp        = 2;  // 声望经验
+  int64 building   = 3;  // 建设度
+  int64 adventure  = 4;  // 冒险心
+  int64 voyage_len = 5;  // 航程长度
+  bool can_upgrade = 6;  // 能否升级
+}
+
+message Building {
+  int64 id        = 1;  // 建筑ID
+  int64 type      = 2;  // 功能类型
+  int64 open_time = 4;  // 开启时间（Unix UTC Seconds）
+  int64 end_time  = 5;  // 结束时间（Unix UTC Seconds）
+}
+
+message Island {
+  int64 id                    = 1;  // 岛屿ID
+  bool opened                 = 2;  // 是否开启
+  repeated Building buildings = 3;  // 建筑列表
+}
+
+message PubAnnouncement {
+  int64 id = 1;  // 公告 ID
+}
+
+message VoyageInfoReply {
+  AreaUnlockInfo area_unlock_info        = 1;  // 区域解锁相关信息
+  Position position                      = 2;  // 玩家上次位置
+  Fleet fleet                            = 3;  // 船队相关信息
+  Reputation reputation                  = 4;  // 声望信息
+  map<int64, Island> islands             = 5;  // 岛屿信息
+  map<int64, NPC> npcs                   = 6;  // 已经开启了的 NPC
+  Weather weather                        = 7;  // 当前天气
+  repeated PubAnnouncement announcements = 8;  // 公告
+}
+
+message NPC {
+  int64 id    = 1;  // NPC ID
+  bool opened = 2;  // 是否开放
+}
+
+enum Weather {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NONE_WEATHER = 0;  //  无
+  SUNNY        = 1;  // 晴
+  CLOUDY       = 2;  // 阴
+  THUNDERSTORM = 3;  // 雷雨
+  HEAVY_RAIN   = 4;  // 大雨
+  LIGHT_RAIN   = 5;  // 小雨
+}
+
+message VoyageStateNotify {
+  repeated NPC changed_npcs              = 1;  // 变更状态了的 NPC（从 open 变为 close / 从 close 变为 open）
+  Weather weather                        = 2;  // 变化后的天气
+  repeated Island opened_islands         = 3;  // 开放了的岛屿列表
+  AreaUnlockInfo area_unlock_info        = 4;  // 区域解锁状态
+  repeated PubAnnouncement announcements = 5;  // 公告信息
+}
+
+message ReputationNotify {
+  Reputation reputation = 1;  // 声望信息
+}

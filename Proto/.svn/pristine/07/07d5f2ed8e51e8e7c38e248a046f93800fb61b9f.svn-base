@@ -1,0 +1,19 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0115pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0115pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct00115Service {
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  bool received_reward = 1;  // 是否已领取体验卡奖励
+  bool purchased       = 2;  // 是否已购买
+}

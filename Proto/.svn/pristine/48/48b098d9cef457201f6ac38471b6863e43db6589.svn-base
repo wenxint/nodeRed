@@ -1,0 +1,287 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0125pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0125pb";
+
+import "corepb/common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0125Service {
+  // 购买挑战次数
+  rpc PurchaseChallengeCnt(PurchaseChallengeCntRequest) returns (PurchaseChallengeCntReply);
+  // 获取任务信息
+  rpc GetTaskInfo(GetTaskInfoRequest) returns (GetTaskInfoReply);
+  // 查询排名奖励信息
+  rpc QueryRankRewardInfo(QueryRankRewardInfoRequest) returns (QueryRankRewardInfoReply);
+  // 查询个人排行榜信息
+  rpc PersonalRanks(PersonalRanksRequest) returns (PersonalRanksReply);
+  // 查询同盟排行榜信息
+  rpc GuildRanks(GuildRanksRequest) returns (GuildRanksReply);
+  // 开战
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  // 结算
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  // 获取阵容信息
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);
+  // 设置阵容
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);
+  // 今日个人信息
+  rpc TodayPersonalInfo(TodayPersonalInfoRequest) returns (TodayPersonalInfoReply);
+  // 扫荡对局
+  rpc SweepBattle(SweepBattleRequest) returns (SweepBattleReply);
+  // 挑战记录
+  rpc RecordStats(RecordStatsRequest) returns (RecordStatsReply);
+  // 检查同盟加入时间
+  rpc CheckGuildJoinTime(CheckGuildJoinTimeRequest) returns (CheckGuildJoinTimeReply);
+}
+
+message RankChange {
+  int64 before = 1;  // 战斗前排名
+  int64 after  = 2;  // 战斗后排名
+}
+
+enum PersonalRank {
+  PERSONAL_RANK_UNKNOWN = 0;  // 未知类型
+  PERSONAL_RANK_TODAY   = 1;  // 今日排行
+  PERSONAL_RANK_LASTDAY = 2;  // 昨日排行
+}
+
+message PersonalRanksRequest {
+  PersonalRank personal_rank_type = 1;  // 今日排行榜/昨日排行榜
+  int64 rank_begin                = 2;  // 排名开始(查询范围，包含该排名，从 1 开始)
+  int64 rank_end                  = 3;  // 排名结束(查询范围，包含该排名，从 1 开始)
+}
+
+message PersonalRanksReply {
+  repeated PlayerRankInfo player_ranks = 1;  // 玩家排名
+  PlayerRankInfo my_rank               = 2;  // 我的排名
+  int64 visiable_limit                 = 3;  // 显示限制
+}
+
+message PlayerRankInfo {
+  int64 rank                              = 1;  // 玩家排名
+  int64 gid                               = 2;  // 玩家 gid
+  int64 damage                            = 3;  // 玩家最高伤害
+  corepb.PersonalDisplayInfo display_info = 4;  // 玩家展示信息
+  string guild_name                       = 5;  // 所属同盟名
+  int64 guild_id                          = 6;  // 所属同盟id
+  bool is_ranking_anonymous               = 7;  //是否匿名
+}
+
+message GuildRanksRequest {
+  int64 rank_begin = 1;  // 排名开始(查询范围，包含该排名，从 1 开始)
+  int64 rank_end   = 2;  // 排名结束(查询范围，包含该排名，从 1 开始)
+}
+
+message GuildRanksReply {
+  repeated GuildRankInfo guild_ranks = 1;  // 同盟排名
+  GuildRankInfo my_rank              = 2;  // 我的排名
+  int64 visiable_limit               = 3;  // 显示限制
+}
+
+message GuildRankInfo {
+  int64 rank                = 1;  // 同盟排名
+  int64 guild_id            = 2;  // 同盟ID
+  string guild_name         = 3;  // 同盟名
+  int64 guild_level         = 4;  // 同盟等级
+  string leader_name        = 5;  // 同盟团长名
+  int64 damage              = 6;  // 伤害
+  int64 guild_flag          = 7;  // 同盟旗帜
+  int64 leader_gid          = 8;  // 团长gid
+  bool is_ranking_anonymous = 9;  //是否匿名
+}
+
+message PurchaseChallengeCntRequest {}
+
+message PurchaseChallengeCntReply {
+  int64 purchase_count = 1;  // 当日已购买次数
+}
+
+message ShopInfo {
+  int64 count           = 1;  // 购买次数
+  corepb.Item cost_item = 2;  // 消耗道具
+}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  int64 personal_rank                                = 1;   // 个人排行(-1表示未上榜)
+  int64 guild_rank                                   = 2;   // 同盟排行(-1表示未上榜，-2表示未加入)
+  corepb.PersonalDisplayInfo top_player_info         = 3;   // 今日排名第一玩家信息
+  repeated actpb.commonpb.Task cooperate_tasks       = 4;   // 合作挑战任务信息
+  bool show_transform_boss_status                    = 5;   // 是否显示boss转阶段的提示
+  BossStatus boss_status                             = 6;   // boss状态
+  repeated BossInfo boss_infos                       = 7;   // boss信息
+  TodayChallengeCountInfo today_challenge_count_info = 8;   //今日挑战次数信息
+  repeated ShopInfo shop_info                        = 9;   // 价格信息
+  int64 purchase_count                               = 10;  // 当日已购买次数
+  int64 challenge_item_id                            = 11;  // 挑战次数道具ID
+  int64 sweep_item_id                                = 12;  // 扫荡道具ID
+  int64 today_max_damge                              = 13;  // 当日最大伤害
+}
+
+message BossStatus {
+  int64 boss_id      = 1;  // 当前阶段boss id
+  int64 total_damage = 2;  // 当前值-上一个宝箱所需
+  int64 all_hp       = 3;  // 本档宝箱所需-上一个宝箱所需
+}
+
+message BossInfo {
+  int64 id                   = 1;  // boss id
+  string name                = 2;  // boss名称
+  string tag                 = 3;  // boss标签
+  repeated string characters = 4;  // 特点
+  string skill_desc          = 5;  // 技能描述
+}
+
+message TodayChallengeCountInfo {
+  int64 remain_cnt = 1;  // 今日剩余挑战次数
+  int64 total_cnt  = 2;  // 今日总共可挑战次数
+}
+
+message GetTaskInfoRequest {}
+
+message GetTaskInfoReply {
+  repeated actpb.commonpb.Task guild_tasks         = 1;  // 同盟挑战任务
+  repeated actpb.commonpb.Task cooperate_tasks     = 2;  // 合作挑战任务
+  repeated PersonalRewardInfo personal_reward_info = 3;  // 个人挑战奖励信息
+}
+
+message PersonalRewardInfo {
+  int64 id                    = 1;
+  string title                = 2;
+  string desc                 = 3;
+  repeated corepb.Item awards = 4;
+}
+
+enum RankType {
+  RANK_TYPE_UNKNOWN  = 0;  // 未知类型
+  RANK_TYPE_PERSONAL = 1;  // 个人排行
+  RANK_TYPE_GUILD    = 2;  // 同盟排行
+}
+
+message QueryRankRewardInfoRequest {
+  RankType type = 1;  // 排行榜类型
+}
+
+message RankRewardInfo {
+  int64 rank_begin            = 1;  // 排名区间
+  int64 rank_end              = 2;  // 排名区间
+  repeated corepb.Item awards = 3;  // 排名奖励
+  string desc                 = 4;  // 排名描述
+}
+
+message QueryRankRewardInfoReply {
+  repeated RankRewardInfo reward_list = 1;  // 奖励列表
+  int64 cur_rank                      = 2;  // 当前排名
+}
+
+enum RewardType {
+  REWARD_TYPE_UNKNOWN   = 0;  // 未知奖励类型
+  REWARD_TYPE_GUILD     = 1;  // 同盟挑战奖励
+  REWARD_TYPE_COOPERATE = 2;  // 合作挑战奖励
+}
+
+// 结算信息
+message SettleInfo {
+  int64 current_damage   = 1;  // 当前战斗伤害
+  int64 max_damage       = 2;  // 今日个人最高伤害
+  RankChange player_rank = 3;  // 玩家排名变化
+  int64 guild_total      = 4;  // 同盟总伤害
+  RankChange guild_rank  = 5;  // 同盟排名变化
+}
+
+message GameStartRequest {}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  corepb.FightResultType result = 1;  // 战斗结果
+  int32 reason                  = 2;  // 结算原因:EGameResultReason
+  int64 cur_damage              = 3;  // 本局造成的伤害
+  bytes dungeon_record_bytes    = 4;  // 战斗对局数据，校验用
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 游戏结束消息
+  SettleInfo settle_info              = 2;  // 结算信息
+  int64 guild_id                      = 3;  // 同盟ID，如果为 0 表示已经退出同盟
+  repeated corepb.Item awards         = 4;  // 奖励
+}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 阵容类型，目前直接传 "act0125_loadout"
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+}
+
+message ApplyLoadoutRequest {
+  corepb.Loadout loadout = 1;  // 阵容
+}
+
+message ApplyLoadoutReply {}
+
+message TodayPersonalInfoRequest {}
+
+message TodayPersonalInfoReply {
+  int64 max_damage                                   = 1;  // 今日个人最高伤害
+  TodayChallengeCountInfo today_challenge_count_info = 2;  // 今日挑战次数信息
+}
+
+message SweepBattleRequest {}
+
+message SweepBattleReply {
+  repeated corepb.Item awards = 1;
+}
+
+message RecordStatsRequest {}
+
+message RecordStatsReply {
+  repeated PersonalRecord personal_records = 1;
+  repeated GuildRecord guild_records       = 2;
+}
+
+message PersonalRecord {
+  int64 date          = 1;  // 日期, 0点unix timestamp
+  int64 total_damage  = 2;  // 总伤害
+  int64 challenge_cnt = 3;  // 挑战次数
+  int64 rank          = 4;  // 排名
+}
+
+message GuildRecord {
+  int64 gid                               = 1;
+  corepb.PersonalDisplayInfo display_info = 2;  // 玩家展示信息
+  Role role                               = 3;  // 同盟职位
+  int64 damage                            = 4;  // 伤害
+}
+
+message CheckGuildJoinTimeRequest {}
+
+message CheckGuildJoinTimeReply {
+  bool show_dialog = 1;  // 是否显示弹窗
+}
+
+enum Role {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  MEMBER       = 0;  // 普通成员
+  LEADER       = 1;  // 同盟会长
+  VICE_LEADER  = 2;  // 副会长
+  SQUAD_LEADER = 3;  // 小队长
+}
+
+enum ZoneType {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  ZONE_TYPE_UNKNOWN = 0;
+  ZONE_TYPE_ZONE    = 1;
+  ZONE_TYPE_WARZONE = 2;
+}

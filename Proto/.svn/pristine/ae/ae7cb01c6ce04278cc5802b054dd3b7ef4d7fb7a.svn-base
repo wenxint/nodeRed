@@ -1,0 +1,39 @@
+// cs protocol
+syntax = "proto3";
+
+package guildwarpb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/guildwarpb";
+
+enum GuildWarErr {
+  OK                           = 0;
+  ChartModelNotFound           = 1230000;  //  chart model数据找不到
+  GuildModelNotFound           = 1230001;  //  guild model数据找不到
+  PlayerDataInconsistent       = 1230002;  // 玩家数据出现了不一致
+  OrderHasBeenAjusted          = 1230003;  // 已经有人调整过顺序了
+  GuildWarRoundFightHasBegan   = 1230004;  // 争霸赛已经开战了
+  PlayerNotInBattleField       = 1230005;  // 玩家不在战场里面
+  MaxWinningStreakCountLimit   = 1230006;  // 已经达到了最大连胜次数
+  InvalidWinningStreakBuyCount = 1230007;  // 非法的连胜购买次数
+  GuildNotInChart              = 1230008;  // 同盟不在对阵图里（同盟未参加本届争霸赛）
+  InvalidGroupPosition         = 1230009;  // 当前处在不正确的组别和位置上
+  GuildWarRoundIsOver          = 1230010;  // 该轮次比赛已经决出胜负了
+  SameCuisineAlreadyEffective  = 1230011;  // 相同料理已经生效了
+  BattleFieldNotFound          = 1230012;  // 战场找不到
+  PlayerStatusInvalid          = 1230013;  // 玩家状态非法
+  FightIsAboutToBegin          = 1230014;  // 战斗即将开始，不允许观战
+  PlayerIsObserving            = 1230015;  // 玩家正在观战
+
+  // 海岛争夺战 1230100 - 1230199
+  IslandSiegeConfigNotFound          = 1230100;  // 配置找不到
+  IslandSiegeNoPermission            = 1230101;  // 没有操作权限
+  IslandSiegeInvalidRallyPoint       = 1230102;  // 非法集结点
+  IslandSiegeInvalidTargetEnemyGuild = 1230103;  // 非法目标敌对同盟
+  IslandSiegePlayerAlreadyMatched    = 1230104;  // 玩家已经匹配了
+  IslandSiegePlayerAlreadyFighting   = 1230105;  // 玩家已经在战斗中
+  IslandSiegePlayerNotFighting       = 1230106;  // 玩家不在战斗中
+  IslandSiegeAlreadyMoving           = 1230107;  // 已经在移动中
+  IslandSiegeMoveCDing               = 1230108;  // 移动cd中
+  IslandSiegeMoveTargetInvalid       = 1230109;  // 移动目标非法
+  IslandSiegeStatusCanNotMatch       = 1230110;  // 状态不能匹配
+  IslandSiegeStatusCanNotCancelMatch = 1230111;  // 状态不能取消匹配
+}

@@ -1,0 +1,23 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0129pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0129pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0069Service {
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;
+  bool have_recharged                = 2;  // 是否已满足充值条件
+}
+
+// 活动开启通知
+message ActOpenNotify {}
+
+// 活动关闭通知
+message ActCloseNotify {}

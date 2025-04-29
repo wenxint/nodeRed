@@ -1,0 +1,65 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0104pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0104pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/common.proto";
+
+// CSAct0104Service 锻刀服务
+service CSAct0104Service {
+  // ForgingKnife 锻刀API
+  rpc ForgingKnife(ForgingKnifeRequest) returns (ForgingKnifeReply);
+  // SetOneclickForgingKnife 设置一键锻刀.
+  rpc SetOneclickForgingKnife(SetOneclickForgingKnifeRequest) returns (SetOneclickForgingKnifeReply);
+}
+
+message SetOneclickForgingKnifeRequest {
+  bool opened = 1;  // 一键锻刀模式; True: 打开；False：关闭
+}
+message SetOneclickForgingKnifeReply {}
+
+// ForgingKnifeRequest 锻刀请求
+message ForgingKnifeRequest {
+  bool batch = 1;  // 一键锻刀模式; True: 打开；False：关闭
+}
+
+// ForgingKnifeReply 锻刀响应.
+message ForgingKnifeReply {
+  repeated corepb.Item items      = 1;  // 锻刀奖励(每轮);
+  repeated Quality qualities      = 2;  // 锻造结果;
+  repeated corepb.Item base_items = 3;  // 每一次锻造的基础奖励
+}
+
+// Quality 锻刀品质
+message Quality {
+  int32 quality = 1;  // 品质
+  int32 count   = 2;  // 数量
+}
+
+// ActGetDetailRequest 活动详情请求信息
+message ActGetDetailRequest {}
+
+// ActGetDetailReply 活动详情响应信息
+message ActGetDetailReply {
+  ActInfo act_info                   = 1;  // 活动基础信息
+  repeated actpb.commonpb.Task tasks = 2;  // 所有任务详细信息
+}
+
+message ActInfo {
+  int64 total_rounds                      = 1;  // 当前锻刀的总轮次
+  int64 quality                           = 2;  // 品质
+  int64 forging_knife_times_in_curr_round = 3;  // 当前轮的锻刀次数
+  corepb.Item item                        = 4;  // 玩家身上的活动(行动力)道具与数量
+  repeated corepb.Item consume_items      = 5;  // 每次锻造需要消耗的道具与数量
+  repeated QualityReward quality_rewards  = 6;  // 每个品质的奖励
+  bool opened_oneclick_forging            = 7;  // 玩家在显示一键锻造开关后的开关设置
+  bool display_opened_oneclick_forging    = 8;  // 显示一键锻造开关
+}
+
+// QualityReward 每个品质的奖励
+message QualityReward {
+  int64 quality                             = 1;  // 品质
+  repeated corepb.Item quality_reward_items = 4;  // 每次锻造奖励的道具与数量
+}

@@ -1,0 +1,158 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0024pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0024pb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  bool is_first_open                  = 1;  // 是否首次打开, 需要播放 MV
+  repeated actpb.commonpb.Task tasks  = 2;  // 所有任务详细信息(目前只是用于客户端计算红点, 页签和活动入口红点由后台计算)
+  ClueInfosReply clue_infos_reply     = 3;  // 线索页面详情(目前只是用于客户端计算红点, 页签上无需红点, 进入活动页签后才有)
+  TalentInfosReply talent_infos_reply = 4;  // 天赋页面详情(目前只是用于客户端计算红点, 页签上无需红点, 进入活动页签后才有)
+  bool key_quest_need_play_animation  = 5;  // 锚点关卡动画是否需要播放
+  bool finished_key_quest             = 6;  // 是否完成了key_quest关卡
+  bool is_need_daily_rp               = 7;  // 是否需要每日红点(“开始追击”按钮)
+}
+
+service CSAct0024Service {
+  rpc ClueInfos(ClueInfosRequest) returns (ClueInfosReply);  // 线索页面
+
+  rpc TalentInfos(TalentInfosRequest) returns (TalentInfosReply);           // 天赋页面
+  rpc UnlockTalent(UnlockTalentRequest) returns (UnlockTalentReply);        // 解锁天赋
+  rpc ResetAllTalent(ResetAllTalentRequest) returns (ResetAllTalentReply);  // 重置所有天赋
+
+  rpc TaskInfos(TaskInfosRequest) returns (TaskInfosReply);  // 任务页面
+
+  rpc EnterMain(EnterMainRequest) returns (EnterMainReply);                                // 进入主界面，获取关卡列表等
+  rpc FinishPlotWatch(FinishPlotWatchRequest) returns (FinishPlotWatchReply);              // 完成首次进地图得剧情MV观看
+  rpc GameStart(GameStartRequest) returns (GameStartReply);                                // 进入单局战斗
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);                                      // 结算
+  rpc FinishPlayAnimation(FinishPlayAnimationRequest) returns (FinishPlayAnimationReply);  // 完成锚点关卡播动画
+}
+
+message ClueInfosRequest {}
+
+message ClueInfosReply {
+  message ClueInfo {
+    int64 clue_id     = 1;  // 线索 ID
+    int64 item_id     = 2;  // 对应道具在PropItem表 ID
+    bool is_real      = 3;  // 是否是真实线索
+    bool is_collected = 4;  // 是否已收集
+    bool is_new_clue  = 5;  // 是否是新获取的线索，需要显示“新”标记
+  }
+  repeated ClueInfo clue_infos = 1;  // 线索信息
+}
+
+message TalentInfosRequest {}
+
+message TalentInfosReply {
+  message TalentInfo {
+    int64 talent_id    = 1;  // 天赋 ID
+    string talent_name = 2;  // 天赋名称
+    string talent_desc = 3;  // 天赋描述
+    bool is_unlocked   = 4;  // 是否已解锁
+
+    repeated int64 advance_talent_ids = 5;  // 前置天赋 ID
+    bool is_advance_unlocked          = 6;  // 前置天赋是否已全部解锁（无前置天赋时为 true）
+
+    int64 page_id    = 7;  // 天赋页 ID
+    string page_name = 8;  // 天赋页名称
+
+    repeated corepb.Item cost = 9;  // 解锁消耗
+  }
+  repeated TalentInfo talent_infos = 1;  // 天赋信息
+  int64 unlocked_talent_num        = 2;  // 已解锁天赋数量
+  int64 total_talent_num           = 3;  // 总天赋数量
+  repeated corepb.Item owned_items = 4;  // 拥有的道具(艾斯币)
+}
+
+message UnlockTalentRequest {
+  int64 talent_id = 1;  // 天赋 ID
+}
+
+message UnlockTalentReply {
+  TalentInfosReply talent_infos_reply = 1;
+}
+
+message ResetAllTalentRequest {
+  int64 page_id = 1;  // 选中的天赋页, 用于重置后返回天赋页新的状态刷新客户端
+}
+
+message ResetAllTalentReply {
+  TalentInfosReply talent_infos_reply = 1;
+}
+
+message TaskInfosRequest {}
+
+message TaskInfosReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+}
+
+message EnterMainRequest {}
+
+message EnterMainReply {
+  repeated QuestInfo quest_infos      = 1;  // 关卡信息
+  int64 current_day                   = 2;  // 当前天数
+  bool is_first_open                  = 3;  // 是否首次打开 (需要播放 剧情MV)
+  repeated actpb.commonpb.Task tasks  = 4;  // 所有任务详细信息
+  ClueInfosReply clue_infos_reply     = 5;  // 线索页面详情
+  TalentInfosReply talent_infos_reply = 6;  // 天赋页面详情
+}
+
+message QuestInfo {
+  int64 quest_id = 1;  // 关卡 ID
+  enum QuestType {
+    TYPE_UNKNOWN = 0;
+    ISLAND       = 1;  // 岛屿
+    SEA          = 2;  // 海域
+  }
+  QuestType quest_type                    = 2;  // 关卡类型
+  int64 unlock_days                       = 3;  // 解锁天数
+  int64 advance_quest_id                  = 4;  // 前置关卡 ID
+  repeated corepb.Item first_pass_rewards = 5;  // 首通奖励
+
+  bool completed              = 10;  // 是否已通关
+  map<int64, bool> star_state = 11;  // 星级信息, star_id -> is_passed
+  int64 collected_fire_coins  = 12;  // 已收集艾斯币数量
+  int64 total_fire_coins      = 13;  // 总共艾斯币数量
+}
+
+message FinishPlotWatchRequest {}
+
+message FinishPlotWatchReply {}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  map<int64, bool> stars        = 2;  // 如果是海战，带上客户端计算得到的星级，格式参考 message Quest 中的 stars
+  corepb.FightResultType result = 3;  // 战斗结果
+  int32 reason                  = 4;  // 结算原因:EGameResultReason
+  repeated int64 fire_coin_ids  = 5;  // 本局内触发艾斯币掉落的 ID 列表
+  int64 fire_coin_num           = 6;  // 本局内触发艾斯币掉落的数量(增量)
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;
+  map<int64, bool> this_stars         = 2;  // 当次的星级，格式参考 message QuestInfo 中的 stars
+  map<int64, bool> previous_stars     = 3;  // 之前的星级，格式参考 message QuestInfo 中的 stars
+  repeated corepb.Item rewards        = 4;  // 下发的奖励
+  bool is_first_pass                  = 5;  // 是否首次通关，展示奖励弹窗
+  repeated corepb.Item clues          = 6;  // 奖励里包含的线索
+}
+
+message FinishPlayAnimationRequest {}
+message FinishPlayAnimationReply {}

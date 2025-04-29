@@ -1,0 +1,96 @@
+// cs protocol
+syntax = "proto3";
+
+package pvppb;
+option go_package = "git.woa.com/red/fightsvr/pkg/proto/pvppb";
+
+import "corepb/fight_common.proto";
+import "clientpb/record.proto";
+
+// 战斗服务
+service PVPService {
+  // meta需要x-fight-id
+  // Deprecated，请使用 metricspb.MetricsService
+  rpc FightMetrics(FightMetricsRequest) returns (FightMetricsReply);
+  rpc GameXOBID(GameXOBIDRequest) returns (GameXOBIDReply);
+
+  // 中途退出
+  // meta需要带上 x-fight-id
+  rpc GameAbort(GameAbortRequest) returns (GameAbortReply);
+
+  // RobotFrame 人机对战定时上传录像数据
+  // meta需要带上 x-fight-id
+  rpc RobotFrame(RobotFrameRequest) returns (RobotFrameReply);
+}
+
+// 战斗开始通知
+message PVPGameStartNtf {
+  int32 ret_code                    = 1;    //战斗是否成功开始。0表示成功, 其它为异常
+  corepb.GameStartMessage start_msg = 2;    // 通用战斗开始包
+  string room_id                    = 100;  // TODO: 后台测试用，客户端不关注
+}
+
+// 战斗结束通知
+message PVPGameOverNtf {
+  int32 ret_code                      = 1;    //战斗是否成功开始。0表示成功, 其它为异常
+  corepb.GameOverMessage over_message = 2;    // 通用战斗结束包
+  bytes settle_reward                 = 5;    // 结算奖励
+  string room_id                      = 100;  // TODO: 后台测试用，客户端不关注
+}
+
+// 战斗中途退出
+message GameAbortRequest {
+  int64 game_trace_id = 1;  // 对局唯一ID
+  int64 role_id       = 2;  // 玩家ID(gid), 用于校验
+  int64 role_idx      = 3;  // 玩家索引, 用于校验
+}
+
+message GameAbortReply {}
+
+// 单局指标
+message FightMetricsRequest {
+  message Action {
+    int32 vkey = 1;  // vkey
+    bytes data = 2;  // pb数据
+  }
+
+  int64 game_trace_id     = 1;  // 对局唯一ID
+  int64 gid               = 2;  // 玩家ID
+  int32 auth              = 3;  // 鉴权，同PVPVkey_AUTH
+  int32 frame_id          = 4;  // 帧ID
+  repeated Action actions = 5;  // action列表
+}
+
+message FightMetricsReply {}
+
+// 对局所在xobid请求
+message GameXOBIDRequest {
+  int64 game_trace_id = 1;  // 对局唯一ID
+}
+
+message GameXOBIDReply {
+  int64 game_trace_id = 1;  // 对局唯一ID
+  string x_ob_id      = 2;  // 对局所在ob pod
+}
+
+message SettleGamePlay {
+  repeated CheckPoint check_points        = 1;
+  repeated corepb.FightTeamInfo team_list = 2;
+}
+
+message CheckPoint {
+  int64 gid   = 1;  // 用户GID
+  int64 score = 2;  // 用户分数
+  int64 time  = 3;  // 用户完成时间
+}
+
+// 人机对战的录像数据
+message RobotFrameRequest {
+  int64 game_trace_id                               = 1;  // 对局唯一ID
+  int32 start_frame_id                              = 2;
+  int32 end_frame_id                                = 3;
+  repeated clientpb.DungeonRoundRecord round_record = 4;  // 按回合存储的
+  repeated clientpb.DungeonHashFrame framehash_list = 5;
+}
+
+message RobotFrameReply {}

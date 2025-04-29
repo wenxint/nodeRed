@@ -1,0 +1,42 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0054pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0054pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0054Service {
+  rpc SubmitMaterial(SubmitMaterialRequest) returns (SubmitMaterialReply);  // SubmitMaterial 提交材料
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 任务详情
+  repeated Material materials        = 2;  // 材料信息
+  map<int64, int64> submit_count     = 3;  // 提交材料数量 伙伴ID->提交该材料的数量
+}
+
+message SubmitMaterialRequest {
+  int64 buddy_id = 1;  // 伙伴ID
+}
+
+message SubmitMaterialReply {
+  repeated corepb.Item awards        = 1;  // 提交奖励
+  repeated actpb.commonpb.Task tasks = 2;  // 任务详情
+  SurpriseInfo surprise_info         = 3;  // 惊喜奖励(为空则说明不触发惊喜奖励)
+}
+
+message Material {
+  int64 buddy_id              = 1;  // 伙伴ID
+  corepb.Item item            = 2;  // 材料ID和当前拥有的数量
+  repeated corepb.Item awards = 3;  // 提交该材料可以获得的奖励
+}
+
+message SurpriseInfo {
+  repeated corepb.Item surprise_awards = 1;  // 惊喜奖励
+  int64 count                          = 2;  // 收集count个材料达成
+}

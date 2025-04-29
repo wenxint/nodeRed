@@ -1,0 +1,103 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0167pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0167pb";
+
+
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0167Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  rpc SetQuestChoiceBuff(SetQuestChoiceBuffRequest) returns (SetQuestChoiceBuffReply);
+  rpc UnlockShowPlay(UnlockShowPlayRequest) returns (UnlockShowPlayReply);
+}
+
+enum QuestStatus {
+  QUEST_STATUS_UNKNOWN = 0;  // 默认值 不使用
+  QUEST_STATUS_UNLOCK  = 1;  // 关卡已解锁(未通关)
+  QUEST_STATUS_LOCK    = 2;  // 关卡未解锁
+  QUEST_STATUS_PASS    = 3;  // 关卡已通关
+}
+
+enum LockReason {
+  REASON_UNKNOWN           = 0;  // 默认值 不使用
+  REASON_PRE_QUEST_LOCK    = 1;  // 前置关卡未通过
+  REASON_OPEN_TIME_UNREACH = 2;  // 开放时间未到
+}
+
+enum BuffStatus {
+  BUFF_STATUS_UNKNOWN    = 0;  // 默认值 不使用
+  BUFF_STATUS_CHOICE     = 1;  // 已被选择
+  BUFF_STATUS_NOT_CHOICE = 2;  // 未被选择
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated QuestInfo quest_infos     = 1;  // 关卡详情
+  repeated actpb.commonpb.Task tasks = 2;  // 任务详情
+  map<int64, int64> quest_hr_type    = 3;  // 关卡对应的历史记录类型信息
+}
+
+message BuffInfo {
+  int64 buff_id          = 1;  // buff_id
+  string buff_desc       = 2;  // buff描述
+  BuffStatus buff_status = 3;  // buff状态
+  string icon_path       = 4;  // 图标路径
+}
+
+message QuestInfo {
+  int64 quest_id                        = 1;  // 关卡ID
+  QuestStatus quest_status              = 2;  // 关卡状态
+  LockReason lock_reason                = 3;  // 锁定原因(quest_status为lock状态时)
+  repeated BuffInfo buff_infos          = 4;  // 关卡buff信息
+  int64 unlock_time                     = 5;  // 解锁时间 秒级时间戳
+  HistoryRecordInfo history_record_info = 6;  // 当前关卡历史记录信息
+  string quest_name                     = 7;  // 关卡名字
+  string quest_tips                     = 8;  // 试炼提示
+  bool unlock_show_play                 = 9;  // 关卡解锁动画是否播放
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+  int64 hr_type                 = 4;  // 历史记录类型
+  int64 hr_value                = 5;  // 记录值
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 通用战斗结算消息
+}
+
+message SetQuestChoiceBuffRequest {
+  int64 quest_id       = 1;  // 关卡ID
+  int64 choice_buff_id = 2;  // 选择的buff_id
+}
+
+message SetQuestChoiceBuffReply {}
+
+message HistoryRecordInfo {
+  int64 hr_type   = 1;  // 历史记录类型
+  int64 min_value = 2;  // 记录类型对应的最小值
+  int64 max_value = 3;  // 记录类型对应的最大值
+  string desc     = 4;  // 描述信息
+  bool get_min    = 5;  // 是否取最小值 true为取最小值 false取最大值
+}
+
+message UnlockShowPlayRequest {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message UnlockShowPlayReply {}

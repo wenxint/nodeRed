@@ -1,0 +1,16 @@
+// cs protocol
+syntax = "proto3";
+
+package matchpb;
+option go_package = "git.woa.com/red/matchsvr/pkg/proto/matchpb";
+
+enum MatchErr {
+  OK                        = 0;
+  Internal                  = 1080001;  // 内部错误
+  BusinessTypeNotRegistered = 1080002;  // 业务类型未注册（未实现？）
+  PlayerNotFound            = 1080003;  // 找不到对应玩家
+  MatchInfoIllegal          = 1080004;  // 匹配请求参数不合法
+  MatchInfoGidNotEqual      = 1080006;  // 匹配请求中玩家gid不匹配
+  MatchResultSizeNotCorrect = 1080007;  // 匹配结果中玩家数量不对
+  ServiceError              = 1080008;  // 服务器异常，暂时无法进行匹配
+}

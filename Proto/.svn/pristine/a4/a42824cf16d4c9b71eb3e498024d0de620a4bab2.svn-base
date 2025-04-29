@@ -1,0 +1,11 @@
+// cs protocol
+syntax = "proto3";
+
+package infopb;
+
+option go_package = "git.woa.com/red/infosvr/pkg/proto/infopb";
+
+enum InfoErr {
+  OK                 = 0;        // 成功
+  FightVersionTooLow = 1130001;  // 客户端战斗版本号太低，需要更新
+}

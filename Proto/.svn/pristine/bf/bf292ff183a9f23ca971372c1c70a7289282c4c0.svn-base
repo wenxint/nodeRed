@@ -1,0 +1,93 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.captainmanualpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/captainmanualpb";
+
+import "corepb/common.proto";
+
+service CSService {
+  // 请求手册开启相关信息
+  rpc QueryManual(QueryManualRequest) returns (QueryManualReply);
+  // 发某个手册奖励
+  rpc DeliverReward(DeliverRewardRequest) returns (DeliverRewardReply);
+  // 第一次打开手册，会取消New状态
+  rpc FirstTouch(FirstTouchRequest) returns (FirstTouchReply);
+  // 第一次锁头碎裂，会取消锁头状态
+  rpc FirstUnlock(FirstUnlockRequest) returns (FirstUnlockReply);
+  // 手册全部完成后领取全通关奖励
+  rpc DeliverPassReward(DeliverPassRewardRequest) returns (DeliverPassRewardReply);
+}
+
+message DeliverPassRewardRequest {}
+
+message DeliverPassRewardReply {
+  repeated corepb.Item items = 1;  // 本次领取的奖励
+}
+
+message FirstUnlockReply {}
+
+message FirstUnlockRequest {
+  int64 manual_id = 1;  // 手册id
+}
+
+message FirstTouchRequest {
+  int64 manual_id = 1;  // 手册id
+}
+
+message FirstTouchReply {}
+
+message QueryManualRequest {}
+
+message QueryManualReply {
+  repeated Manual manuals = 1;  // 当前所有手册
+}
+message Manual {
+  int64 manual_id      = 1;  // 当前的手册id
+  TaskStatus status    = 2;  // 手册是否已经领取
+  repeated Task tasks  = 3;  // 当前手册的所有任务
+  bool is_new          = 4;  // 是否需要显示New标志
+  UnopenReason reason  = 5;  // 未开启原因
+  bool is_first_unlock = 6;  // 是否需要显示锁头碎裂标志
+}
+
+message UnopenReason {
+  UnopenReasonEnum reason = 1;  // 未开启原因
+  repeated int64 params   = 2;  // 未开启原因参数
+}
+
+enum UnopenReasonEnum {
+  UNOPEN_REASON_ENUM_UNKNOWN = 0;  // 无
+  SYSTEMOPEN                 = 1;  // 系统未开启
+  LEVEL                      = 2;  // 等级不足
+  ADVENTURE                  = 3;  // 未通关冒险
+}
+
+message DeliverRewardRequest {
+  int64 manual_id = 1;  // 手册id (包括未开启和开启的)
+}
+
+message DeliverRewardReply {
+  repeated corepb.Item items = 2;  // 本次领取的奖励
+}
+
+message Task {
+  int64 id                      = 1;  // 任务id
+  TaskStatus status             = 2;  // 任务是否已经完成 (只有进行中和已完成)
+  repeated Condition conditions = 3;  // 任务的需求条件完成情况
+}
+
+message Condition {
+  int32 condition_type = 1;  // 枚举的完成条件类型 (弃用)
+  int64 sub_id         = 2;  // 条件需求的子类型，例如物品等 (弃用)
+  int64 count          = 3;  // 当前积累的数量, 逻辑用0、1
+  int64 required       = 4;  // 当前枚举条件的要求值，达到了可以领取奖励
+}
+
+enum TaskStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  UNOPENED   = 0;  // 未开启
+  COMPLETED  = 1;  // 已经完成, 可领取
+  REWARDED   = 2;  // 已经领取了奖励
+  PROCEEDING = 3;  // 正在进行, 未完成
+}

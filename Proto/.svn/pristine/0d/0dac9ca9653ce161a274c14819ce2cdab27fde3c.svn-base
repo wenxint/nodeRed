@@ -1,0 +1,50 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.cruisepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/cruisepb";
+
+import "corepb/common.proto";
+
+service Service {
+  rpc Info(InfoRequest) returns (InfoReply);                          // 获取挂机信息
+  rpc BuyRewards(BuyRewardsRequest) returns (BuyRewardsReply);        // 购买挂机收益
+  rpc ClaimRewards(ClaimRewardsRequest) returns (ClaimRewardsReply);  // 领取挂机奖励
+}
+
+message InfoRequest {}
+
+message InfoReply {
+  int64 accumulated_time_seconds             = 1;  // 秒单位的已积累挂机时间长度
+  int64 period_seconds                       = 2;  // 秒级挂机收益周期
+  repeated corepb.Item expected_reward_rates = 3;  // 客户端显示当前等级的挂机收益奖励，其中的 count 为收益率
+  repeated corepb.Item accumulated_rewards   = 4;  // 挂机期间已积累的奖励列表
+  int64 normal_cost_index                    = 5;  // 当前所在普通购买信息游标（从 0 开始）
+  int64 time_cap_seconds                     = 6;  // 秒单位挂机时间上限
+}
+
+message BuyRewardsRequest {
+  enum OrderType {
+    ORDER_TYPE_UNKNOWN = 0;
+    NORMAL             = 1;  // 普通收益
+    ITEM               = 2;  // 加速道具收益
+  }
+  OrderType order_type = 1;
+  int64 cost_item_id   = 2;  // 花费道具 ID，只有用加速道具收益购买时才需要填写
+  int64 count          = 3;  // 购买次数
+}
+
+message BuyRewardsReply {
+  repeated corepb.Item rewards = 1;  // 得到的奖励
+  int64 count                  = 2;  // 成功购买次数
+}
+
+message ClaimRewardsRequest {}
+
+message ClaimRewardsReply {
+  repeated corepb.Item rewards = 1;
+}
+
+message LoginInfo {
+  int64 accumulated_time_seconds = 1;  // 秒单位的已积累挂机时间长度
+}

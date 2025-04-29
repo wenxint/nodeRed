@@ -1,0 +1,266 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.fightpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/fightpb";
+
+
+import "corepb/fight_common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/common.proto";
+import "pkg/proto/zonepb/fight.proto";
+import "google/protobuf/any.proto";
+
+service FightService {
+  // 获取战斗数据，包括阵容及属性
+  rpc GetFightInfo(GetFightInfoRequest) returns (GetFightInfoReply);
+
+  // 通用的单机开战
+  rpc CommonGameStart(CommonGameStartRequest) returns (CommonGameStartReply);
+
+  // 通用的单机结束
+  rpc CommonGameEnd(CommonGameEndRequest) returns (CommonGameEndReply);
+
+  // 练习场内变更阵容，老协议，保留一段时间后删除，客户端请不要使用
+  rpc PracticeChooseLoadout(PracticeChooseLoadoutRequest) returns (PracticeChooseLoadoutReply);
+
+  // 局内变更阵容
+  rpc ChooseLoadout(ChooseLoadoutRequest) returns (ChooseLoadoutReply);
+
+  // 复活
+  rpc Revive(ReviveRequest) returns (ReviveReply);
+
+  // 上报对局信息
+  rpc PlayerStatisticsInfo(PlayerStatisticsInfoRequest) returns (PlayerStatisticsInfoReply);
+
+  // 剧情播放情况上报
+  rpc CutsceneReport(CutsceneReportRequest) returns (CutsceneReportReply);
+
+  // 新的复活协议
+  // 查询复活信息
+  rpc ReviveV2ItemInfo(ReviveV2ItemInfoRequest) returns (ReviveV2ItemInfoReply);
+  // 复活
+  rpc ReviveV2(ReviveV2Request) returns (ReviveV2Reply);
+
+  // 战斗详情上报
+  rpc FightDetail(FightDetailRequest) returns (FightDetailReply);
+
+  // GetFightConfig 获取战斗配置，在系统配置里
+  rpc GetFightConfig(GetFightConfigRequest) returns (GetFightConfigReply);
+
+  // SetSupportBuddySmartTurn 设置援护智能转向
+  rpc SetSupportBuddySmartTurn(SetSupportBuddySmartTurnRequest) returns (SetSupportBuddySmartTurnReply);
+
+  // SetFightConfig 通用战斗设置
+  rpc SetFightConfig(SetFightConfigRequest) returns (SetFightConfigReply);
+}
+
+message GetFightInfoRequest {
+  corepb.FightType type = 1;
+  int64 dungeon_id      = 2;  // 关卡ID
+}
+
+message GetFightInfoReply {
+  corepb.FightInfo fight_info = 1;
+}
+
+message PracticeChooseLoadoutRequest {
+  corepb.Loadout loadout = 1;
+}
+
+message PracticeChooseLoadoutReply {
+  corepb.FightPlayerInfo fight_data = 1;
+  corepb.Loadout loadout            = 2;
+}
+
+message ChooseLoadoutRequest {
+  corepb.Loadout loadout = 1;
+  corepb.FightType type  = 2;
+  int64 dungeon_id       = 3;  // 副本ID
+  bool is_oppo           = 4;  // 是否是对方的阵容，默认false
+}
+
+message ChooseLoadoutReply {
+  corepb.FightPlayerInfo fight_data = 1;
+  corepb.Loadout loadout            = 2;
+}
+
+// 练习场战斗开始消息
+message PracticeGameMsg {
+  corepb.Loadout loadout = 1;
+}
+
+// 爬塔战斗开始/结算消息
+message MirrorGameMsg {
+  int64 quest_id   = 1;  // 小关ID, 所有章节唯一,递增
+  int64 chapter_id = 2;  // 章节ID
+}
+
+// 精英副本（强者挑战）战斗开始/结算消息
+message EliteDungeonGameMsg {
+  int64 quest_id = 1;  // 副本ID
+}
+
+// 单机本战斗相关结构
+message MultiGameMsg {
+  PracticeGameMsg practice          = 1;  // 练习场
+  MirrorGameMsg mirror              = 2;  // 爬梯
+  EliteDungeonGameMsg elite_dungeon = 3;  // 精英副本（强者挑战）
+}
+
+// 战斗开始Request
+message CommonGameStartRequest {
+  corepb.FightType type = 1;
+  int64 dungeon_id      = 2;  // 关卡ID
+  int64 sysid           = 3;  // 系统ID。来源于哪个系统的战斗，目前用于状态互斥
+
+  MultiGameMsg game_msg           = 10;  // 玩法相关的参数设置
+  google.protobuf.Any custom_data = 11;  // 玩法自定义数据
+  bool disable_report_to_verify   = 12;  // 是否禁止上报到验证服
+}
+
+// 战斗开始Reply
+message CommonGameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+// 战斗结束Request
+message CommonGameEndRequest {
+  corepb.FightType type                       = 1;
+  int64 dungeon_id                            = 2;  // 关卡ID
+  corepb.FightResultType result               = 3;  // 战斗结果
+  zonepb.PveCommonInfoReport client_info      = 4;  // 通用信息上报
+  int32 reason                                = 5;  // 结算原因:EGameResultReason
+  repeated corepb.DungeonParam dungeon_params = 6;  // 副本自定义变量(客户端上报)
+  int64 sysid                                 = 7;  // 系统ID。来源于哪个系统的战斗，目前用于状态互斥
+
+  MultiGameMsg game_msg           = 10;  // 玩法相关的参数设置
+  google.protobuf.Any custom_data = 11;  // 玩法自定义数据
+}
+
+// 战斗结束Reply
+message CommonGameEndReply {
+  corepb.GameOverMessage over_message = 1;
+  repeated corepb.Item items          = 2;
+}
+
+// 复活Request
+message ReviveRequest {
+  corepb.FightType type = 1;  // 关卡类型
+  int64 dungeon_id      = 2;  // 关卡ID
+  int64 system_id       = 3;  // 系统ID
+}
+
+// 复活Reply
+message ReviveReply {
+  int64 curr_revive_count                = 1;  // 当前复活次数
+  int64 max_revive_count                 = 2;  // 最大复活次数
+  repeated corepb.Item next_revive_items = 3;  // 下次复活需要的道具
+}
+
+message SkillUseCnt {
+  int64 skill_id   = 1;  // 技能id
+  int64 use_cnt    = 2;  // 技能使用次数
+  int64 skill_type = 3;  // 技能类型
+}
+
+message BuddySkillsUseInfo {
+  int64 buddy_id                   = 1;  // 使用的角色id
+  repeated SkillUseCnt skill_count = 2;  // 技能具体使用次数
+}
+
+message PlayerStatisticsInfo {
+  uint64 idx                                    = 1;  //玩家的idx
+  int64 gid                                     = 2;  //玩家的gid
+  repeated BuddySkillsUseInfo buddy_skills_info = 3;  // 玩家的技能使用情况，每个伙伴单独统计
+}
+
+// 对局玩家信息统计
+message PlayerStatisticsInfoRequest {
+  corepb.FightType type                           = 1;  // 关卡类型
+  int64 dungeon_id                                = 2;  // 关卡ID
+  int64 game_trace_id                             = 3;  // 游戏traceID
+  int64 data1                                     = 4;  //根据fighttype，含义不同
+  repeated PlayerStatisticsInfo player_statistics = 5;  // 所有玩家的统计信息，一个玩家对应一条数据
+}
+
+message PlayerStatisticsInfoReply {
+  int32 ret = 1;  //返回结果
+}
+
+message CutsceneReportRequest {
+  corepb.FightType type = 1;  // 关卡类型
+  int64 dungeon_id      = 2;  // 关卡ID
+  // string played_cutscene = 3; // 播放了的剧情名 - 废弃
+  string cutscene = 4;  // 剧情名
+  bool played     = 5;  // true:完整播放，false:跳过
+  bool first_time = 6;  // 是否是首次
+}
+
+message CutsceneReportReply {}
+
+message ReviveV2ItemInfoRequest {
+  corepb.FightType type = 1;  // 关卡类型
+  int64 dungeon_id      = 2;  // 关卡ID
+  int64 system_id       = 3;  // 系统ID
+}
+
+message ReviveV2ItemInfo {
+  int64 item_id           = 1;  // 道具id 优先显示料理
+  int64 needed_count      = 2;  // 需要的个数
+  int64 owned_count       = 3;  // 拥有的个数
+  int64 curr_revive_count = 4;  // 当前复活次数
+  int64 max_revive_count  = 5;  // 最大复活次数
+}
+
+message ReviveV2ItemInfoReply {
+  repeated ReviveV2ItemInfo items = 1;  // 复活可以使用的道具
+}
+
+message ReviveV2Request {
+  int64 item_id         = 1;
+  corepb.FightType type = 2;  // 关卡类型
+  int64 dungeon_id      = 3;  // 关卡ID
+  int64 system_id       = 4;  // 系统ID
+}
+
+message CuisineParam {
+  int64 buff_id = 1;  // buff_id
+  int64 hp      = 2;  // 恢复的生命值
+  int64 hp_perc = 3;  // 恢复生命值的万分比
+}
+
+message ReviveV2Reply {
+  // 如果是金币复活，则满血复活
+  // 如果是料理复活，则有其他规则
+  int64 item_id = 1;
+  oneof revive_param {
+    CuisineParam cuisine_param = 2;  // 料理复活的参数
+  }
+}
+
+// 战斗动作详情
+message FightDetailRequest {
+  corepb.PlayerFightActDetail report_info   = 1;  // 通用信息上报
+  corepb.MonsterFightActDetail monster_info = 2;  // 怪物信息上报
+}
+
+message FightDetailReply {}
+
+message GetFightConfigRequest {}
+
+message GetFightConfigReply {
+  corepb.FightConfig fight_config = 1;
+}
+
+message SetSupportBuddySmartTurnRequest {
+  bool support_buddy_smart_turn = 1;  // 援护是否智能转向
+}
+
+message SetSupportBuddySmartTurnReply {}
+
+message SetFightConfigRequest {
+  repeated corepb.FightConfigParam configs = 1;  // 设置项，只需要传改变的一条或多条就行了，不需要全部的
+}
+
+message SetFightConfigReply {}

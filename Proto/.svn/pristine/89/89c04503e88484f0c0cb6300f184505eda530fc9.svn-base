@@ -1,0 +1,62 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0091pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0091pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/fight_common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+  bool is_need_not_passed_quest_rp   = 2;  // 是否需要显示未通关关卡红点
+}
+
+service CSAct0091Service {
+
+  rpc GetQuestInfos(GetQuestInfosRequest) returns (GetQuestInfosReply);  // 获取关卡信息
+
+  rpc GameStart(GameStartRequest) returns (GameStartReply);  // 游戏开始
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);        // 游戏结束
+}
+
+message GetQuestInfosRequest {}
+message GetQuestInfosReply {
+  message QuestInfo {
+    int64 quest_id   = 1;  // 关卡 ID
+    bool is_unlocked = 2;  // 是否已解锁
+    bool is_new      = 3;  // "新" tag
+    bool is_passed   = 4;  // 是否已通过
+
+    int64 unlock_time_unix   = 5;  // 解锁时间
+    string quest_name        = 6;  // 关卡名称
+    repeated int64 badge_ids = 7;  // 此关卡带入的强者之证 ID 列表
+  }
+
+  repeated QuestInfo quest_infos = 1;  // 关卡信息
+  repeated int64 badge_ids       = 2;  // 关卡展示界面所有强者之证 ID 列表
+}
+
+// 游戏开始
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+// 游戏结束
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡 ID
+  int64 kill_count              = 2;  // 击杀数量
+  corepb.FightResultType result = 3;  // 战斗结果
+  int32 reason                  = 4;  // 结算原因:EGameResultReason
+}
+message GameEndReply {
+  bool is_passed                      = 1;  // 是否通关
+  int64 kill_count                    = 2;  // 击杀数量
+  corepb.GameOverMessage over_message = 3;
+}

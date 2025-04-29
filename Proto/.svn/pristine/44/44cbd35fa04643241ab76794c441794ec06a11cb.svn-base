@@ -1,0 +1,142 @@
+// cs protocol
+syntax = "proto3";
+
+package corepb;
+option go_package = "git.woa.com/red/game-proto/corepb";
+
+import "google/protobuf/any.proto";
+
+message LoadoutProfile {
+  int64 min_fight_buddies   = 1;   // 最少要选择的出战伙伴数
+  int64 max_fight_buddies   = 2;   // 最多可选择的出战伙伴数
+  int64 min_support_buddies = 3;   // 最少要选择的援护伙伴数
+  int64 max_support_buddies = 4;   // 最多可选择的援护伙伴数
+  int64 min_dials           = 5;   // 最少要选择的空岛贝数
+  int64 max_dials           = 6;   // 最多可选择的空岛贝数
+  int64 min_helper_buddies  = 10;  // 最少要选择的助战伙伴数
+  int64 max_helper_buddies  = 11;  // 最多可选择的助战伙伴数
+  int64 min_warships        = 12;  // 最少要选择的舰船数
+  int64 max_warships        = 13;  // 最多可选择的舰船数
+  int64 min_ship_skills     = 15;  // 最少要选择的战船技
+  int64 max_ship_skills     = 16;  // 最多可选择的战船技
+
+  repeated LoadoutBuddyCandidate buddy_candidates          = 7;   // 候选伙伴列表
+  repeated LoadoutDialCandidate dial_candidates            = 8;   // 候选空岛贝列表
+  repeated LoadoutWarshipCandidate warship_candidates      = 14;  // 候选舰船列表
+  repeated LoadoutShipSkillCandidate ship_skill_candidates = 17;  // 候选战船技列表
+
+  bool permit_buddy_reuse = 9;  // 是否允许出战与援护复用同样伙伴
+
+  int64 remain_borrowing_times = 18;  // 剩余可借用次数
+  int64 total_borrowing_times  = 19;  // 总可借用次数
+
+  FastDuelLadderProfile fast_duel_ladder_profile = 20;  //  1v1极速单挑段位赛候选阵容配置
+}
+
+// FastDuelLadderProfile 1v1极速单挑段位赛候选阵容
+message FastDuelLadderProfile {
+  int64 min_candidates      = 1;   // 最小候选阵容数；
+  int64 max_candidates      = 2;   // 最大候选阵容数；
+  int64 min_banpick_buddies = 3;   // 1V1极速单挑段位赛最少可以ban伙伴数
+  int64 max_banpick_buddies = 4;   // 1V1极速单挑段位赛最多可以ban伙伴数
+  int64 min_fight_buddies   = 5;   // 每套候选阵容最少要选择的出站伙伴数
+  int64 max_fight_buddies   = 6;   // 每套候选阵容最多要选择的出站伙伴数
+  int64 min_support_buddies = 7;   // 每套候选阵容最少要选择的援护伙伴数
+  int64 max_support_buddies = 8;   // 每套候选阵容最多可选择的援护伙伴数
+  int64 min_dials           = 9;   // 每套候选阵容最少要选择的空岛贝数
+  int64 max_dials           = 10;  // 每套候选阵容最多可选择的空岛贝数
+}
+
+message FashionCandidate {
+  int64 fashion_id = 1;  // 时装ID
+  int64 expire_at  = 2;  // 过期时间(unix second)，默认为0表示永久
+}
+
+message LoadoutBuddyCandidate {
+  int64 buddy_id                               = 1;
+  bool can_fight                               = 2;   // 可以作为出战伙伴
+  bool can_support                             = 3;   // 可以作为援护伙伴
+  bool can_help                                = 4;   // 可以作为助战伙伴
+  int64 expire_at                              = 5;   // 过期时间(unix second)，默认为0表示永久
+  bool disabled                                = 6;   // 是否禁用
+  int64 support_slots                          = 7;   // 如果用作援护伙伴，占用槽位数
+  int64 stars                                  = 10;  // 星级
+  repeated int64 has_friendship_to             = 11;  // 如果是出战伙伴，哪些援护伙伴可以对其使用友情技
+  repeated int64 has_support_friendship_to     = 14;  // 如果是援护伙伴，哪些援护伙伴可以对其使用友情技
+  bool is_limitfree                            = 12;  // 是否限免伙伴
+  bool is_limitfree_support                    = 13;  // 是否限免援护
+  bool is_special                              = 15;  // 是否特殊伙伴（自带空岛贝）
+  bool is_new_fight                            = 16;  // 是否包含「新」出战伙伴标识
+  bool is_new_support                          = 17;  // 是否包含「新」援护伙伴标识
+  bool is_task_buddy                           = 18;  // 是否竞技场任务伙伴 (包含「任务」标识)
+  bool dead                                    = 19;  // 是否死亡，如果死亡则显示待复活，不可选
+  bool recommended                             = 20;  // 是否为推荐伙伴
+  repeated int64 limitfree_act_ids             = 21;  // 限免活动 ID
+  repeated int64 belong_act_ids                = 22;  // 所属活动 ID
+  bool is_story_buddy                          = 23;  // 是否剧情伙伴
+  bool is_borrowing_buddy                      = 24;  // 是否借用伙伴
+  int64 fashion_id                             = 25;  // 伙伴时装id
+  repeated FashionCandidate fashion_candidates = 26;  // 候选时装列表
+}
+
+message LoadoutDialCandidate {
+  int64 dial_id     = 1;
+  int64 expire_at   = 2;   // 过期时间(unix second)，默认为0表示永久
+  bool disabled     = 3;   // 是否禁用
+  int64 level       = 10;  // 等级
+  bool is_limitfree = 11;  // 是否限免
+  bool is_new       = 12;  // 是否包含「新」标识
+}
+
+message LoadoutWarshipCandidate {
+  int64 warship_id  = 1;
+  int64 expire_at   = 2;  // 过期时间(unix second)，默认为0表示永久
+  bool disabled     = 3;  // 是否禁用
+  bool is_new       = 4;  // 是否包含「新」标识
+  int64 stars       = 5;  // 战船星级
+  bool is_limitfree = 6;  // 是否限免
+  int64 quality     = 7;  // 品质
+}
+
+message LoadoutShipSkillCandidate {
+  int64 skill_id    = 1;
+  bool is_new       = 2;  // 是否包含「新」标识
+  bool is_limitfree = 3;  // 是否限免
+  bool disabled     = 4;  // 是否禁用
+}
+
+message Loadout {
+  repeated LoadoutBuddyChoice fight_buddy_choices    = 1;  // 所选择的出战伙伴组成（注意顺序）
+  repeated LoadoutBuddyChoice support_buddy_choices  = 2;  // 所选择的援护伙伴组成（注意顺序）
+  repeated LoadoutDialChoice dial_choices            = 3;  // 所选择的空岛贝组成（注意顺序）
+  repeated LoadoutBuddyChoice helper_buddy_choices   = 4;  // 所选择的助战伙伴组成（注意顺序）
+  repeated LoadoutWarshipChoice warship_choices      = 5;  // 所选择的战船组成（注意顺序）
+  repeated LoadoutShipSkillChoice ship_skill_choices = 6;  // 所选择的战船技组成（注意顺序）
+  repeated LoadoutBanpickChoice banpick_choices      = 7;  // 所选择的禁选伙伴组成（注意顺序）
+}
+
+message LoadoutBanpickChoice {
+  int64 buddy_id = 1;  // 伙伴 ID
+}
+
+message LoadoutBuddyChoice {
+  int64 buddy_id      = 1;   // 伙伴 ID
+  int64 buddy_res_seq = 2;   // 伙伴资源的序号（双人伙伴用）
+  bool use_friendship = 10;  // 是否要使用友情技
+  int64 fashion_id    = 11;  // 伙伴时装id
+}
+
+message LoadoutDialChoice {
+  int64 dial_id      = 1;  // 空岛贝 ID
+  int32 pos          = 2;  // 空岛贝位置
+  int64 adjust_level = 3;  // 调整后的空岛贝等级（非0则以这个值为准）
+}
+
+message LoadoutWarshipChoice {
+  int64 warship_id = 1;  // 战船 ID
+}
+
+message LoadoutShipSkillChoice {
+  int64 skill_id = 1;  // 战船技 ID
+  int32 pos      = 2;  // 战船技位置
+}

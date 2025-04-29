@@ -1,0 +1,13 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0106pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0106pb";
+
+import "corepb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated corepb.Item rewards = 1;  // 展示奖励
+}

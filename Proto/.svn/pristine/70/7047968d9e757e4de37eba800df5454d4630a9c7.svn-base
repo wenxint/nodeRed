@@ -1,0 +1,142 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0152pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0152pb";
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "corepb/loadout_comm.proto";
+
+service CSAct0152Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  rpc GameRaid(GameRaidRequest) returns (GameRaidReply);
+  // 获取阵容信息
+  rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);
+  // 设置阵容
+  rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 current_level_id = 1;  // 当前关卡id
+  int64 rank_id          = 2;  // 当前排名所属排名id
+
+  message RewardInfo {
+    int64 next_level = 1;  // 排名下一档位关卡数
+    message RankReward {
+      int64 rank_id                               = 1;  // 排名id
+      repeated corepb.Item rewards                = 2;  // 排名奖励
+      repeated corepb.Item last_day_extra_rewards = 3;  // 最后一日额外排名奖励励
+    }
+    repeated RankReward rank_rewards = 2;  // 排名奖励
+  }
+  RewardInfo reward_info = 3;  // 当前排名奖励信息
+
+  message TimeConfig {
+    int64 can_fight_time_begin_at_unix = 1;  // 战斗开始时间(时间戳)
+    int64 can_fight_time_end_at_unix   = 2;  // 战斗结束时间(时间戳)
+    int64 settle_time_begin_sec        = 3;  // 结算开始时间(一天中的第x秒 hh:mm:ss -> hh*3600+mm*60+ss)
+    int64 settle_time_end_sec          = 4;  // 结算结束时间(一天中的第x秒 hh:mm:ss -> hh*3600+mm*60+ss)
+  }
+  TimeConfig time_config = 4;  // 时间配置
+
+  RankInfo rank_info = 5;  // 排名信息
+
+  int64 current_level_pass_person_count = 6;  // 废弃-当前关卡通关人数
+
+  string rank_instance = 7;  // 排名实例
+
+  // message FightAgainPackWeight {
+  //   int64 fight_again_count = 1;  // 战斗次数
+  //   int64 rate_percent      = 2;  // 权重
+  // }
+  // repeated FightAgainPackWeight fight_again_pack_weights = 8;   // 战斗次数权重
+
+  int64 fight_again_count    = 9;   // 再战次数
+  int64 skip_level_count     = 10;  // 能跳的关卡数量
+  int64 max_skip_level_count = 11;  // 最大跳关数量
+
+  map<int64, int64> level_pass_person_count = 12;  // 关卡通关人数
+  int64 badge_count_warn                    = 13;  // 徽章数提醒
+  bool can_fight                            = 14;  // 是否可以战斗
+  int64 act_fc                              = 15;  // 本活动的赏金
+  int64 accumulated_pack_max_rate_count     = 16;  // 累计最大概率掉落的次数
+
+  message PackWeight {
+    int64 fight_day    = 1;  // 天数
+    int64 rate_percent = 2;  // 权重
+  }
+  repeated PackWeight pack_weights = 17;  // 掉落包权重
+}
+
+message RankInfo {
+  enum RankType {
+    RANK_TYPE_UNKNOWN = 0;
+    RANK_TYPE_VALUE   = 1;  // 名次
+    RANK_TYPE_RANGE   = 2;  // 区间
+  }
+  int64 rank_id              = 1;  // 当前排名所属排名id (-1 则表示未上榜，下面的数据都不生效)
+  RankType rank_type         = 2;  // 排名类型
+  int64 my_rank_permille     = 3;  // 我的排名千分比
+  int64 my_rank              = 4;  // 当前具体名次(1 - N)
+  int64 next_level_rank_rank = 5;  // 排名下一档位排名(1 - N)
+  int64 next_level           = 6;  // 排名下一档位关卡数
+}
+
+message GameStartRequest {
+  int64 level = 1;  // 关卡id
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 2;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  corepb.FightResultType result   = 1;  // 战斗结果
+  int32 reason                    = 2;  // 结算原因:EGameResultReason
+  bytes dungeon_record_bytes      = 3;  // 战斗对局数据，校验用
+  int64 normal_monster_drop_count = 4;  // 普通怪物包数量
+  int64 elite_monster_drop_count  = 5;  // 精英怪物包数量
+  int64 boss_monster_drop_count   = 6;  // 首领怪物包数量
+  repeated EventDrop event_drops  = 7;  // 事件掉落
+}
+
+message EventDrop {
+  int64 id    = 1;  // 事件类型id
+  int64 count = 2;  // 掉落数量
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;  // 游戏结束消息
+  repeated corepb.Item awards         = 2;  // 奖励
+  int64 first_pass_ranking            = 3;  // 首通排名
+  bool is_badge_over_limit            = 4;  // 是否超过背包上限
+  int64 auto_next_fight_level         = 5;  // 自动挑战的下一关卡
+}
+
+message GameRaidRequest {}
+
+message GameRaidReply {
+  repeated corepb.Item awards = 1;  // 奖励
+  int64 skip_level_count      = 3;  // 能跳的关卡数量
+  int64 max_skip_level_count  = 4;  // 最大跳关数量
+  bool is_badge_over_limit    = 5;  // 是否超过背包上限
+}
+
+message LoadoutInfoRequest {
+  string loadout_type = 1;  // 阵容类型，目前直接传 "act0125_loadout"
+}
+
+message LoadoutInfoReply {
+  corepb.LoadoutProfile profile = 1;  // 阵容配置
+  corepb.Loadout loadout        = 2;  // 阵容
+}
+
+message ApplyLoadoutRequest {
+  corepb.Loadout loadout = 1;  // 阵容
+}
+
+message ApplyLoadoutReply {}

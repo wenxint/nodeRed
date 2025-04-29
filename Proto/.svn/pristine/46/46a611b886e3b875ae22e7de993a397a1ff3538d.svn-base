@@ -1,0 +1,76 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.pvppb.casualpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pvppb/casualpb";
+
+
+import "corepb/fight_common.proto";
+
+// 竞技场娱乐赛服务
+service CasualService {
+  // Deprecated: 建议使用 loadoutpb 中的 LimitFreeInfo 协议，
+  // 娱乐赛-获取本周限免信息
+  rpc GetCasualLimitFreeInfo(GetCasualLimitFreeInfoRequest) returns (GetCasualLimitFreeInfoReply);
+  // 获取娱乐赛信息
+  rpc GetCasualInfo(GetCasualInfoRequest) returns (GetCasualInfoReply);
+  // 记录匹配模式
+  rpc RecordMatchMode(RecordMatchModeRequest) returns (RecordMatchModeReply);
+}
+
+message GetCasualLimitFreeInfoRequest {}
+
+message LimitFreeBuddy {
+  int64 buddy_id = 1;  // 伙伴ID
+  int64 star     = 2;  // 星级
+}
+
+message LimitFreeDial {
+  int64 dial_id                = 1;  // 空岛贝ID
+  int64 level                  = 2;  // 空岛贝等级
+  corepb.FightSkill skill_info = 3;  // 技能相关信息
+}
+
+message GetCasualLimitFreeInfoReply {
+  reserved 1;
+
+  repeated LimitFreeBuddy buddies  = 2;  // 限免伙伴列表
+  repeated LimitFreeBuddy supports = 3;  // 限免援护列表
+  repeated LimitFreeDial dials     = 4;  // 限免空岛贝列表
+  string tips                      = 5;  // 限免提示
+}
+
+message GetCasualInfoRequest {}
+message GetCasualInfoReply {
+  int64 punish_end_ts       = 1;  // 战斗消极惩罚结束时间戳
+  bool disable_cancel_match = 2;  // 是否禁止取消匹配
+  int64 win_counts          = 3;  // 胜场数
+  int64 total_counts        = 4;  // 总场数
+
+  FastDuelStatus fast_duel_status = 5;  // 极速单挑状态
+  MatchMode match_mode            = 6;  // 匹配模式，如果极速单挑关闭，该模式会自动切换为普通娱乐赛模式
+  int64 fast_duel_punish_end_ts   = 7;  // 极速单挑惩罚结束时间戳
+
+  int64 year_id    = 8;   // 当前赛年ID
+  int64 season_id  = 9;   // 当前赛季ID
+  int64 comp_level = 10;  // 当前赛年竞技等级
+}
+
+message FastDuelStatus {
+  bool is_open = 1;  // 极速单挑是否开启
+
+  int64 open_at   = 2;  // deprecated: 极速单挑开启时间(unix seconds)
+  int64 finish_at = 3;  // deprecated: 极速单挑结束时间(unix seconds)
+}
+
+enum MatchMode {
+  MATCH_MODE_UNKNOWN = 0;  // 未知
+  NORMAL             = 1;  // 普通娱乐赛模式
+  FAST_DUEL          = 2;  // 极速单挑模式
+}
+
+message RecordMatchModeRequest {
+  MatchMode match_mode = 1;  // 匹配模式
+}
+
+message RecordMatchModeReply {}

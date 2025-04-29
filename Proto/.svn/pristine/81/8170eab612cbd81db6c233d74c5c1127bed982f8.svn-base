@@ -1,0 +1,16 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0034pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0034pb";
+
+service CSAct0034Service {}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 group_type      = 1;  // 团本类型
+  int64 play_start_hour = 2;  // 游玩起始时间
+  int64 play_end_hour   = 3;  // 游玩结束时间
+  int64 hard_group_type = 4;  // 困难团本类型
+}

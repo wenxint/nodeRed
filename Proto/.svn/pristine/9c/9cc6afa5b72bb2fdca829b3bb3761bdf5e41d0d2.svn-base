@@ -1,0 +1,30 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.advertpb;
+
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/advertpb";
+
+service CSAdvertService {
+  rpc AdvertGetList(AdvertGetListRequest) returns (AdvertGetListReply);
+}
+
+message AdvertGetListRequest {}
+
+message AdvertGetListReply {
+  repeated AdvertInfo advert_list = 1;
+}
+
+message AdvertInfo {
+  int64 id          = 1;
+  int64 is_open     = 2;
+  int64 time_begin  = 3;
+  int64 time_end    = 4;
+  int64 order       = 5;
+  string url        = 6;
+  string desc       = 7;
+  int64 interval    = 8;
+  int64 click_type  = 9;
+  string click_tips = 10;
+  int64 click_jump  = 11;
+}

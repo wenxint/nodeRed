@@ -1,0 +1,123 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.pvppb.fightagainpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pvppb/fightagainpb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+// 竞技场再战功能
+service FightAgainService {
+  // Settings 获取再战设置
+  rpc Settings(SettingsRequest) returns (SettingsReply);
+  // SetToggle 设置再战开关
+  rpc SetToggle(SetToggleRequest) returns (SetToggleReply);
+  // SetIsSameLoadout  设置再战是否使用相同阵容
+  rpc SetIsSameLoadout(SetIsSameLoadoutRequest) returns (SetIsSameLoadoutReply);
+  // Invite 邀请再战
+  rpc Invite(InviteRequest) returns (InviteReply);
+  // Accept 接受再战邀请
+  rpc Accept(AcceptRequest) returns (AcceptReply);
+  // Reject 拒绝再战邀请
+  rpc Reject(RejectRequest) returns (RejectReply);
+  // Cancel 取消再战邀请
+  rpc Cancel(CancelRequest) returns (CancelReply);
+  // AckInviteNotify 邀请通知确认，表示收到了 notify
+  rpc AckInviteNotify(AckInviteNotifyRequest) returns (AckInviteNotifyReply);
+}
+
+message SettingsRequest {}
+
+message SettingsReply {
+  bool enable          = 1;  // 是否开启再战功能
+  bool is_same_loadout = 2;  // 再战是否使用相同阵容
+}
+
+message SetToggleRequest {
+  bool enable = 1;  // 是否开启再战功能
+}
+
+message SetToggleReply {}
+
+message SetIsSameLoadoutRequest {
+  bool is_same_loadout = 1;  // 再战是否使用相同阵容
+}
+
+message SetIsSameLoadoutReply {}
+
+message InviteRequest {
+  int64 invitee                  = 1;  // 被邀请者 gid
+  uint64 game_trace_id_caused_by = 2;  // 由哪场战斗引发的邀请
+  bool is_same_loadout           = 3;  // 再战是否使用相同阵容
+}
+
+message PlayerDisplayInfo {
+  corepb.PersonalDisplayInfo personal_info = 1;  // 个人显示信息
+  int64 ladder_score                       = 2;  // 段位分
+  int64 lobby_buddy_id                     = 3;  // 站街伙伴ID
+  int64 lobby_buddy_fashion_id             = 4;  // 站街伙伴时装ID
+}
+
+message InviteReply {
+  int64 invitation_expire_at        = 1;  // 邀请过期时间
+  PlayerDisplayInfo inviter_display = 2;  // 邀请方展示信息
+  PlayerDisplayInfo invitee_display = 3;  // 被邀方展示信息
+}
+
+message AcceptRequest {
+  int64 inviter = 1;  // 邀请者 gid
+}
+
+message AcceptReply {}
+
+message RejectRequest {
+  int64 inviter = 1;  // 邀请者 gid
+}
+
+message RejectReply {}
+
+message CancelRequest {
+  int64 invitee = 1;  // 被邀请者 gid
+}
+
+message CancelReply {}
+
+message AckInviteNotifyRequest {
+  int64 inviter = 1;  // 邀请者 gid
+}
+
+message AckInviteNotifyReply {}
+
+// 再战邀请通知，受邀方收到
+message FightAgainInviteNotify {
+  int64 inviter                     = 1;  // 邀请者 gid
+  PlayerDisplayInfo inviter_display = 2;  // 邀请方展示信息
+  PlayerDisplayInfo invitee_display = 3;  // 被邀方展示信息
+  corepb.FightType fight_type       = 4;  // 战斗类型
+  bool is_same_loadout              = 5;  // 再战是否使用相同阵容
+  int64 invitation_expire_at        = 6;  // 邀请过期时间
+}
+
+// 邀请接受通知
+message FightAgainAcceptNotify {
+  int64 invitee       = 1;  // 被邀请者 gid
+  string invitee_name = 2;  // 被邀请者名字
+}
+
+// 邀请拒绝通知
+message FightAgainRejectNotify {
+  int64 invitee       = 1;  // 被邀请者 gid
+  string invitee_name = 2;  // 被邀请者名字
+}
+
+// 告知邀请方: 被邀请方收到了邀请通知
+message FightAgainInviteeAckedNotify {
+  int64 invitee = 1;  // 被邀请者 gid
+}
+
+// 再战导致的对局，在 game start, game event, game end 中均以 PassThrough 字段透传
+message PassThrough {
+  uint64 game_trace_id_caused_by = 1;  // 由哪场战斗引发的再战
+}

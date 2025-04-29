@@ -1,0 +1,141 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.shipyardpb;
+
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/shipyardpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/specialpackpb/specialpack.proto";
+
+service CSService {
+  // 获取战船列表
+  rpc GetWarshipList(GetWarshipListRequest) returns (GetWarshipListResponse);
+  // 部件改造
+  rpc UpgradeWarshipPart(UpgradeWarshipPartRequest) returns (UpgradeWarshipPartResponse);
+  // 战船升阶
+  rpc UpgradeWarship(UpgradeWarshipRequest) returns (UpgradeWarshipResponse);
+  // 去除战船新获得标记
+  rpc CloseWarshipNewFlag(CloseWarshipNewFlagRequest) returns (CloseWarshipNewFlagReply);
+  // 获取已解锁的船灵技能
+  rpc GetAllShipSoulSkill(GetAllShipSoulSkillRequest) returns (GetAllShipSoulSkillReply);
+  // 去除船灵技能新获得标记
+  rpc CloseShipSoulSkillNewFlag(CloseShipSoulSkillNewFlagRequest) returns (CloseShipSoulSkillNewFlagReply);
+  // 检查战船部件
+  rpc CheckWarshipPart(CheckWarshipPartRequest) returns (CheckWarshipPartReply);
+}
+
+message GetWarshipListRequest {
+  bool include_not_open = 1;  // 是否包含未上架战船
+}
+
+message GetWarshipListResponse {
+  corepb.FightAttr fight_attr                             = 1;
+  repeated WarshipInfo warships                           = 2;
+  int64 fc                                                = 3;
+  int64 owned_ship_num                                    = 4;
+  int64 upgrading_ship_id                                 = 5;  // 正在改造战船ID
+  repeated zonepb.specialpackpb.SpecialPack special_packs = 6;  // 所拥有的限时礼包
+}
+
+enum WarshipState {
+  WS_UNKNOWN  = 0;  // 未定义
+  WS_LOCKED   = 1;  // 未解锁
+  WS_UNLOCKED = 2;  // 已解锁
+  WS_NOT_OPEN = 3;  // 未上架
+}
+
+enum WarshipUpgradeState {
+  WUS_UNKNOWN     = 0;  // 未定义
+  WUS_UPGRADEABLE = 1;  // 可以加固
+  WUS_FULL_LEVEL  = 2;  // 已满级
+}
+
+message WarshipPartInfo {
+  int64 id                                  = 1;  // 改造星级
+  corepb.FightAttr current_level_fight_attr = 2;  // 当前等级的战斗属性
+  corepb.FightAttr next_level_fight_attr    = 3;  // 下一等级的战斗属性
+  repeated corepb.Item items                = 4;  // 下次改造需要的道具
+}
+
+message WarshipInfo {
+  int64 id                                  = 1;   // 战船ID
+  WarshipState state                        = 2;   // 战船状态
+  int64 level                               = 3;   // 阶数
+  WarshipUpgradeState upgrade_state         = 4;   // 战船加固状态  （当state为UNLOCKED或者ONFIGHTED时，该字段才生效）
+  corepb.FightAttr fight_attr               = 5;   // 属性加成
+  int64 star                                = 6;   // 改造星级
+  repeated WarshipPartInfo parts            = 7;   // 部件
+  bool is_new                               = 8;   // 新获得标记
+  repeated corepb.Item items                = 9;   // 下次加固需要的道具
+  corepb.FightAttr current_level_fight_attr = 10;  // 当前加固等级属性加成
+  corepb.FightAttr next_level_fight_attr    = 11;  // 下一加固等级属性加成(未解锁是为满级加成属性，满级时无意义)
+  int64 max_level                           = 12;  // 最大阶数
+  int64 timestamp                           = 13;  // 获得时间
+  int64 star_item_count                     = 14;  // 改造道具数量
+}
+
+message AllWarshipInfo {
+  repeated WarshipInfo warships = 1;
+}
+
+message UpgradeWarshipPartRequest {
+  int64 id = 1;  // 战船id
+}
+
+message UpgradeWarshipPartResponse {
+  WarshipInfo changed_warship = 1;
+}
+
+message UpgradeWarshipRequest {
+  bool rapid = 2;  // 是否快速，为true且材料足够时，会直升到（(level+6)/7)*7+1级；直到道具不够，退化成每次升级1个小等级
+}
+
+message UpgradeWarshipResponse {
+  WarshipInfo changed_warship = 1;  // 加固后船只信息
+}
+
+message UnlockWarshipNtf {
+  WarshipInfo warship        = 1;
+  bool is_convert            = 2;  // 是否为重复获得（重复获得会转化为道具）
+  repeated corepb.Item items = 3;  // 获得的转化物品奖励
+}
+
+message CloseWarshipNewFlagRequest {
+  int64 id = 1;  // 战船id
+}
+
+message CloseWarshipNewFlagReply {}
+
+message GetAllShipSoulSkillRequest {}
+
+message ShipSoulSkill {
+  int64 skill_id = 1;  // 技能id
+  bool is_locked = 2;  // 是否解锁
+  bool is_new    = 3;  // 是否为新
+}
+
+message GetAllShipSoulSkillReply {
+  repeated ShipSoulSkill total = 1;  // 船灵技能
+}
+
+message UnlockShipSoulSkillNtf {
+  repeated ShipSoulSkill unlock_skill = 1;  // 解锁的船灵技能
+}
+
+message CloseShipSoulSkillNewFlagRequest {
+  repeated int64 id = 1;  // 船灵技能id
+}
+
+message CloseShipSoulSkillNewFlagReply {}
+
+message CheckWarshipPartRequest {
+  int64 id = 1;  // 战船id
+}
+
+message CheckWarshipPartReply {
+  int64 current_star   = 1;  // 当前星级 （0级表示未解锁）
+  int64 max_star       = 2;  // 最大星级
+  int64 reachable_star = 3;  // 能升到多少星级 （当未解锁时，该值无意义）
+}

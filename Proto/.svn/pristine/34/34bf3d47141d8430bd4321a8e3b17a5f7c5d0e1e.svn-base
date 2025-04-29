@@ -1,0 +1,296 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0048pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0048pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0048Service {
+  rpc SceneInfo(SceneInfoRequest) returns (SceneInfoReply);                                                        // 获取场景详情
+  rpc BlessList(BlessListRequest) returns (BlessListReply);                                                        // 祝福列表
+  rpc Bless(BlessRequest) returns (BlessReply);                                                                    // 发送祝福
+  rpc FriendList(FriendListRequest) returns (FriendListReply);                                                     // 发送对象好友列表
+  rpc BlessStyle(BlessStyleRequest) returns (BlessStyleReply);                                                     // 祝福样式
+  rpc BulletScreen(BulletScreenRequest) returns (BulletScreenReply);                                               // 弹幕列表
+  rpc DressList(DressListRequest) returns (DressListReply);                                                        // 装扮列表
+  rpc Dress(DressRequest) returns (DressReply);                                                                    // 装扮设置
+  rpc FinishOpeningPlotPlay(FinishOpeningPlotPlayRequest) returns (FinishOpeningPlotPlayReply);                    // 播放完开场剧情时调用
+  rpc GiftDetailQuery(GiftDetailQueryRequest) returns (GiftDetailQueryReply);                                      // 伴手礼详情查询
+  rpc GiftSubmit(GiftSubmitRequest) returns (GiftSubmitReply);                                                     // 伴手礼提交
+  rpc SpringFestivalGiftInfoQuery(SpringFestivalGiftInfoQueryRequest) returns (SpringFestivalGiftInfoQueryReply);  // 新春送礼详情
+  rpc SpringFestivalGiftClaim(SpringFestivalGiftClaimRequest) returns (SpringFestivalGiftClaimReply);              // 新春礼物领取
+  rpc AllTaskInfoQuery(AllTaskInfoQueryRequest) returns (AllTaskInfoQueryReply);                                   // 所有任务详情
+  rpc TaskClaimReward(TaskClaimRewardRequest) returns (TaskClaimRewardReply);                                      // 任务领奖
+  rpc RankInfoQuery(RankInfoQueryRequest) returns (RankInfoQueryReply);                                            // 排行榜详情查询
+  rpc GetActSpecialEndTime(GetActSpecialEndTimeRequest) returns (GetActSpecialEndTimeReply);  // 获取当前活动特有的结束时间 和Act.xlxs中配置的end_time不是一回事儿 这个是当前活动的特有逻辑
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated corepb.Item show_rewards = 1;  // 在活动页展示的奖励
+}
+
+message SceneInfoRequest {}
+
+message DressInfo {
+  int64 area_id  = 1;  // 区域id
+  int64 dress_id = 2;  // 装扮id
+}
+
+message SceneInfoReply {
+  int64 atmosphere               = 1;  // 氛围值
+  int64 level                    = 2;  // 当前氛围值等级
+  int64 contribution             = 3;  // 个人贡献
+  bool is_start_plot             = 4;  // 是否播放过开场剧情
+  bool spring_dress_open         = 5;  // 新春装扮是否开启
+  repeated DressInfo dress_info  = 6;  // 自定义装扮信息
+  int64 new_bless_num            = 7;  // 新的祝福个数
+  int64 level_before             = 8;  // 之前的氛围等级
+  repeated corepb.Item gift_info = 9;  // 伴手礼信息
+}
+
+enum BlessType {
+  TYPE_UNKNOWN = 0;  // 默认值
+  TYPE_GUILD   = 1;  // 同盟
+  TYPE_FRIEND  = 2;  // 好友
+  TYPE_BUDDY   = 3;  // 伙伴
+}
+
+// 祝福列表
+message BlessListRequest {}
+
+message BlessInfo {
+  int64 from_gid                           = 1;  // 发送人
+  int64 from_buddy_id                      = 2;  // 系统发送 伙伴id
+  corepb.PersonalDisplayInfo personal_info = 3;  // 个人显示信息
+  BlessType type                           = 4;  // 是同盟发送还是好友发送
+  int64 content_id                         = 5;  // 内容id
+  string content                           = 6;  // 系统发送的祝福内容
+  int64 style_id                           = 7;  // 样式id
+}
+
+message BlessListReply {
+  repeated BlessInfo list = 1;
+  int64 bless_count       = 2;  // 祝福总数量 包含已读和未读
+}
+
+// 发送祝福
+message BlessRequest {
+  int64 to_gid      = 1;  // 发给接受者
+  int64 to_guild_id = 2;  // 同盟
+  BlessType type    = 3;  // 是同盟发送还是好友发送
+  int64 content_id  = 4;  // 内容id
+  int64 style_id    = 5;  // 样式id
+}
+
+message BlessReply {}
+
+// 发送对象好友列表
+message FriendListRequest {}
+
+message FriendInfo {
+  int64 gid                                = 1;
+  corepb.PersonalDisplayInfo personal_info = 2;  // 个人显示信息
+  string guild_name                        = 3;  // 所属同盟
+}
+
+message FriendListReply {
+  repeated FriendInfo friends = 1;
+}
+
+// 祝福样式，包括解锁状态
+message BlessStyleRequest {}
+
+message BlessStyleInfo {
+  int64 style_id            = 1;  // 样式id
+  bool is_unlock            = 2;  // 是否解锁
+  int64 unlock_contribution = 3;  // 解锁需要的贡献值
+}
+
+message BlessStyleReply {
+  repeated BlessStyleInfo list = 1;
+}
+
+// 弹幕
+message BulletScreenRequest {}
+
+message BulletScreenReply {
+  repeated BlessInfo list = 1;
+}
+
+// 装扮配置列表
+message DressListRequest {}
+
+message DressConfig {
+  int64 id           = 1;  // 配置id
+  string name        = 2;  // name
+  bool is_inuse      = 3;  // 是否在使用中
+  bool is_unlock     = 4;  // 是否解锁
+  int64 unlock_level = 5;  // 解锁需要的氛围等级
+  int64 area_id      = 6;  // 区域id
+}
+
+message DressListReply {
+  repeated DressConfig dress_list = 1;  // 自定义装扮配置信息
+}
+
+// 装扮设置
+message DressRequest {
+  int64 area_id  = 1;  // 区域id
+  int64 dress_id = 2;  // 装扮id
+}
+
+message DressReply {}
+
+// notify 装扮设置成功，发送给同盟其他成员
+message DirectBuySuccNotify {
+  int64 area_id  = 1;  // 区域id
+  int64 dress_id = 2;  // 装扮id
+}
+
+// 开场剧情播放完成
+message FinishOpeningPlotPlayRequest {}
+
+message FinishOpeningPlotPlayReply {}
+
+// 伴手礼详情
+message GiftDetailQueryRequest {}
+
+message GiftDetailQueryReply {
+  int64 guild_atmosphere       = 1;  // 当前同盟氛围值
+  int64 guild_atmosphere_level = 2;  // 当前同盟氛围等级
+  repeated corepb.Item gifts   = 3;  // 伴手礼信息
+  int64 next_level_atmosphere  = 4;  // 下一氛围等级的目标值
+}
+
+// 伴手礼提交
+message GiftSubmitRequest {}
+
+message GiftSubmitReply {
+  int64 guild_atmosphere       = 1;  // 扣除伴手礼后的同盟氛围值
+  int64 guild_atmosphere_level = 2;  // 扣除伴手礼后的同盟氛围等级
+  repeated corepb.Item gifts   = 3;  // 伴手礼信息
+  int64 next_level_atmosphere  = 4;  // 下一氛围等级的目标值
+}
+
+// 新春送礼详情
+message SpringFestivalGiftInfoQueryRequest {}
+
+message SpringFestivalGiftInfoQueryReply {
+  bool already_claim         = 1;  // 是否已经领取奖励
+  repeated corepb.Item gifts = 2;  // 新春礼物信息
+}
+
+// 新春送礼领取
+message SpringFestivalGiftClaimRequest {}
+
+message SpringFestivalGiftClaimReply {
+  repeated corepb.Item gifts = 1;  // 新春礼物信息
+}
+
+// 任务详情
+message AllTaskInfoQueryRequest {}
+
+message RankTaskInfo {
+  bool in_gear                 = 1;  // 是否在当前档位
+  string desc                  = 2;  // 描述信息
+  repeated corepb.Item rewards = 3;  // 对应的奖励信息
+}
+
+message TaskCategoryDetail {
+  repeated actpb.commonpb.Task tasks = 1;  // 对应分类下所有任务详情
+  repeated RankTaskInfo ranks        = 2;  // 排名信息
+}
+
+message AllTaskInfoQueryReply {
+  map<int64, TaskCategoryDetail> tasks = 1;  // 所有任务详情 key为任务的分类(同盟任务/同盟排名/个人任务)
+}
+
+// 任务领奖
+message TaskClaimRewardRequest {
+  int32 task_id       = 1;  // 需要领奖的任务ID
+  int64 task_category = 2;  // 任务分类
+}
+
+message TaskClaimRewardReply {
+  repeated int64 claimed_task_ids = 1;  // 所有领奖的任务ID
+  repeated corepb.Item rewards    = 2;  // 所有领取的奖励信息
+}
+
+// 排行榜详情
+enum RankType {
+  RANK_UNKNOWN             = 0;  // 默认值 暂时无使用
+  PERSON_RANK              = 1;  // 个人排行榜
+  GUILD_RANK               = 2;  // 同盟排行榜
+  PERSON_GUILD_FILTER_RANK = 3;  // 个人榜单中过滤同盟成员榜单
+}
+
+message RankInfoQueryRequest {
+  RankType rank_type = 1;  // 查询的榜单类型 个人榜单/同盟榜单
+  int64 begin_rank   = 2;  // 开始查询名次
+  int64 end_rank     = 3;  // 结束查询名次
+}
+
+message GuildRankInfo {
+  int64 rank                             = 1;   // 名次
+  string guild_name                      = 2;   // 同盟名字
+  corepb.PersonalDisplayInfo player_info = 3;   // 玩家信息
+  int64 guild_cur_members                = 4;   // 同盟当前成员数
+  int64 guild_total_memebers             = 5;   // 同盟成员数上限
+  int64 guild_level                      = 6;   // 同盟等级
+  int64 guild_contribution               = 7;   // 同盟总共贡献值
+  int64 guild_flag                       = 8;   // 同盟旗帜
+  int64 gid                              = 9;   // 玩家gid
+  bool is_ranking_anonymous              = 10;  // 是否排行榜匿名
+  int64 guild_id                         = 11;  // 同盟ID
+}
+
+message GuildRankDetail {
+  GuildRankInfo self                = 1;  // 玩家所在同盟的排名信息
+  repeated GuildRankInfo rank_infos = 2;  // 同盟榜单详情
+  int64 max_rank                    = 3;  // 榜单最大显示名次
+}
+
+message PersonRankInfo {
+  int64 rank                             = 1;  // 名次
+  corepb.PersonalDisplayInfo player_info = 2;  // 玩家信息
+  string guild_name                      = 3;  // 玩家所属同盟名字
+  int64 fc                               = 4;  // 玩家战力
+  int64 contribution                     = 5;  // 玩家贡献值
+  int64 gid                              = 6;  // 玩家gid
+  bool is_ranking_anonymous              = 7;  // 是否排行榜匿名
+  int64 guild_id                         = 8;  // 同盟ID
+}
+
+message PersonRankDetail {
+  PersonRankInfo self                = 1;  // 玩家所在个人榜单的排名信息
+  repeated PersonRankInfo rank_infos = 2;  // 个人榜单详情
+  int64 max_rank                     = 3;  // 榜单最大显示名次
+}
+
+message RankInfoQueryReply {
+  GuildRankDetail guild_rank_detail   = 1;  // 同盟榜单信息
+  PersonRankDetail person_rank_detail = 2;  // 个人榜单信息
+}
+
+// 氛围等级变化的通知
+message GuildAtmosphereLevelChangeNotify {
+  int64 before_level = 1;  // 变化之前的等级
+  int64 after_level  = 2;  // 变化之后的等级
+}
+
+message GetActSpecialEndTimeRequest {}
+
+message GetActSpecialEndTimeReply {
+  int64 act_special_end_time = 1;  // 当前活动特有的结束时间
+}
+
+// 同盟氛围值变化通知
+message GuildAtmosphereChangeNotify {
+  int64 before_atmosphere = 1;  // 变化之前的同盟氛围值
+  int64 after_atmosphere  = 2;  // 变化之后的同盟氛围值
+}

@@ -1,0 +1,58 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.fashionpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/fashionpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/dressingpb/dressing.proto";
+
+// FashionService 时装系统服务
+service FashionService {
+  // FashionInfos 获取时装信息
+  rpc FashionInfos(FashionInfosRequest) returns (FashionInfosReply);
+  // FashionInfoByItemID 获取单个时装信息
+  rpc FashionInfoByItemID(FashionInfoByItemIDRequest) returns (FashionInfoByItemIDReply);
+  // UseFashion 使用时装
+  rpc UseFashion(UseFashionRequest) returns (UseFashionReply);
+  // UnloadFashion 卸载时装
+  rpc UnloadFashion(UnloadFashionRequest) returns (UnloadFashionReply);
+}
+
+message FashionInfosRequest {}
+
+message FashionInfosReply {
+  repeated FashionInfo fashion_infos = 1;  // 玩家拥有的时装列表
+}
+
+message FashionInfoByItemIDRequest {
+  int64 fashion_item_id = 1;  // 时装道具ID
+}
+
+message FashionInfoByItemIDReply {
+  FashionInfo fashion           = 1;  // 时装信息
+  zonepb.dressingpb.TimeInfo time_info = 2;  // 配置限时信息
+}
+
+message FashionInfo {
+  int64 id                 = 1;  // 时装ID
+  bool unlocked            = 2;  // 是否获得
+  bool is_used             = 3;  // 是否使用
+  int64 expire_at          = 4;  // 到期时间(unix second)，若为0则表示永久
+  corepb.FightAttr attr    = 5;  // 属性加成
+  repeated int64 buddy_ids = 6;  // 可装备的伙伴ID列表
+}
+
+message UseFashionRequest {
+  int64 buddy_id   = 1;  // 伙伴ID
+  int64 fashion_id = 2;  // 时装ID
+}
+
+message UseFashionReply {}
+
+message UnloadFashionRequest {
+  int64 buddy_id = 1;  // 伙伴ID
+}
+
+message UnloadFashionReply {}

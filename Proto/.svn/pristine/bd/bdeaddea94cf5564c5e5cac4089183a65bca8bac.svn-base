@@ -1,0 +1,62 @@
+// cs protocol
+syntax = "proto3";
+
+package raidpb;
+option go_package = "git.woa.com/red/raidsvr/pkg/proto/raidpb";
+
+enum RaidErr {
+  OK                              = 0;        // 成功
+  CancelMatchFailed               = 1240001;  // 取消匹配失败，实际取消时已经匹配成功
+  MemberNotEnough                 = 1240002;  // 成员不足
+  NoTeamLeader                    = 1240003;  // 没有队长
+  NotAllReady                     = 1240004;  // 有人未准备
+  NotGroupOwner                   = 1240005;  // 不是团本的房主
+  InvalidPasswdSetting            = 1240006;  // 无效的密码设置
+  GroupAlreayFull                 = 1240007;  // 团本已满
+  GroupAlreadyStart               = 1240008;  // 团本已开始
+  FCNotEnough                     = 1240009;  // 战力不足
+  EquipScoreNotEnough             = 1240010;  // 装等值不足
+  PlayerLevelNotEnough            = 1240011;  // 玩家等级不足
+  PasswdError                     = 1240012;  // 密码错误
+  NoInvitePermission              = 1240013;  // 没有邀请权限
+  AlreadyInvited                  = 1240014;  // 已经邀请
+  InInviteCD                      = 1240015;  // 邀请CD中
+  PlayerNotReadyForFight          = 1240016;  // 玩家状态不对（未从结算界面回来），不能开战，不能进入下一个阶段
+  DungeonNotOpen                  = 1240017;  // 副本未开放
+  DungeonAlreadyDone              = 1240018;  // 副本已完成挑战
+  DungeonToMaxTeams               = 1240019;  // 副本已达到最大同时挑战队伍数
+  DungeonInCD                     = 1240020;  // 副本处于CD中
+  AlreadyInGroup                  = 1240021;  // 已经在团本中
+  FightBuddyConflict              = 1240022;  // 伙伴冲突（重复）
+  InviteTargetAlreadyInGroup      = 1240023;  // 邀请的对象已经在房间里
+  InThisGroupBlacklist            = 1240024;  // 在这个房间的黑名单中（踢出CD中）
+  NotInThisGroup                  = 1240025;  // 不在这个团本中
+  GroupNotExist                   = 1240026;  // 团本不存在
+  AlreadyFlipByOther              = 1240027;  // 已经被其他人翻牌
+  AlreadyFlip                     = 1240028;  // 已经翻过牌
+  FightBuddyConflictWhenStartRaid = 1240029;  // 开团时伙伴冲突
+  ClientVersionNotMatch           = 1240030;  // 客户端版本号不匹配
+  InviteTargetNotOnline           = 1240031;  // 邀请的对象不在线
+  InviteTargetInPunishTime        = 1240032;  // 邀请的对象在惩罚时间内
+  InviteTargetNotUnlockThisRaid   = 1240033;  // 邀请的对象未解锁此团本
+  InPunishTime                    = 1240034;  // 在惩罚时间内
+  NoRewardTicket                  = 1240035;  // 没有奖励券
+  StageRewarded                   = 1240036;  // 阶段已经领取过奖励（需要等待刷新
+  PasswordNotMatch                = 1240037;  // 密码不匹配
+  OthersNotReadyForToNextStage    = 1240038;  // 其他人未就绪(手动进入下个阶段时)
+  CreateGroupFailed               = 1240039;  // 创建房间失败
+  LoadoutConflict                 = 1240040;  // 阵容冲突
+  GroupNotPublic                  = 1240041;  // 不是公开的
+  CannotSwapOwnerPosition         = 1240042;  // 不能交换房主的位置
+  TeamLeaderCanStartFight         = 1240043;  // 队长才能开始战斗
+  CannotSwapPositionInFighting    = 1240044;  // 战斗中不能交换位置
+  OwnerNoNeedReady                = 1240045;  // 房主不能点准备
+  UICDirtyCheckFailed             = 1240046;  // uic检查失败
+  InfoQueryEmpty                  = 1240047;  // info获取失败
+  ACT34NotOpen                    = 1240048;  // 活动34未开放
+  ACT34NotInPlayTime              = 1240049;  // 活动34不在游玩时间内
+  NotInvited                      = 1240050;  // 未被邀请(按过期处理)
+  ApplyInvalidFc                  = 1240051;  // 设置了不合法的实力门槛(大于房主的实力)
+
+  // 后台内部专用段  12490000 - 12499999
+}

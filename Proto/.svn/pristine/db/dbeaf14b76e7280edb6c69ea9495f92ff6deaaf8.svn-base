@@ -1,0 +1,81 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.businesscardpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/businesscardpb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/zonepb/dressingpb/dressing.proto";
+
+service CSService {
+  // 请求所有名片信息
+  rpc QueryBusinessCardInfo(QueryBusinessCardInfoRequest) returns (QueryBusinessCardInfoReply);
+  // 请求单个名片信息
+  rpc QueryBusinessCardInfoByItemID(QueryBusinessCardInfoByItemIDRequest) returns (QueryBusinessCardInfoByItemIDReply);
+  // 操作名片
+  rpc OperationBusinessCard(OperationBusinessCardRequest) returns (OperationBusinessCardReply);
+}
+
+message QueryBusinessCardInfoRequest {}
+
+message QueryBusinessCardInfoReply {
+  repeated BusinessCard business_cards = 1;  // 名片列表
+}
+
+message QueryBusinessCardInfoByItemIDRequest {
+  int64 business_card_item_id = 1;  // 名片道具ID
+}
+
+message QueryBusinessCardInfoByItemIDReply {
+  BusinessCard business_card    = 1;  // 名片信息
+  zonepb.dressingpb.TimeInfo time_info = 2;  // 配置限时信息
+}
+
+enum BusinessCardStatus {
+  STATUS_UNKNOWN = 0;  // 未知状态
+  LOCKED         = 1;  // 锁定中，未获得
+  UNLOCKED       = 2;  // 已拥有，未使用
+  NEW            = 3;  // 新获得
+  USING          = 4;  // 使用中
+}
+
+enum BusinessCardType {
+  TYPE_UNKNOWN = 0;  // 未知类型
+  ETERNAL      = 1;  // 永久类型
+  LIMITED      = 2;  // 限时类型
+}
+
+enum BusinessCardCategory {
+  CATEGORY_UNKNOWN = 0;  // 无类别
+  ACHIEVEMENT      = 1;  // 成就类型
+  HONOR            = 2;  // 荣誉类型
+  ACTIVITY         = 3;  // 活动类型
+  SPECIAL          = 4;  // 特殊类型
+}
+
+message BusinessCard {
+  int64 business_card_id        = 1;  // 名片 ID
+  BusinessCardStatus status     = 2;  // 名片状态
+  BusinessCardType type         = 3;  // 名片类型
+  BusinessCardCategory category = 4;  // 名片类别
+  int64 expire_at               = 5;  // 到期时间(Unix Second)，若为0则表示永久
+  bool is_default               = 6;  // 是否默认名片
+  corepb.FightAttr attr         = 7;  // 属性加成
+}
+
+enum OperationType {
+  OP_UNKNOWN               = 0;  // 未知操作
+  QUERY_NEW                = 1;  // 访问新名片
+  USE_BUSINESS_CARD        = 2;  // 使用名片
+  CANCEL_USE_BUSINESS_CARD = 3;  // 取消使用名片
+}
+
+message OperationBusinessCardRequest {
+  int64 business_card_id = 1;  // 名片 ID
+  OperationType op_type  = 2;  // 操作类型
+}
+
+message OperationBusinessCardReply {
+  BusinessCard business_card = 1;  // 被操作的名片
+}

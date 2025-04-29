@@ -1,0 +1,124 @@
+// cs protocol
+syntax = "proto3";
+
+package waractpb.wact0117pb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/waractpb/wact0117pb";
+
+import "corepb/common.proto";
+import "corepb/loadout_comm.proto";
+import "corepb/scene_common.proto";
+
+// 有状态服务,请求需要携带 x-warid 标头且值为「war_id」
+service StatefulService {
+  // 用于结算界面展示对局中各玩家信息
+  rpc RoomInfo(RoomInfoRequest) returns (RoomInfoReply) {}
+  // Launch 进入，后台自动开启基于 notify 的状态同步
+  rpc Launch(LaunchRequest) returns (LaunchReply);
+  // Leave 离开
+  rpc Leave(LeaveRequest) returns (LeaveReply);
+  rpc RoleOpt(RoleOptRequest) returns (RoleOptReply);  // 玩家操作
+  rpc Ping(PingRequest) returns (PingReply);           // 来自客户端的心跳协议
+}
+
+// RoomInfo
+
+enum FQResult {
+  FQ_RESULT_UNKNOWN = 0;
+  RQ_RESULT_CORRECT = 1;
+  RQ_RESULT_WRONG   = 2;
+  RQ_RESULT_TIMEOUT = 3;
+}
+
+message FQPlayInfo {
+  int64 gid                   = 1;
+  FQResult result             = 2;  // 最新一局结果
+  int64 rank                  = 3;  // 对局内名次，如果还没结算为 0
+  int64 correct_count         = 4;  // 正确数
+  int64 max_con_correct_count = 5;  // 最高连续正确数
+  int64 wrong_count           = 6;  // 错误数
+  int64 score                 = 7;  // 积分总数
+  int64 changed_score         = 8;  // 本局游戏累计的积分变化
+  int64 con_correct_count     = 9;  // 当前连续正确数
+}
+
+message FQPlayer {
+  FQPlayInfo fq_info                      = 1;
+  corepb.PersonalDisplayInfo display_info = 2;
+  corepb.Loadout loadout                  = 3;  // 阵容
+}
+
+message RoomInfoRequest {}
+
+message RoomInfoReply {
+  repeated FQPlayer players = 1;
+}
+
+message LaunchRequest {}
+
+message LaunchReply {
+  repeated FQPlayer players                = 1;
+  map<int64, corepb.SceneRoleOptUnit> opts = 2;  // 位置信息
+  RoomProgressInfoNTF room_progress        = 3;
+  corepb.SceneRoleOptUnit init_pos         = 4;  // 初始位置
+}
+
+message LeaveRequest {}
+
+message LeaveReply {}
+
+message RoleOptRequest {
+  corepb.SceneRoleOptUnit opt = 1;
+}
+message RoleOptReply {}
+
+message PingRequest {}
+message PingReply {}
+
+// ntf
+message RoleOptInfo {
+  int64 gid                   = 1;
+  corepb.SceneRoleOptUnit opt = 2;
+}
+
+// 玩家位置通知
+message RoleOptNTF {
+  repeated RoleOptInfo opt_list = 1;
+}
+
+// 玩家列表变化通知
+message RoleListChangedNTF {
+  repeated FQPlayer role_list = 1;
+}
+
+// entity RoomState
+enum RoomState {
+  ROOM_STATE_UNKNOWN           = 0;
+  ROOM_STATE_WAITING           = 1;  // 等待玩家
+  ROOM_STATE_WAITING_START     = 2;  // 玩家已足够，等待开始
+  ROOM_STATE_WAITING_QUESTION  = 3;  // 准备答题
+  ROOM_STATE_ANSWERING         = 4;  // 答题中
+  ROOM_STATE_ROUND_OVER        = 5;  // 答题结束
+  ROOM_STATE_FINISHED          = 6;  // 房间已结束
+  ROOM_STATE_WAITTING_FINISHED = 7;  // 房间等待结算
+}
+
+// 房间进度通知
+message RoomProgressInfoNTF {
+  RoomState room_state                = 1;   // 房间状态
+  int64 next_room_state_will_start_at = 2;   // 下一阶段房间状态预计开始时间
+  int64 round                         = 3;   // 当前答题轮次
+  string question                     = 4;   // ROOM_STATE_ANSWERING 时才有
+  string left_choice                  = 5;   // ROOM_STATE_ANSWERING 时才有
+  string right_choice                 = 6;   // ROOM_STATE_ANSWERING 时才有
+  repeated FQPlayInfo fq_play_infos   = 7;   // 答题结果 ROOM_STATE_ROUND_OVER 时才有
+  RoleOptNTF role_opt_ntf             = 8;   // 玩家位置被直接重置时才有
+  int64 svr_time                      = 9;   // 当前服务器时间
+  bool is_early_start                 = 10;  // 是否提前开始 如果是提前开始，第一次 ROOM_STATE_WAITING_START 状态时才有（仅一次）
+}
+
+// misc
+
+// CustomGameData 是 GameStartMessage 的 CustomData 字段
+message CustomGameData {
+  string war_id = 1;
+}

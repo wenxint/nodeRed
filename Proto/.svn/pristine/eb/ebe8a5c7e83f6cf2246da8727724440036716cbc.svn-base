@@ -1,0 +1,41 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0107pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0107pb";
+
+
+import "corepb/common.proto";
+
+service CSAct0107Service {
+  // 提交物资
+  rpc CommitShadow(CommitShadowRequest) returns (CommitShadowReply);
+  // 抓获影子
+  rpc CatchShadow(CatchShadowRequest) returns (CatchShadowReply);
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 committed_count          = 1;  // 已提交的影子数量
+  repeated int64 escaped_shadows = 2;  // 已逃逸的影子
+  bool is_first_enter            = 3;  // 是否首次进入
+  repeated int64 shadow_escape_limit = 4;  // 影子逃逸阈值
+}
+
+message CommitShadowRequest {}
+
+message CommitShadowReply {
+  repeated corepb.Item awards    = 1;  // 获得的奖励
+  int64 committed_count          = 2;  // 已提交的影子数量
+  repeated int64 escaped_shadows = 3;  // 已逃逸的影子
+}
+
+message CatchShadowRequest {
+  int64 shadow_id = 1;
+}
+
+message CatchShadowReply {
+  repeated corepb.Item awards    = 1;  // 获得的奖励
+  repeated int64 escaped_shadows = 2;  // 已逃逸的影子
+}

@@ -1,0 +1,305 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb;
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb";
+
+enum GuildErr {
+  OK                           = 0;
+  SystemNotOpen                = 1200000;  // 系统未开放
+  DocumentNotExists            = 1200001;
+  SessionNotExists             = 1200002;
+  NameInvalid                  = 1200003;
+  NameExists                   = 1200004;
+  MemberFull                   = 1200005;
+  IDNotEqual                   = 1200006;
+  NotInGuild                   = 1200007;
+  NoPermission                 = 1200008;
+  GuildInfoEmpty               = 1200009;
+  PlayerInfoEmpty              = 1200010;
+  NoApplyer                    = 1200011;
+  ApplyerNumLimit              = 1200012;
+  AlreadyHasGuild              = 1200013;
+  LeaderCanNotLeave            = 1200014;
+  KickeeNotInGuild             = 1200015;
+  GuildHasMember               = 1200016;
+  NotMeetCondition             = 1200017;
+  WroneServer                  = 1200018;
+  PlayerIsLocked               = 1200019;
+  GetCountFail                 = 1200020;
+  LevelLimit                   = 1200021;
+  FcLimit                      = 1200022;
+  KickSelf                     = 1200023;
+  RoleCountLimit               = 1200024;
+  InvalidBlessType             = 1200025;
+  PlayerHasBlessed             = 1200026;
+  PlayerNoBlessed              = 1200027;
+  BoxHasAwarded                = 1200028;
+  JoinGuildCD                  = 1200029;  // 加入同盟时间冷却中
+  TooManyApplyGuild            = 1200030;  // 批量申请加入的同盟数量过多
+  AlreadyApplied               = 1200031;  // 已经申请过该同盟
+  ApplyerGuildNumLimit         = 1200032;  // 申请同盟数限制
+  AlreadyInGuild               = 1200033;  // 已在同盟中（第三人称）
+  DailyRecruitCountLimit       = 1200034;  // 今日招募次数已用完
+  DeclarationInvalid           = 1200035;  // 公告非法
+  BlessRedPackageNotEnough     = 1200036;  // 红包领完了
+  FlagNotUnlocked              = 1200037;  // 旗帜未解锁
+  FlagItemCanNotDeduct         = 1200038;  // 旗帜道具扣除失败
+  InvalidParam                 = 1200039;  // 参数无效
+  ItemNotEnough                = 1200040;  // 道具不足
+  ConfigNotFound               = 1200041;  // 配置找不到
+  GuidIDNotEqual               = 1200042;  // 不在同一个同盟
+  PlayerNotApplyGuild          = 1200043;  // 玩家未申请该同盟
+  BlessRedPackageStatusInvalid = 1200044;  // 红包状态不对
+  BlessCountNotEnough          = 1200045;  // 祝福人数不足，不能领取礼包
+  JoinRequestRejected          = 1200046;  // 入会申请被拒绝
+  GuildTotalCountLimit         = 1200047;  // 同盟总数限制
+  CreateGuildCD                = 1200049;  // 创建同盟CD中
+
+  // 情报屋
+  PrayDoNotExist           = 1200050;
+  PrayAlreadyCompleted     = 1200051;
+  PrayCountNotEnough       = 1200052;
+  StillInQuitGuildPrayCD   = 1200053;
+  DonateCountNotEnough     = 1200054;
+  InvalidPrayInfo          = 1200055;
+  PrayInfoIsExpired        = 1200056;
+  PrayAlreadyDonated       = 1200057;
+  StillInSeekHelpCD        = 1200058;
+  CanNotDonateToMySelf     = 1200059;
+  KeepSakeNotEnough        = 1200060;
+  BuddyChipsNotEnough      = 1200061;
+  TaskAlreadyReceived      = 1200062;  // 任务已经被领取过
+  TaskNotComplete          = 1200063;  // 任务还未完成
+  ReturnPlayerError        = 1200064;  // 回赠对象错误
+  PrayBuddyBaned           = 1200065;  // 伙伴被禁止征集
+  InvalidJourneyGuildLevel = 1200066;  // 非法的同盟征程等级
+  RecruitItemNotEnough     = 1200067;  // 招募道具不足
+  LimitSSCardNotEnough     = 1200068;  // 限时SS卡不足
+  NormalSSCardNotEnough    = 1200069;  // 常规SS卡不足
+
+  // 同盟基础2
+  RecruitMessageInvalid    = 1200080;  // 招募信息非法
+  UicCheckIllegal          = 1200081;  // uic检查非法
+  PlayerHasUnregistered    = 1200082;  // 玩家已注销
+  GuildAlreadyDissolved    = 1200083;  // 同盟已经解散
+  TransferTimeLimit        = 1200084;  // 转让团长时间限制
+  SetRoleTimeLimit         = 1200085;  // 分配职务时间限制
+  PlayerHasLeftGuild       = 1200086;  // 对方{玩家名}与您不在同一个同盟
+  PlayerHasNoPray          = 1200087;  // {玩家名}当前无征集请求,区别于PrayDoNotExist
+  RecruitMessageIsEmpty    = 1200088;  // 招募宣言为空
+  OperationMutualExclusion = 1200089;  // 操作互斥
+  KickPlayerLimit          = 1200090;  // 踢人限制
+  LeaveGuild2ndConfirm     = 1200091;  // 离开同盟二次确认
+  KickPlayer2ndConfirm     = 1200092;  // 当有活动时，踢人二次确认
+  GuildFlagLimit           = 1200093;  // 同盟旗帜限制
+  GuildNameLimit           = 1200094;  // 同盟名称限制
+  NotTargetShard           = 1200095;  // 目标同盟不在该shard上
+  GloryWarzoneNotOpen      = 1200096;  // 尚无战区赛季荣耀可回顾
+  GloryWarzoneNotOpen2     = 1200097;  // 战区排名尚未开启 （不同的地方要不同的提示）
+  GloryHistoryIsEmpty      = 1200098;  // 荣耀回顾为空
+
+  // ---海贼派遣---
+  DGLimit                = 1200100;
+  DGWrongCfg             = 1200101;
+  DGWeekTaskLimit        = 1200102;
+  DGWeekPopularityLimit  = 1200103;
+  DGNotAllFinished       = 1200104;
+  DGMaxQuality           = 1200105;
+  DGLessQuality          = 1200106;
+  DGFullSharePlayer      = 1200107;
+  DGRewardAlreadyReceive = 1200108;
+
+  // ---狩猎海王--- 废弃
+  HuntingSeaErrGangJoinTimeShort = 1200201;  // 加入同盟时间过短
+  HuntingSeaErrGangLvLimit       = 1200202;  // 同盟等级不足
+  HuntingSeaErrUserLvLimit       = 1200203;  // 玩家等级不足
+  HuntingSeaErrNotOpen           = 1200204;  // 活动尚未开启
+  HuntingSeaShardNotHost         = 1200205;  // 无效shard
+  HuntingSeaErrInner             = 1200206;  // 内部错误
+  HuntingSeaErrNotInGuild        = 1200207;  // 没有加入同盟
+  HuntingSeaErrRoundLimit        = 1200208;  // 参与次数达上限
+  HuntingSeaErrMaxBuyCnt         = 1200209;  // 超过最大购买次数
+  BanByIDIP                      = 1200210;  // 被idip禁止
+  InvalidRankID                  = 1200211;  // 无效的排行报id
+  HuntingSeaBuyConflict          = 1200213;  // 并发购买冲突
+  HuntingSeaGuildEncourageLimit  = 1200214;  // 同盟祝福次数上限
+  HuntingSeaInvalidRewardType    = 1200215;  // 无效的奖励类型
+  HuntingSeaRewardedAlready      = 1200216;  // 已领取过次奖励
+  HuntingSeaDamageNotEnough      = 1200217;  // 伤害未达标
+  HuntingSeaDamageNotJoin        = 1200218;  // 未参与过无法领取奖励
+
+  // 同盟药房
+  PharmacyErrTalentLevelChanged    = 1200301;  // 捐赠时天赋等级已更新
+  PharmacyErrToTodayMaxActiveCount = 1200302;  // 已经达到了今天最大贡献活跃度人数
+  PharmacyErrToMaxTalentLevel      = 1200303;  // 天赋已经达到了最大等级(所有天赋都激活了)
+  PharmacyErrAlreadyDonate         = 1200304;  // 今日已进行活跃度捐赠
+  PharmacyErrJoinTimeLimit         = 1200305;  // 加入同盟时间不足（现在改成从离开上个同盟的时间算了）
+  PharmacyErrExpTooMuch            = 1200306;  // 同盟其他人捐赠导致进度变化，本次捐赠经验过多，无法捐赠
+  PharmacyErrToTodayPlayerLimit    = 1200307;  // 道具捐赠获得经验达到个人每日上限
+  PharmacyErrToTodayGuildLimit     = 1200308;  // 道具捐赠获得经验达到同盟每日上限
+  PharmacyErrAlreadyAwarded        = 1200309;  // 奖励已领取
+  PharmacyErrTalentLevelLocked     = 1200310;  // 该天赋等级未激活
+
+  // 勇闯推进城(旧版)
+  ImpelDownErrBuyEnergyTimesOverflow     = 1200400;  // 购买行动力次数超过上限
+  ImpelDownErrBuyEnergyTimesDuplicate    = 1200401;  // 购买行动力次数操作重复
+  ImpelDownErrTaskNotComplete            = 1200402;  // 任务尚未完成
+  ImpelDownErrMapNotOpen                 = 1200403;  // 地图尚未开启
+  ImpelDownErrTaskAlreadyReceived        = 1200404;  // 任务奖励已领取过
+  ImpelDownErrExplorationNotEnough       = 1200405;  // 探索进度不足
+  ImpelDownErrExplorationNotComplete     = 1200406;  // 探索进度尚未完成
+  ImpelDownErrExplorationAlreadyReceived = 1200407;  // 探索进度奖励已领取过
+  ImpelDownErrLevelNotMatch              = 1200408;  // 任务或者探索层数不匹配
+  ImpelDownErrInvalidPlayerPosition      = 1200409;  // 不合法的玩家位置
+  ImpelDownErrRolePremissionNotEnough    = 1200410;  // 角色权限不够
+  ImpelDownErrQuestionCountNotEnough     = 1200411;  // 题库题目数量不够
+  ImpelDownErrQuestionAnswerError        = 1200412;  // 题库回答错误
+  ImpelDownErrEventStateError            = 1200413;  // 事件状态错误
+  ImpelDownErrEnergyNotEnough            = 1200414;  // 行动力不足
+  ImpelDownErrFightFailed                = 1200415;  // 战斗失败
+  ImpelDownErrNoEventOnPoint             = 1200416;  // 地块无事件
+  ImpelDownErrEventAlreadyFinished       = 1200417;  // 事件已经完成
+  ImpelDownErrEventProcessing            = 1200418;  // 事件处理中
+  ImpelDownErrBossAlreadyDead            = 1200419;  // boss已经死亡
+  ImpelDownErrEliteAlreadyDead           = 1200420;  // 精英怪已经死亡
+  ImpelDownErrBossNotDead                = 1200421;  // boss未死亡
+  ImpelDownErrEliteNotDead               = 1200422;  // 精英怪未死亡
+  ImpelDownErrRewardEventAlreadyReceived = 1200423;  // 奖励事件奖励已领取
+  ImpelDownErrMonsterCanNotRaid          = 1200424;  // 尚未达到小怪扫荡条件
+  ImpelDownErrLevelStillLock             = 1200425;  // 层数尚未解锁
+  ImpelDownErrPlayerNotInMap             = 1200426;  // 玩家不在地图中
+  ImpelDownErrOtherPlayerProcessing      = 1200427;  // 其他玩家正在处理事件
+  ImpelDownErrTimeLimitNotComplete       = 1200428;  // 新加入未达到参与时间限制
+  ImpelDownErrRewardBoxNotAvailable      = 1200429;  // 奖励宝箱不可领取
+  ImpelDownErrGuildOpenLevel             = 1200430;  // 同盟开启等级限制
+  ImpelDownErrInvalidOperation           = 1200431;  // 无效操作
+  ImpelDownErrEliteCanNotRaid            = 1200432;  // 尚未达到精英扫荡条件
+  ImpelDownErrBossCanNotRaid             = 1200433;  // 尚未达到Boss扫荡条件
+  ImpelDownErrMapAlreadyOpen             = 1200434;  // 地图已经开启
+  ImpelDownErrImpelDownReset             = 1200435;  // 新的一周来临，推进城已经重置
+  ImpelDownErrSelfPlayerProcessing       = 1200436;  // 请稍后再发起战斗
+
+  // 同盟争霸赛
+  GuildWarHasSignedUp                               = 1200450;  // 已经报名了
+  GuildWarNotOpen                                   = 1200451;  // 本届同盟争霸赛未开启
+  GuildWarNotInSignUpTime                           = 1200452;  // 不在报名时间内
+  GuildWarSignUpGuildLevelNotSatisfied              = 1200453;  // 报名未达到同盟等级条件
+  GuildWarSignUpBlessCountNotSatisfied              = 1200454;  // 报名未达到祝福次数条件
+  GuildWarSignUpGuildNumNotEnough                   = 1200455;  // 报名同盟数不足
+  GuildWarQuitLimit                                 = 1200456;  // 进入争霸赛的同盟限制退出
+  GuildWarRewardAlreadyReceived                     = 1200457;  // 奖励已经领取
+  GuildWarRewardNotAvailable                        = 1200458;  // 奖励不可领取
+  GuildWarRoundPrepareHasNotBegan                   = 1200459;  // 争霸赛（轮次准备）还未开始
+  GuildWarRoundFightHasBegan1                       = 1200460;  // 争霸赛（轮次战斗）已经开始，无法参战
+  GuildWarRoundFightHasBegan2                       = 1200461;  // 争霸赛（轮次战斗）已经开始，无法调整出战顺序
+  GuildWarRoundFightHasBegan3                       = 1200462;  // 争霸赛（轮次战斗）已经开始，无法购买连胜次数
+  GuildWarRoundFightHasBegan4                       = 1200463;  // 争霸赛（轮次战斗）已经开始，无法食用料理
+  GuildWarGuildHasEliminated                        = 1200464;  // 争霸赛 同盟已经被淘汰
+  GuildWarEnterBattleFieldJoinGuildTimeNotSatisfied = 1200465;  // 加入同盟时间不满足条件，不允许进入战场
+  GuildWarCuisineInvalid                            = 1200466;  // 料理不可用于争霸赛
+  GuildWarCuisineNotEnough                          = 1200467;  // 料理数量不足
+  GuildWarDissoveLimit                              = 1200468;  // 进入争霸赛的同盟限制解散
+  GuildWarClientVersionLimit                        = 1200469;  // 请升级客户端后再进战场
+  GuildWarSignUpRoleLimit                           = 1200470;  // 团长或者副团长才可以报名
+  GuildWarAjustRoleLimit                            = 1200471;  // 团长或者副团长才可以调整顺序
+  GuildWarNotQualified                              = 1200472;  // 没有争霸赛参与资格
+
+  // 海岛争夺战
+  IslandSiegeNotOpen                              = 1200500;  // 还未开启
+  IslandSiegeNeedUpdate                           = 1200501;  // 数据需要更新
+  IslandSiegeHasSignedUp                          = 1200502;  // 已报名
+  IslandSiegeNotInSignUpTime                      = 1200503;  // 不在报名时间内
+  IslandSiegeNotSignUp                            = 1200504;  // 未报名
+  IslandSiegeSignUpRoleLimit                      = 1200505;  // 报名权限限制
+  IslandSiegeSignUpGuildLevelNotSatisfied         = 1200506;  // 同盟等级不满足
+  IslandSiegeSignUpCurWeekBlessCountNotSatisfied  = 1200507;  // 同盟祝福次数不满足(本周)
+  IslandSiegeSignUpLastWeekBlessCountNotSatisfied = 1200508;  // 同盟祝福次数不满足(上周)
+  IslandSiegeSignUpGuildRankNotSatisfied          = 1200509;  // 同盟排名不满足
+  IslandSiegeAvailableSignUpTimesLimit            = 1200510;  // 报名次数限制
+  IslandSiegeDataNotFound                         = 1200511;  // 数据找不到
+  IslandSiegeRewardAlreadyReceived                = 1200512;  // 奖励已经领取
+  IslandSiegeRewardNotAvailable                   = 1200513;  // 奖励不可领取
+  IslandSiegeQuitLimit                            = 1200514;  // 进入海岛争夺战的同盟限制退出
+  IslandSiegeDissoveLimit                         = 1200515;  // 进入海岛争夺战的同盟限制解散
+  IslandSiegeChangeGuildNameLimit                 = 1200516;  // 进入海岛争夺战的同盟限制修改名称
+  IslandSiegeSetGuildFlagLimit                    = 1200517;  // 进入海岛争夺战的同盟限制修改旗帜
+  IslandSiegeZoneOpenDaysLimit                    = 1200518;  // 开服天数不满足
+  IslandSiegeGuildLevelLimit                      = 1200519;  // 同盟等级不满足
+
+  // 同盟宴会
+  GuildBanquetInvalidRequest              = 1200600;  // 非法的输入，一般不会有这种情况
+  GuildBanquetNotMeetOpenServiceCondition = 1200601;  // 不满足开服条件，不能解锁
+  GuildBanquetNotMeetGuildLevelCondition  = 1200602;  // 不满足同盟等级条件，不能解锁
+  GuildBanquetNotInHoldingTime            = 1200603;  // 宴会不在举办时间
+  GuildBanquetCanNotHold                  = 1200604;  // 宴会不满足举办条件，不能举办
+  GuildBanquetQuitLimit                   = 1200605;  // 宴会举办期间不能退出同盟
+  GuildBanquetCuisineEatCountLimit        = 1200606;  // 食用已达上限
+  GuildBanquetJoinGuildCDLimit            = 1200607;  // {time}后才可参加
+  GuildBanquetRoleLimit                   = 1200608;  // 同盟宴会角色权限限制
+  GuildBanquetLevelHasChanged             = 1200609;  // 等级已发生变化，请刷新再试下
+  GuildBanquetCantSnack                   = 1200610;  // 当前等级不能加餐
+  GuildBanquetDonateMaxCountLimit         = 1200611;  // 该级别的料理已经捐献到上限了
+  GuildBanquetDonateHoldingLimit          = 1200612;  // 宴会正在举办中，不能捐献
+  GuildBanquetEatCD                       = 1200613;  // 食用的CD
+  GuildBanquetDonateItemNotEnough         = 1200614;  // 捐献道具不足
+  GuildBanquetDissoveLimit                = 1200615;  // 进入宴会的同盟限制解散
+  GuildBanquetRecruitCDLimit              = 1200616;  // 招募CD中
+  GuildBanquetHoldTimeNotConfirmed        = 1200617;  // 举办时间未确定
+  GuildBanquetHasSnacked                  = 1200618;  // 已经加过餐了
+
+  // 勇闯推进城2.0
+  InperuDaunBossNotOpenYet              = 1200700;  // 首领关卡尚未开启
+  InperuDaunCannotBuyMoreTimes          = 1200701;  // 不能购买更多次数
+  InperuDaunChallengeTimesNotEnough     = 1200702;  // 挑战次数不足
+  InperuDaunPersonalRewardAlreadyDrawed = 1200703;  // 个人奖励已领取
+  InperuDaunPersonalRewardNotAvailable  = 1200704;  // 个人奖励不可领取
+  InperuDaunNoDamageRecord              = 1200705;  // 无伤害记录
+  InperuDaunPlayerNotInGuild            = 1200706;  // 玩家不在同盟中
+  InperuDaunJoinTimeLimit               = 1200707;  // 加入同盟时间不足 join_hours_need 小时
+  InperuDaunGuildLevelLimit             = 1200708;  // 同盟等级不足 guild_level_need 级
+  InperuDaunZoneOpenDaysLimit           = 1200709;  // 开服天数不足 zone_open_days_need 天
+  InperuDaunAbortFightByEliteDead       = 1200710;  // 精英怪已经死亡，无法继续战斗
+  InperuDaunAbortFightByReset           = 1200711;  // 推进城已经重置，无法继续战斗
+  InperuDaunRefreshYourself             = 1200712;  // 请刷新一下
+  InperuDaunReservedForClient1          = 1200713;  // 保留给客户端使用
+  InperuDaunReservedForClient2          = 1200714;  // 保留给客户端使用
+  InperuDaunAbortFightByKicked          = 1200715;  // 已被踢出同盟，无法继续战斗
+
+  // 狩猎海王
+  SeaKingPersonalRewardAlreadyDrawed = 1200800;  // 个人奖励已领取
+  SeaKingPersonalRewardNotAvailable  = 1200801;  // 个人奖励不可领取
+  SeaKingPlayerNotInGuild            = 1200802;  // 玩家不在同盟中
+  SeaKingJoinTimeLimit               = 1200803;  // 加入同盟时间不足
+  SeaKingGuildLevelLimit             = 1200804;  // 同盟等级不足
+  SeaKingZoneOpenDaysLimit           = 1200805;  // 开服天数不足
+  SeakingNotInActOpenTime            = 1200806;  // 非活动开放时间
+
+  // 岛屿激斗
+  IslandClashQuitLimit           = 1200901;  // 岛屿激斗离开同盟限制
+  IslandClashDissoveLimit        = 1200902;  // 岛屿激斗解散同盟限制
+  IslandClashNotInPlayTime       = 1200903;  // 岛屿激斗不在活动时间
+  IslandClashRewardHasClaimed    = 1200904;  // 岛屿激斗奖励已经领取了
+  IslandClashRewardNotAvailable  = 1200905;  // 岛屿激斗奖励不满足领取条件
+  IslandClashJoinGuildTimeLimit  = 1200906;  // 岛屿激斗加入同盟时间限制
+  IslandClashGuildLevelLimit     = 1200907;  // 岛屿激斗加入同盟等级限制
+  IslandClashOperServerDaysLimit = 1200908;  // 岛屿激斗服务器开服天数限制
+
+  // 同盟事件
+  GuildEventNotExist         = 1201001;  // 同盟事件不存在
+  GuildEventAlreadyExist     = 1201002;  // 同盟事件已存在
+  GuildEventRewardHasClaimed = 1201003;  // 同盟事件奖励已领取
+  GuildEventRewardRoleLimit  = 1201004;  // 领取同盟事件奖励权限限制
+
+  // 同盟海战
+  GuildSeaWarLevelNotSatisfied      = 1201100;  // 同盟等级不满足
+  GuildSeaWarMemberRoleNotSatisfied = 1201101;  // 无资格报名
+  GuildSeaWarAlreadySignedUp        = 1201102;  // 同盟已经报名
+  GuildSeaWarNotInSignUpTime        = 1201103;  // 不在报名时间内
+  GuildSeaWarTaskNotAchieved        = 1201104;  // 任务未达成
+  GuildSeaWarTaskAlreadyClaimed     = 1201105;  // 任务奖励已领取
+  GuildSeaWarOperServerDaysLimit    = 1201106;  // 同盟海战服务器开服天数限制
+
+  // 御宝前
+  GuildBlessDataInconsistency = 1201200;  // 数据不一致
+}

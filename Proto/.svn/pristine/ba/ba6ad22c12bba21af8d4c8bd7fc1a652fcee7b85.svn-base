@@ -1,0 +1,460 @@
+// cs protocol
+syntax = "proto3";
+
+package warpb.kingswarpb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/warpb/kingswarpb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+// 王者争锋服务 - 有状态部分，请求需要携带 x-warid 标头且值为「war_id」
+service StatefulKingsWarService {
+
+  // EnterMain 进入王者争锋主界面
+  rpc EnterMain(EnterMainRequest) returns (EnterMainReply);
+
+  // EnterWar 进入王者争锋场景
+  rpc EnterWar(EnterWarRequest) returns (EnterWarReply);
+
+  // EnterField 进入王者争锋战场
+  rpc EnterField(EnterFieldRequest) returns (EnterFieldReply);
+
+  // LeaveField 离开王者争锋战场
+  rpc LeaveField(LeaveFieldRequest) returns (LeaveFieldReply);
+
+  // EnterMainCity 进入王者争锋某方主城
+  rpc EnterMainCity(EnterMainCityRequest) returns (EnterMainCityReply);
+
+  // LeaveMainCity 离开王者争锋某方主城
+  rpc LeaveMainCity(LeaveMainCityRequest) returns (LeaveMainCityReply);
+
+  // EnterWildArea 进入野外资源点
+  rpc EnterWildArea(EnterWildAreaRequest) returns (EnterWildAreaReply);
+
+  // LeaveWildArea 离开野外资源点
+  rpc LeaveWildArea(LeaveWildAreaRequest) returns (LeaveWildAreaReply);
+
+  // StartMatch 开始匹配(先锋战场)
+  rpc StartMatch(StartMatchRequest) returns (StartMatchReply);
+
+  // CancelMatch 取消匹配(先锋战场)
+  rpc CancelMatch(CancelMatchRequest) returns (CancelMatchReply);
+
+  // OccupyNode 尝试占领据点(普通战场/精英战场的主城或者野外资源点)
+  rpc OccupyNode(OccupyNodeRequest) returns (OccupyNodeReply);
+
+  // LeaveNode 放弃据点(普通战场/精英战场的主城或者野外资源点)
+  rpc LeaveNode(LeaveNodeRequest) returns (LeaveNodeReply);
+
+  // Heartbeat 心跳(客户端需携带玩家所处位置)
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);
+
+  // EnterTreasure 进入宝藏争夺
+  rpc EnterTreasure(EnterTreasureRequest) returns (EnterTreasureReply);
+
+  // LeaveTreasure 离开宝藏争夺
+  rpc LeaveTreasure(LeaveTreasureRequest) returns (LeaveTreasureReply);
+
+  // SignUpTreasure 报名争夺宝藏
+  rpc SignUpTreasure(SignUpTreasureRequest) returns (SignUpTreasureReply);
+
+  // Leaderboard 排行榜查询
+  rpc Leaderboard(LeaderboardRequest) returns (LeaderboardReply);
+
+  // FightWill 战意查询
+  rpc FightWill(FightWillRequest) returns (FightWillReply);
+
+  // FightRecord 战斗记录查询
+  rpc FightRecord(FightRecordRequest) returns (FightRecordReply);
+}
+
+message GuildProfile {
+  int64 id               = 1;  // 同盟ID
+  string name            = 2;  // 同盟名称
+  int64 flag             = 3;  // 同盟旗帜
+  int64 fc               = 4;  // 同盟战力
+  int64 leader_gid       = 5;  // 团长ID
+  string leader_name     = 6;  // 团长名称
+  int64 point            = 7;  // 积分(本服岛屿激斗)
+  repeated int64 members = 8;  // 同盟成员ID列表
+}
+
+message PlayerProfile {
+  int64 gid     = 1;  // 玩家ID
+  int64 zone_id = 2;  // 小区ID
+  string name   = 3;  // 玩家名称
+  int64 fc      = 4;  // 战力
+}
+
+message PlayerDetail {
+  PlayerProfile player                    = 1;  // 玩家简略信息
+  corepb.PersonalDisplayInfo display_info = 2;  // 完整的玩家展示数据
+}
+
+message EnterMainRequest {}
+
+message ZonePoint {
+  int64 zone_id = 1;  // 小区ID
+  int64 point   = 2;  // 积分
+}
+
+enum Stage {
+  STAGE_UNKNOWN = 0;  // 未知
+  STAGE_PREPARE = 1;  // 准备阶段
+  STAGE_FIGHT   = 2;  // 战斗阶段
+  STAGE_RESULT  = 3;  // 结果阶段
+}
+
+message EnterMainReply {
+  repeated GuildProfile guilds                = 1;  // 本服参赛同盟列表(已经排序)
+  repeated ZonePoint zone_points              = 2;  // 小区积分(仅在结果阶段有效)
+  int64 war_start_at                          = 3;  // 开赛时间(unix second)，如果当前时间小于开赛时间，则表示准备阶段
+  int64 war_finish_at                         = 4;  // 结束时间(unix second)，如果当前时间大于结束时间，则表示赛果展示
+  map<int64, GuildProfile> all_guild_profiles = 5;  // 本场王者争锋参赛同盟的展示数据(key 为同盟ID, value 为同盟展示数据)
+}
+
+message EnterWarRequest {}
+
+message FieldProfile {
+  int64 id                          = 1;  // 战场ID
+  string name                       = 2;  // 战场名称
+  int64 players_limit_per_zone      = 3;  // 每个小区可进入最大人数
+  map<int64, int64> players_by_zone = 4;  // 每个小区已进入人数(key 为 zone_id, value 为人数)
+  map<int64, int64> scores_by_zone  = 5;  // 每个小区积分(key 为 zone_id, value 为积分)
+}
+
+message FightWillInfo {
+  int64 current       = 1;  // 当前战意值
+  int64 max           = 2;  // 最大战意值
+  int64 attr_addition = 3;  // 属性加成(万分比)
+}
+
+message EnterWarReply {
+  int64 finish_at                              = 1;  // 结束时间(unix second)
+  repeated FieldProfile fields                 = 2;  // 战场简略信息
+  map<int64, FightWillInfo> fight_will_by_zone = 3;  // 每个小区战意信息(key 为 zone_id, value 为战意信息)
+}
+
+message EnterFieldRequest {
+  int64 field_id = 1;  // 战场ID
+}
+
+message FrontlineZone {
+  int64 id                 = 1;  // 小区ID
+  int64 players_count      = 2;  // 已进入人数
+  int64 players_limit      = 3;  // 最大进入人数
+  FightWillInfo fight_will = 4;  // 小区战意信息
+}
+
+message FrontlineFieldInfo {
+  int64 version = 1;  // 版本号(用于客户端更新数据)
+
+  int64 id                     = 2;  // 战场ID
+  string name                  = 3;  // 战场名称
+  repeated FrontlineZone zones = 4;  // 小区列表(如果是 NTF，此处为增量更新)
+}
+
+message MainCityProfile {
+  int64 id            = 1;  // 主城ID
+  int64 zone_id       = 2;  // 所属小区ID
+  int64 players_count = 3;  // 已进入人数
+  int64 players_limit = 4;  // 最大进入人数
+}
+
+message WildAreaProfile {
+  int64 id            = 1;  // 野外资源点ID
+  int64 players_count = 2;  // 已进入人数
+  int64 players_limit = 3;  // 最大进入人数
+}
+
+message WildNode {
+  int64 id                   = 1;  // 据点ID
+  PlayerProfile owner        = 2;  // 占领者，如果没有表示尚未占领
+  bool fighting              = 3;  // 是否正在战斗
+  int64 could_fight_after    = 4;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
+  int64 successive_win_count = 5;  // 连续胜利次数
+  int64 remain_hp_percent    = 6;  // 剩余血量百分比(万分比)
+}
+
+message TreasureProfile {
+  int64 id            = 1;  // 宝藏点ID
+  int64 players_count = 2;  // 已进入人数
+  int64 players_limit = 3;  // 最大进入人数
+
+  message Round {
+    int64 sign_up_start_at = 1;  // 报名开始时间(unix second)
+    int64 sign_up_end_at   = 2;  // 报名结束时间(unix second)
+  }
+  repeated Round rounds = 4;  // 宝藏点刷新轮次列表
+}
+
+message TreasureArea {
+  int64 id                           = 1;  // 宝藏点ID
+  bool exist                         = 2;  // 是否存在
+  int64 sign_up_start_at             = 3;  // 报名开始时间(unix second)
+  int64 sign_up_end_at               = 4;  // 报名结束时间(unix second)
+  repeated PlayerDetail players      = 5;  // 争夺者列表(全量设置)
+  map<int64, bool> player_eliminated = 6;  // 玩家是否被淘汰(key 为玩家ID, value 为是否被淘汰)
+  int64 round_id                     = 7;  // 当前轮次ID
+}
+
+message NormalFieldInfo {
+  int64 id                             = 1;  // 战场ID
+  string name                          = 2;  // 战场名称
+  repeated WildAreaProfile wild_areas  = 3;  // 野外资源点列表
+  repeated MainCityProfile main_cities = 4;  // 主城列表
+  TreasureProfile treasure             = 5;  // 宝藏点
+}
+
+message EnterFieldReply {
+  FrontlineFieldInfo frontline_field = 1;  // 先锋战场详细信息，如果进入的战场不是先锋战场，则该字段为空
+  NormalFieldInfo normal_field       = 2;  // 普通战场详细信息，如果进入的战场不是普通战场，则该字段为空
+}
+
+message LeaveFieldRequest {
+  int64 field_id = 1;  // 战场ID
+}
+
+message LeaveFieldReply {}
+
+message EnterMainCityRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 city_id  = 2;  // 主城ID
+}
+
+message MainCityNode {
+  int64 id                   = 1;  // 据点ID
+  string name                = 2;  // 据点名称
+  PlayerProfile owner        = 3;  // 占领者，如果没有表示尚未占领
+  bool fighting              = 4;  // 是否正在战斗
+  int64 could_fight_after    = 5;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
+  int64 successive_win_count = 6;  // 连续胜利次数
+}
+
+message MainCityInfo {
+  int64 version = 1;  // 版本号(用于客户端更新数据)
+
+  int64 id                    = 2;  // 主城ID
+  int64 zone_id               = 3;  // 所属小区ID
+  repeated MainCityNode nodes = 4;  // 主城据点列表(如果是 NTF，此处为增量更新)
+}
+
+message EnterMainCityReply {
+  MainCityInfo main_city = 1;  // 主城信息
+}
+
+message LeaveMainCityRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 city_id  = 2;  // 主城ID
+}
+
+message LeaveMainCityReply {}
+
+message EnterWildAreaRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 野外资源点ID
+}
+
+message WildAreaInfo {
+  int64 version = 1;  // 版本号(用于客户端更新数据)
+
+  int64 id                = 2;  // 野外资源点ID
+  repeated WildNode nodes = 3;  // 野外资源点列表(如果是 NTF，此处为增量更新)
+  WildAreaStatics statics = 4;  // 野外资源点统计信息
+}
+
+message WildAreaStatics {
+  int64 players_count                            = 1;  // 参战人数
+  map<int64, int64> players_count_by_guild       = 2;  // 参战人数(按同盟分组)
+  int64 occpuied_node_count                      = 3;  // 已占领据点数
+  map<int64, int64> occpuied_node_count_by_guild = 4;  // 已占领据点数(按同盟分组)
+  int64 total_node_count                         = 5;  // 据点总数
+}
+
+message EnterWildAreaReply {
+  WildAreaInfo wild_area = 1;  // 野外资源点信息
+}
+
+message LeaveWildAreaRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 野外资源点ID
+}
+
+message LeaveWildAreaReply {}
+
+message LeaderboardRequest {
+  int64 field_id = 1;  // 战场ID(如果传入 0 表示返回整个全部战场综合排名)
+}
+
+message GuildPoint {
+  GuildProfile guild = 1;  // 同盟信息
+  int64 point        = 2;  // 积分
+}
+
+message LeaderboardReply {
+  repeated ZonePoint zone_points = 1;  // 小区排行
+  repeated GuildPoint guilds     = 2;  // 同盟排行，注意查询同盟积分排名的时候，field_id 无效
+}
+
+message StartMatchRequest {
+  int64 field_id = 1;  // 战场ID
+}
+
+message StartMatchReply {
+  int64 estimated_wait_time = 1;  // 预计等待时间(秒)
+}
+
+message CancelMatchRequest {
+  int64 field_id = 1;  // 战场ID
+}
+
+message CancelMatchReply {}
+
+message OccupyNodeRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 区域ID(主城 ID 或者野外资源点 ID)
+  int64 node_id  = 3;  // 据点ID
+}
+
+message OccupyNodeReply {
+  MainCityNode main_city_node = 1;  // 如果占领的是主城据点，则返回主城据点信息
+  WildNode wild_node          = 2;  // 如果占领的是野外资源点据点，则返回野外资源点据点信息
+}
+
+message LeaveNodeRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 区域ID(主城 ID 或者野外资源点 ID)
+  int64 node_id  = 3;  // 据点ID
+}
+
+message LeaveNodeReply {
+  MainCityNode main_city_node = 1;  // 主城据点信息，如果离开的是主城据点，则该字段有数据
+  WildNode wild_node          = 2;  // 野外资源点据点信息，如果离开的是野外资源点据点，则该字段有数据
+}
+
+message EnterTreasureRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 宝藏点ID
+}
+
+message EnterTreasureReply {
+  TreasureArea treasure_area = 1;  // 宝藏点信息
+}
+
+message LeaveTreasureRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 宝藏点ID
+}
+
+message LeaveTreasureReply {}
+
+message SignUpTreasureRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 宝藏点ID
+}
+
+message SignUpTreasureReply {}
+
+message HeartbeatRequest {
+  int64 field_id = 1;  // 战场ID
+  int64 area_id  = 2;  // 区域ID(主城 ID 或者野外资源点 ID)
+}
+
+message HeartbeatReply {
+  int64 field_id = 1;  // 战场ID，后台调整后，认为玩家应该在的战场，客户端需要根据该字段更新玩家位置
+  int64 area_id  = 2;  // 区域ID(主城 ID 或者野外资源点 ID)，后台调整后，认为玩家应该在的区域，客户端需要根据该字段更新玩家位置
+}
+
+message FightRecordRequest {
+  // FIXME: 本协议最好支持分页查询
+}
+
+message FightRecord {
+  PlayerDetail left_player           = 1;  // 左玩家信息
+  PlayerDetail right_player          = 2;  // 右玩家信息
+  GuildProfile left_guild            = 3;  // 左同盟信息
+  GuildProfile right_guild           = 4;  // 右同盟信息
+  corepb.FightResultType result_type = 5;  // 战斗结果类型(对于玩家自己而言)
+  int64 finished_at                  = 6;  // 战斗结束时间(unix second)
+}
+
+message FightRecordReply {
+  repeated FightRecord records = 1;  // 战斗记录
+}
+
+message FightWillRequest {}
+
+message FightWillReply {
+  map<int64, FightWillInfo> will_by_zone = 1;  // 战意信息(key 为小区ID, value 为战意信息)
+}
+
+// 当玩家处于先锋战场时，数据采用全量拉取 + 增量更新的方式，以下 FrontlineFieldNTF 为增量更新
+// EnterField 后，仅在两种情况会停止收到增量更新:
+// 1. 玩家主动离开先锋战场(LeaveField)
+// 2. 玩家心跳超时(Heartbeat)
+
+message FrontlineFieldNTF {
+  FrontlineFieldInfo change = 1;  // 增量更新:先锋战场详细信息
+}
+
+// 当玩家处于先锋战场匹配成功后，会给双方玩家推送 FrontlineMatchSuccessNTF
+message FrontlineMatchSuccessNTF {}
+
+// 当玩家处于普通/精英战场的主城时，数据采用全量拉取 + 增量更新的方式，以下 MainCityNTF 为增量更新
+// EnterMainCity 后，仅在两种情况会停止收到增量更新:
+// 1. 玩家主动离开主城(LeaveMainCity)
+// 2. 玩家心跳超时(Heartbeat)
+
+message MainCityNTF {
+  MainCityInfo change = 1;  // 增量更新:主城信息
+}
+
+// 当玩家处于普通/精英战场的野外资源点时，数据采用全量拉取 + 增量更新的方式，以下 WildAreaNTF 为增量更新
+// EnterWildArea 后，仅在两种情况会停止收到增量更新:
+// 1. 玩家主动离开野外资源点(LeaveWildArea)
+// 2. 玩家心跳超时(Heartbeat)
+
+message WildAreaNTF {
+  WildAreaInfo change = 1;  // 增量更新:野外资源点信息
+}
+
+// 宝藏点刷新的时候，会向该战场内所有玩家推送 TreasureAreaNTF
+// EnterField 后，仅在两种情况会停止收到全量更新:
+// 1. 玩家主动离开战场(LeaveField)
+// 2. 玩家心跳超时(Heartbeat)
+
+message TreasureAreaNTF {
+  TreasureArea treasure_node = 1;  // 宝藏点信息
+  bool new_round             = 2;  // 是否是新的一轮
+}
+
+// 宝藏争夺结果通知，会向该战场内所有玩家推送 TreasureResultNTF
+message TreasureResultNTF {
+  int64 area_id        = 1;  // 宝藏点ID
+  int64 treasure_id    = 2;  // 宝藏点刷新次数
+  PlayerProfile winner = 3;  // 胜利者
+  int64 points         = 4;  // 积分奖励
+}
+
+// 当活动结束时，会向所有战场在线玩家推送 SettleNTF，此时客户端应该展示结算数据，停止一切行为
+
+message SettledGuild {
+  int64 id    = 1;  // 同盟ID
+  int64 point = 2;  // 积分
+  int64 rank  = 3;  // 排名
+}
+
+message SettleNTF {
+  int64 zone_rank                   = 1;  // 玩家所在小区排名
+  int64 guild_rank                  = 2;  // 玩家所在同盟的本服排名
+  int64 zone_point                  = 3;  // 玩家所在小区积分
+  int64 guild_point                 = 4;  // 玩家所在同盟积分
+  repeated corepb.Item rank_rewards = 5;  // 排名奖励
+}
+
+// FightCustomData 战斗自定义数据，在 GameOverMessage 中传递玩家积分变化情况
+message FightCustomData {
+  map<int64, int64> scores_change   = 1;  // 玩家积分变化(key 为玩家ID, value 为积分变化值)
+  map<int64, int64> successive_wins = 2;  // 玩家连胜次数(key 为玩家ID, value 为连续胜利次数)
+}

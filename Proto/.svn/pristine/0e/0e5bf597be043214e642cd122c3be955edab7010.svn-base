@@ -1,0 +1,20 @@
+// cs protocol
+syntax = "proto3";
+
+package scorepb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pvppb/scorepb";
+
+message LadderScoreInfo {
+  int64 score                  = 1;   // pvp积分
+  int64 hidden_score           = 2;   // pvp隐藏分
+  int64 successive_win         = 3;   // 连胜次数
+  int64 win_cnt                = 4;   // 赢的次数
+  int64 lose_cnt               = 5;   // 输的次数
+  int64 deuce_cnt              = 6;   // 平的次数
+  int64 match_robot_percentage = 7;   // 匹配机器人概率，万分比，根据输赢回浮动
+  int64 successive_lose        = 8;   // 连败次数
+  int64 score_history          = 12;  // 历史最高分
+  int64 warrior_score          = 13;  // 勇士积分
+  int64 successive_win_history = 14;  // 历史最高连胜
+  int64 perfect_win            = 15;  // 完胜次数
+}

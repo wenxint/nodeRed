@@ -1,0 +1,44 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0171pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0171pb";
+import "corepb/common.proto";
+
+service CSAct0171Service {
+
+  rpc Reissue(ReissueRequest) returns (ReissueReply);  // 补发签到奖励
+}
+
+// ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated SignInInfo sign_in_infos = 1;  // 月签到信息
+  int64 time_card_count             = 2;  // 时光卡道具数量;
+  int64 gold_count                  = 3;  // 金币数量
+  int64 curr_days                   = 4;  // 当前天数
+  int64 now_timestamp               = 5;  //当前时间
+}
+
+// SignInInfo 签到信息
+message SignInInfo {
+  int64 day                     = 1;  // 第N天签到
+  bool signed                   = 2;  // 当日是否签到
+  bool is_reissue_consumed      = 3;  // 未签到时，补领是否需要消耗道具
+  int64 consume_time_card_count = 4;  // 补领需要消耗的时光卡道具数量
+  int64 consume_gold_count      = 5;  // 补领需要消耗的金币数量
+  repeated corepb.Item items    = 6;  // 签到奖励
+  bool is_reissue               = 7;  // 是否补领
+}
+
+// ReissueRequest 补发签到奖励请求
+message ReissueRequest {
+  int64 days                                          = 1;  // 补领第几天的奖励
+  repeated corepb.GiftSelectedItem gift_selected_item = 2;  // 可选礼包选中道具信息
+}
+
+// ReissueReply 补发签到奖励回复
+message ReissueReply {
+  repeated corepb.Item rewards = 1;  // 领取到的奖励
+  repeated int64 reward_ids    = 2;  // 领取到的奖励 ID 列表
+}

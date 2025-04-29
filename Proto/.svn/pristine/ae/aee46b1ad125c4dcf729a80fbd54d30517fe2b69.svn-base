@@ -1,0 +1,35 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0175pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0175pb";
+
+
+import "corepb/common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0175Service {
+}
+
+enum RewardState {
+  CANT_CLAIM_UNKNOWN = 0;  // 默认状态 不可领取
+  WAIT_CLAIM         = 1;  // 奖励可以领取
+  ALREADY_CLAIM      = 2;  // 奖励已经领取
+}
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated DayInfo day_infos = 1;  // 所有天的信息
+  actpb.commonpb.Share share = 2;  // 分享信息
+}
+
+message DayInfo {
+  int64 day_index              = 1;  // 活动的第X天
+  int64 day_unix               = 2;  // 当前天的秒级时间戳
+  RewardState reward_state     = 3;  // 奖励状态
+  repeated corepb.Item rewards = 4;  // 奖励
+  int64 bg_image_id            = 5;  // 每天背景图ID
+}

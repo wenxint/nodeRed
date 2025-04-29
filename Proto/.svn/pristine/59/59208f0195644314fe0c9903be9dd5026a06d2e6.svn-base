@@ -1,0 +1,296 @@
+// cs protocol
+syntax = "proto3";
+
+package guildwarpb.islandclashpb;
+option go_package = "git.woa.com/red/guildwarsvr/pkg/proto/guildwarpb/islandclashpb";
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "corepb/loadout_comm.proto";
+
+// 岛屿激斗服务
+service IslandClashService {
+  // EnterClash 进入活动场景
+  rpc EnterClash(EnterClashRequest) returns (EnterClashReply);
+  // LeaveClash 离开活动场景
+  rpc LeaveClash(LeaveClashRequest) returns (LeaveClashReply);
+  // GetClashInfo 获取战况
+  rpc GetClashInfo(GetClashInfoRequest) returns (GetClashInfoReply);
+  // CollectFeed 领取物资奖励
+  rpc CollectFeed(CollectFeedRequest) returns (CollectFeedReply);
+  // EnterIsland 进入岛屿
+  rpc EnterIsland(EnterIslandRequest) returns (EnterIslandReply);
+  // LeaveIsland 离开岛屿
+  rpc LeaveIsland(LeaveIslandRequest) returns (LeaveIslandReply);
+  // GetIslandInfo 获取岛屿信息
+  rpc GetIslandInfo(GetIslandInfoRequest) returns (GetIslandInfoReply);
+  // Preparation 起始占领
+  rpc Preparation(PreparationRequest) returns (PreparationReply);
+  // CancelPreparation 取消起始占领
+  rpc CancelPreparation(CancelPreparationRequest) returns (CancelPreparationReply);
+  // Fight 挑战
+  rpc Fight(FightRequest) returns (FightReply);
+  // Heartbeat 心跳
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);
+  // GetRankList 获取排名列表
+  rpc GetRankList(GetRankListRequest) returns (GetRankListReply);
+  // PVEFight PVE挑战
+  rpc PVEFight(PVEFightRequest) returns (PVEFightReply);
+  // QueryFightReport 查询战报
+  rpc QueryFightReport(QueryFightReportRequest) returns (QueryFightReportReply);
+}
+
+message QueryFightReportRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+message QueryFightReportReply {
+  repeated IslandClashFightReport fight_reports = 1;  // 战报
+}
+
+message IslandClashFightReport {
+  corepb.FightResultType result      = 1;  // 战斗结果
+  int64 battle_time                  = 2;  // 战斗时间
+  IslandClashPlayerInfo self_player  = 3;  // 自己
+  IslandClashPlayerInfo rival_player = 4;  // 对手
+}
+
+message IslandClashPlayerInfo {
+  int64 gid                                = 1;   // 玩家id
+  string name                              = 2;   // 玩家名称
+  string plat_pic                          = 3;   // 平台头像
+  int64 guild_id                           = 5;   // 同盟id
+  string guild_name                        = 6;   // 同盟名称
+  int64 flag                               = 7;   // 同盟旗帜
+  corepb.LoadoutBuddyChoice buddies_choice = 8;   // 伙伴信息
+  int64 level                              = 9;   // 玩家等级
+  corepb.DressInfo dress_info              = 10;  // 时装信息
+}
+
+message EnterClashRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+// 岛屿简要信息
+message IslandBrief {
+  int64 id                         = 1;  // 岛屿id
+  int64 player_num                 = 2;  // 总参战人数
+  int64 occupy_grid_num            = 3;  // 已被占领的资源点数量
+  int64 total_grid_num             = 4;  // 资源点总数
+  int64 self_guild_player_num      = 5;  // 本同盟参战人数
+  int64 self_guild_occupy_grid_num = 6;  // 本同盟占领的资源点数量
+  map<int64, GridInfo> grid_infos  = 7;  // 资源点数据，GridInfo 只填充 status 和 guild_id
+}
+
+message IslandFeedInfo {
+  int64 pos                    = 1;  // 物资位置
+  bool has_collect_feed        = 2;  // 是否领取过物资
+  IslandFeedNotify feed_notify = 3;  // 物资收集变化通知
+}
+
+message EnterClashReply {
+  int64 start_time                  = 1;  // 岛屿激斗开始时间
+  int64 end_time                    = 2;  // 岛屿激斗结束时间
+  IslandFeedInfo feed_info          = 3;  // 可领取物资信息
+  repeated IslandBrief island_infos = 4;  // 岛屿列表
+  int64 island_id                   = 5;  // 当前所处岛屿
+  bool first_enter                  = 6;  // 是否首次进入
+  int64 preparation_end_time        = 7;  // 起始占领阶段结束时间
+  int64 fc_rank                     = 8;  // 战力排名
+}
+
+// 物资收集变化通知
+message IslandFeedNotify {
+  int64 collect_num       = 1;  // 已收集物资数量
+  int64 total_num         = 2;  // 总收集物资数量
+  int64 cur_hp_ratio      = 3;  // 当前血量加成（万分比）
+  int64 cur_attack_ratio  = 4;  // 当前攻击加成（万分比）
+  int64 cur_defense_ratio = 5;  // 当前防御加成（万分比）
+}
+
+message LeaveClashRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+message LeaveClashReply {}
+
+// 一些错误提示通知
+message ShowErrorNotify {
+  int64 code     = 1;  // 错误码
+  string message = 2;  // 错误信息
+}
+
+message CollectFeedRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+message CollectFeedReply {
+  repeated corepb.Item awards = 1;  // 奖励
+}
+
+message GetClashInfoRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+message GetClashInfoReply {
+  repeated IslandBrief island_infos = 1;  // 岛屿列表
+}
+
+message EnterIslandRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+enum GridStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  IDLE     = 0;  // 空闲，可直接占领
+  OCCUPIED = 1;  // 已被占领
+}
+
+// 资源点信息
+message GridInfo {
+  int64 id                 = 1;  // 资源点id
+  GridStatus status        = 2;  // 当前状态
+  PlayerInfo occupy_player = 3;  // 占领玩家信息
+  int64 guild_id           = 4;  // 占领同盟id
+}
+
+message PlayerInfo {
+  int64 gid                      = 1;  // 占领玩家id
+  int64 guild_id                 = 2;  // 所属同盟id
+  int64 win_num                  = 3;  // 胜场数
+  int64 hp_percent_remain        = 4;  // 剩余血量万分比
+  bool fighting                  = 5;  // 玩家是否在战斗中
+  int64 available_challenge_time = 6;  // 可被挑战时间
+  string guild_name              = 7;  // 同盟名称
+  int64 guild_flag               = 8;  // 同盟旗帜
+  string name                    = 9;  // 玩家名称
+}
+
+// 岛屿信息
+message IslandInfo {
+  int64 id                        = 1;  // 岛屿id
+  int64 occupy_grid_num           = 2;  // 已被占领的资源点数量
+  int64 total_grid_num            = 3;  // 资源点总数
+  int64 total_player_num          = 4;  // 总参与人数
+  map<int64, int64> guild_players = 5;  // 岛屿内各同盟参与人数
+  map<int64, GridInfo> grid_infos = 6;  // 资源点数据
+  int64 version                   = 7;  // 数据版本号
+}
+
+// 岛屿变更时同步推送
+message IslandUpdateNotify {
+  IslandInfo island_info = 1;  // 岛屿信息
+}
+
+// 玩家占领岛屿个人积分变化时的同步推送
+message PlayerScoreUpdateNotify {
+  int64 score_increase = 1;  // 增加的分数
+}
+
+message EnterIslandReply {
+  IslandInfo island_info       = 1;  // 岛屿详情
+  bool has_join_preparation    = 2;  // 是否参与起始占领
+  int64 preparation_player_num = 3;  // 参与起始占领人数
+}
+
+message GetIslandInfoRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+message GetIslandInfoReply {
+  IslandInfo island_info = 1;  // 岛屿详情
+}
+
+message LeaveIslandRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+message LeaveIslandReply {}
+
+message PreparationRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+// 起始占领数据变化通知
+message PreparationNotify {
+  int64 island_id  = 1;  // 岛屿id
+  int64 player_num = 2;  // 参与争夺玩家人数
+}
+
+message PreparationReply {}
+
+message CancelPreparationRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+message CancelPreparationReply {}
+
+message FightRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+  int64 grid_id   = 3;  // 资源点id
+  bool occupy     = 4;  // 是否占领
+}
+
+message FightReply {}
+
+message HeartbeatRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+}
+
+message HeartbeatReply {
+  int64 island_id = 1;  // 玩家岛屿id
+}
+
+// 玩家离线通知
+message PlayerOfflineNotify {}
+
+enum RankType {
+  RANK_TYPE_UNKNOWN   = 0;  // 未知
+  GUILD               = 1;  // 同盟
+  PLAYER_CONTRIBUTION = 3;  // 玩家贡献
+}
+
+message GetRankListRequest {
+  string clash_id    = 1;  // 岛屿激斗ID
+  RankType rank_type = 2;  // 排行榜类型
+}
+
+message RankBasicInfo {
+  int64 gid   = 1;
+  string name = 2;  // 玩家名称
+}
+
+message RankGuildInfo {
+  int64 guild_id    = 1;  // 同盟的id
+  string guild_name = 2;  // 同盟名称
+  int64 flag        = 3;  // 同盟旗帜
+}
+
+message RankInfo {
+  int64 score              = 1;  // 分数
+  int64 rank               = 2;  // 排名
+  int64 zone_id            = 3;  // 所在区
+  RankBasicInfo basic_info = 4;  // 玩家信息
+  RankGuildInfo guild_info = 5;  // 同盟信息
+  int64 update_time        = 6;  // 更新时间
+}
+
+message GetRankListReply {
+  RankType rank_type          = 1;  // 排行榜类型
+  repeated RankInfo rank_list = 2;  // 玩家排行榜
+  RankInfo self_rank_info     = 3;  // 自身信息
+  int64 fixed_rank_count      = 4;  // ranklist前多少名固定
+}
+
+message PVEFightRequest {
+  string clash_id = 1;  // 岛屿激斗ID
+  int64 island_id = 2;  // 岛屿id
+}
+
+message PVEFightReply {}

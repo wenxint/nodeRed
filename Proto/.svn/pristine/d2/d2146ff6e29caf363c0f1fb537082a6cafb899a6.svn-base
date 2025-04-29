@@ -1,0 +1,15 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0111pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0111pb";
+import "corepb/common.proto";
+
+service CSAct0111Service {}
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  string desc                 = 1;
+  repeated corepb.Item awards = 2;
+  string area_id              = 3;
+}

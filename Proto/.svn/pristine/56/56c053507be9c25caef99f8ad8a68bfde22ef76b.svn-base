@@ -1,0 +1,73 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.actfriendduelpb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/actfriendduelpb";
+
+
+import "corepb/common.proto";
+
+service CSActFriendDuelService {
+  // 邀请玩家切磋
+  rpc ActInvitePvp(ActInvitePvpRequest) returns (ActInvitePvpReply);
+  // 取消邀请
+  rpc CancelActInvitePvp(CancelActInvitePvpRequest) returns (CancelActInvitePvpReply);
+  // 处理邀请请求
+  rpc HandleActPvpInvitation(HandleActPvpInvitationRequest) returns (HandleActPvpInvitationReply);
+}
+
+// 发出邀请
+message ActInvitePvpRequest {
+  int64 act_id        = 1;  // 活动ID
+  int64 gid           = 2;  // 被邀请人GID
+  bool is_plat_friend = 3;  // 是否是平台好友
+}
+
+message ActInvitePvpReply {}
+
+// 邀请方取消邀请
+message CancelActInvitePvpRequest {
+  int64 act_id = 1;  // 活动ID
+}
+
+message CancelActInvitePvpReply {}
+
+enum ActInviteOpt {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  REJECT = 0;  // 拒绝
+  ACCEPT = 1;  // 接受
+}
+
+message HandleActPvpInvitationRequest {
+  int64 act_id        = 1;  // 活动ID
+  int64 gid           = 2;  // 邀请人GID
+  int64 opt           = 3;  // 操作 0-拒绝 1-接受
+  bool is_plat_friend = 4;  // 是否是平台好友
+  int64 reject_reason = 5;  // 如果选择拒绝，需要传入拒绝原因，对应 ClientErrorCode.xlsx 中的错误码
+}
+
+message HandleActPvpInvitationReply {}
+
+// Notification
+message ActPvpInvitationNTF {
+  int64 act_id                             = 1;  // 活动ID
+  int64 from_gid                           = 2;  // 邀请人GID
+  string from_name                         = 3;  // 邀请人名字
+  int64 from_level                         = 4;  // 邀请人等级
+  string from_plat_pic                     = 5;  // 邀请人头像
+  bool is_from_plat                        = 6;  // 邀请人是否是平台好友
+  corepb.PersonalDisplayInfo personal_info = 7;  // 邀请人显示信息
+  int64 game_type                          = 8;  // 玩法类型
+}
+
+message RejectActPvpInvitationNTF {
+  int64 act_id = 1;  // 活动ID
+  int64 gid    = 2;  // 被邀请人GID
+  string name  = 3;  // 被邀请人名字
+  int64 reason = 4;  // 拒绝原因，对应 ClientErrorCode.xlsx 中的错误码
+}
+
+message Invitee {
+  int64 invitee_gid      = 1;  // 当前邀请玩家
+  int64 invite_timestamp = 2;  // 当前发起邀请时间
+}
