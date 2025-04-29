@@ -78,6 +78,28 @@ const redApiRoutes = fs
 redApiRoutes.forEach((route) => {
   app.use("/myapi", route.router);
 });
+
+/**
+ * @description 在应用启动时从 SVN 同步 Proto 文件目录
+ * @see http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net
+ */
+const { execSync } = require("child_process");
+const protoSVNRepo = 'http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net';
+const protoDir = path.join(__dirname, "Proto");
+try {
+  // 如果目录不存在或不是工作副本，则执行 checkout；否则执行 update
+  const svnMeta = path.join(protoDir, '.svn');
+  if (!fs.existsSync(protoDir) || !fs.existsSync(svnMeta)) {
+    console.info('SVN 初次检出 Proto 文件...');
+    execSync(`svn checkout "${protoSVNRepo}" "${protoDir}" --username a1_red --password A1Red@dev --no-auth-cache --non-interactive --trust-server-cert`, { stdio: 'inherit' });
+  } else {
+    console.info('SVN 更新 Proto 文件...');
+    execSync(`svn update "${protoDir}" --username a1_red --password A1Red@dev --no-auth-cache --non-interactive --trust-server-cert`, { stdio: 'inherit' });
+  }
+} catch (error) {
+  console.error('Proto 文件 SVN 同步失败:', error);
+}
+
 app.use(function (req, res, next) {
   next(createError(404));
 });
