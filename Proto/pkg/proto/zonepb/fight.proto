@@ -7,6 +7,7 @@ option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb";
 import "corepb/fight_common.proto";
 import "corepb/common.proto";
 import "pkg/proto/zonepb/pvppb/scorepb/score.proto";
+import "pkg/proto/zonepb/secretfieldpb/secretfield.proto";
 
 message GameStartNtf {
   int32 ret_code                        = 1;  // 战斗是否成功开始。0表示成功, 其它为异常
@@ -34,16 +35,15 @@ message GameOverNtf {
 
 message BusinessGameOverMsg {
   oneof msg {
-    PvPLadderGameOverMsg pvp_ladder         = 1;
-    JointBattleSettleReward joint_battle    = 2;
-    MirrorGameOverMsg mirror                = 3;
-    PseudoPvpGameOverMsg pseudo_pvp_battle  = 4;
-    SecretFieldGameOverMsg secret_field     = 5;
-    HuntingSeaGameOverMsg hunting_sea       = 6;
-    IslandSiegeGameOverMsg island_siege     = 7;
-    PvpCasualGameOverMsg pvp_casual         = 8;
-    ProtectViviGameOverMsg protect_vivi     = 9;
-    SkypieaGoldrushOverMsg skypiea_goldrush = 10;
+    PvPLadderGameOverMsg pvp_ladder        = 1;
+    JointBattleSettleReward joint_battle   = 2;
+    MirrorGameOverMsg mirror               = 3;
+    PseudoPvpGameOverMsg pseudo_pvp_battle = 4;
+    SecretFieldGameOverMsg secret_field    = 5;
+    HuntingSeaGameOverMsg hunting_sea      = 6;
+    IslandSiegeGameOverMsg island_siege    = 7;
+    PvpCasualGameOverMsg pvp_casual        = 8;
+    ProtectViviGameOverMsg protect_vivi    = 9;
   }
 }
 
@@ -57,9 +57,10 @@ message GameEventNtf {
 message FightExt {
   // 竞技场-娱乐赛
   message Casual {
-    int64 common_hidden_score = 1;  // 竞技场通用隐藏积分
-    bool is_new_player        = 2;
-    bool is_fight_again       = 3;  // 是否再战功能开启的战斗
+    int64 common_hidden_score          = 1;  // 竞技场通用隐藏积分
+    bool is_new_player                 = 2;
+    bool is_fight_again                = 3;  // 是否再战功能开启的战斗
+    scorepb.LadderScoreInfo score_info = 4;  // 段位分等信息
   }
   // 竞技场-段位赛
   message Ladder {
@@ -193,17 +194,18 @@ message GambleBoxInfo {
 
 // 秘境战斗结算信息
 message SecretFieldGameOverMsg {
-  repeated corepb.Item base_items  = 1;  // 基础掉落（右上角飘的奖励）
-  repeated corepb.Item equip_items = 2;  // 装备
-  int64 cur_level                  = 3;
-  int64 role_level                 = 4;
-  repeated corepb.Item mvp_items   = 5;  // [Deprecated] mvp奖励
-  bool is_mvp                      = 6;  // 是否mvp
-  string room_id                   = 7;  // roomid
-  GambleBoxInfo equip_gamble_info  = 8;  // 装备翻牌信息
+  repeated corepb.Item base_items                      = 1;  // 基础掉落（右上角飘的奖励）
+  repeated corepb.Item equip_items                     = 2;  // 装备
+  int64 cur_level                                      = 3;
+  int64 role_level                                     = 4;
+  repeated corepb.Item mvp_items                       = 5;  // [Deprecated] mvp奖励
+  bool is_mvp                                          = 6;  // 是否mvp
+  string room_id                                       = 7;  // roomid
+  zonepb.secretfieldpb.GambleBoxInfo equip_gamble_info = 8;  // 装备翻牌信息
   // GambleBoxInfo runes_gamble_info = 9;   // [Deprecated] 符石付费宝箱信息
-  int64 pay_rewards_count = 10;  // 奖励之中，氪金奖励的数量
-  bool is_fight_abnormal  = 11;  // 是否战斗异常，战斗异常时即使战斗胜利也不给奖励
+  int64 pay_rewards_count                       = 10;  // 奖励之中，氪金奖励的数量
+  bool is_fight_abnormal                        = 11;  // 是否战斗异常，战斗异常时即使战斗胜利也不给奖励
+  zonepb.secretfieldpb.FightRecord fight_record = 12;  // 里面只有 boxes 字段有赋值
 }
 
 // 守护公主结算信息

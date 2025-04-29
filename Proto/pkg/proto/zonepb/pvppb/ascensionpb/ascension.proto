@@ -1,0 +1,190 @@
+// cs protocol
+syntax = "proto3";
+
+package zonepb.pvppb.ascensionpb;
+option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pvppb/ascensionpb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+// 竞技场赛年等级和熟练度系统
+service AscensionService {
+  // 赛年 UI 需要的信息
+  rpc YearUI(YearUIRequest) returns (YearUIReply);
+  // 领取赛年等级进度奖励
+  rpc ClaimYearProgressRewards(ClaimYearProgressRewardsRequest) returns (ClaimYearProgressRewardsReply);
+  // 伙伴熟练度 UI 需要的信息
+  rpc BuddyMasteryUI(BuddyMasteryUIRequest) returns (BuddyMasteryUIReply);
+  // 领取熟练度称号奖励
+  rpc ClaimTitleRewards(ClaimTitleRewardsRequest) returns (ClaimTitleRewardsReply);
+
+  // 大局结束后战斗数据上报
+  // +3 大版本前临时使用，届时在帧同步中直接上报
+  rpc ReportFightDetail(ReportFightDetailRequest) returns (ReportFightDetailReply);
+}
+
+// AscensionService.YearUI
+
+message YearUIRequest {}
+
+message YearUIReply {
+  int64 comp_level                    = 1;  // 赛年竞技等级
+  int64 comp_exp_to_next_level        = 2;  // 到下一等级前的经验
+  int64 comp_exp_needed_to_next_level = 3;  // 到下一等级需要的经验
+  int64 comp_exp_this_week            = 4;  // 本周获得的经验
+  int64 comp_exp_limit_this_week      = 5;  // 本周经验上限
+
+  message SeasonInfo {
+    int64 year_id         = 1;  // 赛年ID
+    int64 year_start_time = 2;  // 赛年开始时间
+    int64 year_end_time   = 3;  // 赛年结束时间
+    int64 season_id       = 4;  // 赛季ID
+    message SeasonConfig {
+      int64 season_id         = 1;  // 赛季ID
+      int64 season_start_time = 2;  // 赛季开始时间
+      int64 season_end_time   = 3;  // 赛季结束时间
+    }
+    repeated SeasonConfig season_configs = 5;
+  }
+  SeasonInfo season_info = 11;  // 当前赛年和赛季信息
+
+  message ProgressInfo {
+    message Reward {
+      int64 required_comp_level  = 1;  // 需要达到的竞技等级
+      repeated corepb.Item items = 2;  // 奖励道具
+      bool claimed               = 3;  // 是否已领取
+    }
+    repeated Reward rewards = 1;  // 奖励列表
+  }
+  ProgressInfo progress_info = 12;  // 当前赛年等级进度奖励信息
+
+  message TaskInfo {
+    message Task {
+      int64 task_id  = 1;  // 任务ID
+      int64 progress = 2;  // 进度数值
+      message StarConfig {
+        int64 star_index      = 1;  // 第几星(一星 = 1)
+        int64 max_progress    = 2;  // 最大进度数值
+        int64 comp_exp_reward = 3;  // 经验奖励
+      }
+      repeated StarConfig star_configs = 3;  // 各星配置
+    }
+    repeated Task tasks = 1;  // 所有可见任务
+  }
+  TaskInfo task_info = 13;  // 赛年任务信息
+}
+
+// AscensionService.ClaimYearProgressRewards
+
+message ClaimYearProgressRewardsRequest {
+  int64 comp_level = 1;  // 优先领取的竞技等级
+}
+
+message ClaimYearProgressRewardsReply {
+  repeated corepb.Item rewards       = 1;  // 奖励
+  repeated int64 claimed_comp_levels = 2;  // 已领取的竞技等级
+}
+
+// AscensionService.BuddyMasteryUI
+
+message BuddyMasteryUIRequest {}
+
+message BuddyMasteryUIReply {
+  int64 points_this_week       = 1;  // 本周获得的熟练值
+  int64 points_limit_this_week = 2;  // 本周熟练值上限
+
+  message Buddy {
+    int64 buddy_id                   = 1;  // 伙伴ID
+    int64 tier_id                    = 2;  // 熟练度级别ID
+    int64 points_to_next_tier        = 3;  // 到下一级别前的熟练值
+    int64 points_needed_to_next_tier = 4;  // 到下一级别需要的熟练值
+    int64 match_count                = 5;  // 总场次
+    int64 win_match_count            = 6;  // 胜场次
+  }
+  repeated Buddy buddies = 11;  // 伙伴列表
+
+  message Title {
+    int64 title_id             = 1;  // 称号ID
+    repeated corepb.Item items = 2;  // 奖励内容
+    int64 required_tier_id     = 3;  // 需要达到的熟练度级别ID
+    int64 required_tier_count  = 4;  // 需要达到的熟练度级别数量
+    bool claimed               = 5;  // 是否已领取
+  }
+  repeated Title titles = 12;  // 称号列表
+}
+
+// AscensionService.ClaimTitleRewards
+
+message ClaimTitleRewardsRequest {
+  int64 title_id = 1;  // 优先领取的称号ID
+}
+
+message ClaimTitleRewardsReply {
+  repeated corepb.Item rewards = 1;  // 奖励
+
+  message Title {
+    int64 title_id             = 1;  // 称号ID
+    repeated corepb.Item items = 2;  // 奖励内容
+    int64 required_tier_id     = 3;  // 需要达到的熟练度级别ID
+    int64 required_tier_count  = 4;  // 需要达到的熟练度级别数量
+    bool claimed               = 5;  // 是否已领取
+  }
+  repeated Title titles = 2;  // 称号列表
+}
+
+// AscensionService.ReportFightDetail
+
+message ReportFightDetailRequest {
+  repeated corepb.PlayerFightActDetail round_details = 1;  // 按顺序各单局信息
+}
+
+message ReportFightDetailReply {}
+
+// NTFs
+
+// PVP 结算后赛年任务和熟练度进度更新
+// +3 大版本前临时使用，届时直接合到结算消息
+message UpdateNTF {
+  message YearUpdate {
+    int64 old_comp_level                = 1;  // 旧竞技等级
+    int64 new_comp_level                = 2;  // 新竞技等级
+    int64 comp_exp_gain                 = 3;  // 竞技经验增加
+    int64 comp_exp_to_next_level        = 4;  // 到下一等级前的经验
+    int64 comp_exp_needed_to_next_level = 5;  // 到下一等级需要的经验
+    int64 year_id                       = 6;  // 赛年ID
+
+    message UpdatedTask {
+      int64 task_id       = 1;  // 任务ID
+      int64 progress_gain = 2;  // 进度数值增加
+    }
+    repeated UpdatedTask updated_tasks = 11;  // 更新的任务列表
+
+    repeated corepb.Item rewards = 21;  // 奖励
+  }
+  YearUpdate year_update = 1;  // 赛年更新
+
+  message BuddyMasteryUpdate {
+    message UpdatedBuddy {
+      int64 buddy_id    = 1;  // 伙伴ID
+      int64 tier_id     = 2;  // 熟练度级别ID
+      int64 points_gain = 3;  // 熟练度增加
+    }
+    repeated UpdatedBuddy updated_buddies = 1;  // 更新的伙伴列表
+
+    repeated corepb.Item rewards = 11;  // 奖励
+  }
+  BuddyMasteryUpdate buddy_mastery_update = 2;  // 伙伴熟练度更新
+
+  message PVPTaskUpdate {
+    message UpdatedTask {
+      int64 task_id       = 1;  // 任务ID
+      int64 progress_gain = 2;  // 进度数值增加
+    }
+    repeated UpdatedTask updated_tasks = 1;  // 更新的任务列表
+    int64 wins_this_week_gain          = 2;  // 本周胜场数增加
+
+    repeated corepb.Item rewards = 11;  // 奖励
+  }
+  PVPTaskUpdate pvp_task_update = 3;  // 竞技场任务更新
+}

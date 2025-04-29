@@ -62,6 +62,9 @@ enum SystemID {
   AvatarBox                        = 807;        // 头像框
   Dress                            = 808;        // 装扮
   Avatar                           = 809;        // 头像
+  Fashion                          = 810;        // 时装
+  BusinessCard                     = 811;        // 名片
+  ArenaScene                       = 812;        // 竞技场场景
   UltimateKillPic                     = 850;        // 奥义击杀图
   Recruit                          = 901;        // 招募
   RecruitDetail                    = 9010001;    // 招募详情

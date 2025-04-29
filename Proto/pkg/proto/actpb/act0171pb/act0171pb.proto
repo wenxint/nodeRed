@@ -17,6 +17,7 @@ message ActGetDetailReply {
   int64 time_card_count             = 2;  // 时光卡道具数量;
   int64 gold_count                  = 3;  // 金币数量
   int64 curr_days                   = 4;  // 当前天数
+  int64 now_timestamp               = 5;  //当前时间
 }
 
 // SignInInfo 签到信息

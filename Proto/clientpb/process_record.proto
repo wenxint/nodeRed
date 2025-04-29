@@ -2,8 +2,6 @@
 syntax = "proto3";
 package clientpb;
 option go_package = "git.woa.com/red/game-proto/clientpb";
-import "corepb/fight_common.proto";
-import "clientpb/logtrack.proto";
 
 // http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net/Proto/pkg/proto/clientpb/record.proto
 // 这个文件来自客户端, 修改必须由客户端发起后同步给我们!!!

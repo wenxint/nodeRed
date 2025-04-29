@@ -305,10 +305,12 @@ enum Gender {
 
 // 装扮信息
 message DressInfo {
-  AvatarBoxInfo avatar_box_info = 1;
-  TitleInfo title_info          = 2;
-  StickerInfo sticker_info      = 3;  // 战局内表情信息
-  AvatarInfo avatar_info        = 4;
+  AvatarBoxInfo avatar_box_info       = 1;
+  TitleInfo title_info                = 2;
+  StickerInfo sticker_info            = 3;  // 战局内表情信息
+  AvatarInfo avatar_info              = 4;
+  BusinessCardInfo business_card_info = 5;  // 名片信息
+  ArenaSceneInfo arena_scene_info     = 6;  // 竞技场场景信息
 }
 
 // 战局内表情信息
@@ -340,6 +342,18 @@ message TitleInfo {
   int64 expired_time = 2;  // 过期时间(Unix Second)
 }
 
+// 名片信息
+message BusinessCardInfo {
+  int64 business_card_id = 1;  // 名片 id
+  int64 expired_time     = 2;  // 过期时间(Unix Second)
+}
+
+// 竞技场场景信息
+message ArenaSceneInfo {
+  int64 arena_scene_id = 1;  // 竞技场场景 id
+  int64 expired_time   = 2;  // 过期时间(Unix Second)
+}
+
 // 个人显示信息
 message PersonalDisplayInfo {
   string name                            = 1;  // 角色昵称
@@ -351,6 +365,7 @@ message PersonalDisplayInfo {
   int64 zone_id                          = 7;  // 玩家所在小区
   int64 last_launch_from_gamecenter_time = 8;  // 上次从游戏中心启动的时间
   Gender gender                          = 9;  // 性别
+  int64 comp_level                       = 10;  // 竞技等级
 }
 
 // 活动信息

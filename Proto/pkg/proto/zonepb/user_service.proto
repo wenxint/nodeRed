@@ -361,6 +361,7 @@ message PvpLadderSummaryInfo {
 message BuddyState {
   int64 id   = 1;  // id
   int64 star = 2;  // 星级
+  int64 buddy_mastery_tier = 3;  // 伙伴熟练度级别
 }
 message BuddySummaryInfo {
   int64 fc                    = 1;  // 战力
@@ -511,15 +512,18 @@ message PokedexState {
 
 // 装扮信息
 message DressingSummaryInfo {
-  int64 fc                             = 1;  // 战力
-  corepb.FightAttr attr                = 2;  // 总属性加成
-  AvatarBoxInfo avatar_box_info        = 3;  // 头像框信息
-  TitleInfo title_info                 = 4;  // 称号信息
-  StickerInfo sticker_info             = 5;  // 表情信息
-  UltraKillPicInfo ultra_kill_pic_info = 6;  // 奥义击杀图信息
-  AvatarInfo avatar_info               = 7;  // 头像信息
-  bool is_hidden                       = 8;  // 是否隐藏
-  BuddyTokenInfo buddy_token_info      = 9;  // 伙伴信物信息
+  int64 fc                             = 1;   // 战力
+  corepb.FightAttr attr                = 2;   // 总属性加成
+  AvatarBoxInfo avatar_box_info        = 3;   // 头像框信息
+  TitleInfo title_info                 = 4;   // 称号信息
+  StickerInfo sticker_info             = 5;   // 表情信息
+  UltraKillPicInfo ultra_kill_pic_info = 6;   // 奥义击杀图信息
+  AvatarInfo avatar_info               = 7;   // 头像信息
+  bool is_hidden                       = 8;   // 是否隐藏
+  BuddyTokenInfo buddy_token_info      = 9;   // 伙伴信物信息
+  BuddyFashionInfo buddy_fashion_info  = 10;  // 时装信息
+  BusinessCardInfo business_card_info  = 11;  // 名片信息
+  ArenaSceneInfo arena_scene_info      = 12;  // 场景信息
 }
 
 message DressingState {
@@ -555,6 +559,22 @@ message UltraKillPicInfo {
 message BuddyTokenInfo {
   repeated DressingState buddy_token_infos = 1;  // 伙伴信物列表
   int64 total_num                          = 2;  // 总数
+}
+
+// 时装信息 (FashionInfo 已被占了)
+message BuddyFashionInfo {
+  repeated DressingState fashions = 1;  // 时装列表
+  int64 total_num                 = 2;  // 总数
+}
+
+message BusinessCardInfo {
+  repeated DressingState business_cards = 1;  // 名片列表
+  int64 total_num                       = 2;  // 总数
+}
+
+message ArenaSceneInfo {
+  int64 arena_scene_id = 1;  // 场景id
+  int64 expired_time   = 2;  // 过期时间(Unix Second)
 }
 
 message QueryUserSummaryInfoV2Response {

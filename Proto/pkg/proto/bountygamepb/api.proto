@@ -4,6 +4,7 @@ syntax = "proto3";
 package bountygamepb;
 option go_package = "git.woa.com/red/bountygamesvr/pkg/proto/bountygamepb";
 
+
 import "corepb/common.proto";
 import "corepb/fight_common.proto";
 import "corepb/loadout_comm.proto";
@@ -249,8 +250,9 @@ message GloryRankReply {
 
 // 阵容中的伙伴(和援护)信息
 message BuddyInfo {
-  int64 buddy_id = 1;
-  int64 stars    = 2;
+  int64 buddy_id   = 1;
+  int64 stars      = 2;
+  int64 fashion_id = 3;  // 时装ID
 }
 
 // 阵容中的空岛贝信息
@@ -333,12 +335,16 @@ message RefreshBountyListReply {
 message SeasonRecordRequest {}
 
 message SeasonRecordInfo {
-  int64 season_id    = 1;  // 赛季ID
-  string season_name = 2;  // 赛季名称
-  int64 rank         = 3;  // 排名
-  int64 score        = 4;  // 积分
-  int64 fc           = 5;  // 实力
-  Loadout loadout    = 6;  // 阵容
+  int64 season_id     = 1;   // 赛季ID
+  string season_name  = 2;   // 赛季名称
+  int64 rank          = 3;   // 排名
+  int64 score         = 4;   // 积分
+  int64 fc            = 5;   // 实力
+  Loadout loadout     = 6;   // 阵容
+  int64 win_times     = 7;   // 胜利次数
+  int64 fight_times   = 8;   // 战斗次数
+  int64 begin_score   = 9;   // 赛季开始时的积分
+  int64 highest_score = 10;  // 赛季最高积分
 }
 
 message SeasonRecordReply {

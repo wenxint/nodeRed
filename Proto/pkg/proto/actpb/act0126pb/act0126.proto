@@ -1,0 +1,48 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0126pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0126pb";
+
+import "corepb/common.proto";
+
+service CSAct0126Service {
+  rpc Dice(DiceRequest) returns (DiceReply);  // 掷骰子
+}
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  bool is_one_click_throw          = 1;  // 是否开启一键投掷
+  repeated RewardInfo reward_infos = 2;  // 奖励信息
+  int64 item_id                    = 3;  // 投掷道具ID
+  string enter_lines               = 4;  // 进入活动台词
+}
+
+message RewardInfo {
+  int64 diff_begin            = 1;  // 差值下限
+  int64 diff_end              = 2;  // 差值上限
+  repeated corepb.Item reward = 3;  // 奖励
+  string desc                 = 4;  // 描述
+}
+
+message DiceRequest {
+  bool is_one_click_throw = 1;  // 是否一键投掷
+}
+
+message DiceReply {
+  bool can_one_click_throw         = 1;  // 能否开启一键投掷
+  repeated DiceResult dice_results = 2;  // 掷骰子结果
+}
+
+message DiceResult {
+  int64 cnt                   = 1;  // 投掷次数
+  bool is_win                 = 2;  // 是否胜利
+  repeated int64 player_point = 3;  // 玩家两个骰子点数
+  repeated int64 npc_point    = 4;  // NPC两个骰子点数
+  int64 diff_value            = 5;  // 差值
+  repeated corepb.Item reward = 6;  // 奖励
+  string lines                = 7;  // 台词
+  string icon                 = 8;  // 图标
+}

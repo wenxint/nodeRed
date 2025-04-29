@@ -15,7 +15,7 @@ enum SpecialSysID {
 enum RPStatus {
   NO_POINT      = 0;  // 无红点
   HAVE_POINT    = 1;  // 有红点
-  HAVE_NEW_FLAG = 2;  // 有新标记    红点>新标记>正常
+  HAVE_NEW_FLAG = 2;  // Deprecated: 有新标记，推荐使用 HAVE_POINT+RPDetail.tips:新
 }
 
 enum RPType {
@@ -34,10 +34,11 @@ message RPDetail {           // 红点目前有三种展示：单纯有无红点
 message RPMeta {
   int64 ts     = 1;  // 红点计算的时间戳，毫秒
   uint64 sgrid = 2;  // gatesvr的gsct和grid计算出来的多次登录也唯一且有序递增的值，客户端请求触发的红点计算才有值
+  int64 ver    = 3;  // 该红点计算逻辑版本号，建议每次更新计算逻辑递增，以便触发重算
 }
 
 message RedPoint {
-  uint32 sys_id          = 1;  // 红点id, 全局唯一. 之前经常以系统ID作为红点id
+  int64 sys_id           = 1;  // 红点id, 全局唯一. 之前经常以系统ID作为红点id
   RPStatus status        = 2;  // 是否有红点
   RPType type            = 3;
   RPDetail status_detail = 4;  // 一些较特殊的红点，需要填充这里对应的字段

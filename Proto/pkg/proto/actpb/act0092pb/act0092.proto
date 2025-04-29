@@ -1,0 +1,48 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0092pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0092pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+import "corepb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated int64 salt_pos                  = 1;  // 海盐 <序号>，领取海盐时，传序号
+  repeated actpb.commonpb.Task reward_info = 2;  // 任务进度列表
+  int64 salt_count_claimed                 = 3;  // 已收集的海盐数量
+  repeated RelateActInfo relate_act_infos  = 4;
+}
+
+message RelateActInfo {
+  int64 id             = 1;  // 条目唯一id
+  int64 related_act_id = 2;  // 关联活动id
+  enum ActStatus {
+    ACT_STATUS_UNKNOWN  = 0;
+    ACT_STATUS_NOT_OPEN = 1;
+    ACT_STATUS_OPENING  = 2;
+    ACT_STATUS_CLOSED   = 3;
+  }
+  ActStatus act_status       = 3;  // 关联活动状态
+  int64 act_open_time_unix   = 4;  // 关联活动开启时间
+  int64 act_end_time_unix    = 5;  // 关联活动结束时间
+  int64 act_player_level_min = 6;  // 玩家等级最小值
+  int64 act_player_level_max = 7;  // 玩家等级最大值
+  string act_name            = 8;  // 活动名称
+}
+
+message ActDeliverRewardRequest {}
+message ActDeliverRewardReply {}
+
+service CSAct0092Service {
+  rpc CollectSeaSalt(CollectSeaSaltRequest) returns (CollectSeaSaltReply);  // 领取海盐
+}
+
+message CollectSeaSaltRequest {
+  int64 salt_index = 1;  // 海盐序号
+}
+message CollectSeaSaltReply {
+  repeated corepb.Item reward = 1;  // 获得的奖励
+}

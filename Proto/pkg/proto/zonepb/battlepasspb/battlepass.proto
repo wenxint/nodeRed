@@ -8,17 +8,17 @@ option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/battlepasspb";
 import "corepb/common.proto";
 
 service BattlePassService {
-  // 查询宝典信息（进入宝典的时候）
+  // 查询特典信息（进入特典的时候）
   rpc QueryBattlePassInfo(QueryBattlePassInfoRequest) returns (QueryBattlePassInfoReply);
-  // 查询宝典概览信息（主界面）
+  // 查询特典概览信息（主界面）
   rpc QueryBattlePassBrifeInfo(QueryBattlePassBrifeInfoRequest) returns (QueryBattlePassBrifeInfoReply);
-  // 领取某一级的宝典奖励
+  // 领取某一级的特典奖励
   rpc ClaimRewards(ClaimRewardsRequest) returns (ClaimRewardsReply);
   // 领取额外奖励
   rpc ClaimExtraRewards(ClaimExtraRewardsRequest) returns (ClaimExtraRewardsReply);
   // 领取所有奖励（包括等级奖励和额外奖励）
   rpc ClaimAllRewards(ClaimAllRewardsRequest) returns (ClaimAllRewardsReply);
-  // 进阶宝典（之后接入直购之后可能流程有变化，先按这样临时处理）
+  // 进阶特典（之后接入直购之后可能流程有变化，先按这样临时处理）
   rpc AdvancingBattlePass(AdvancingBattlePassRequest) returns (AdvancingBattlePassReply);
   // 购买等级
   rpc BuyLevel(BuyLevelRequest) returns (BuyLevelReply);
@@ -42,6 +42,17 @@ service BattlePassService {
   rpc IgnoreSpecialPackRedpoint(IgnoreSpecialPackRedpointRequest) returns (IgnoreSpecialPackRedpointReply);
   // 领取补偿(赛季一临时处理)
   rpc ClaimCompensation(ClaimCompensationRequest) returns (ClaimCompensationReply);
+  // 领取第二赛季继承的特典
+  rpc ClaimSeasonTwoInherit(ClaimSeasonTwoInheritRequest) returns (ClaimSeasonTwoInheritReply);
+}
+
+message ClaimSeasonTwoInheritRequest {
+  int64 season_id = 1;  // 赛季ID
+}
+
+message ClaimSeasonTwoInheritReply {
+  repeated corepb.Item items = 1;  // 领取的奖励
+  BattlePassInfo info        = 2;  // 特典信息
 }
 
 message ClaimCompensationRequest {
@@ -63,7 +74,7 @@ message BuySpecialPackRequest {
 }
 
 message BuySpecialPackReply {
-  BattlePassInfo info        = 1;  // 宝典信息
+  BattlePassInfo info        = 1;  // 特典信息
   repeated corepb.Item items = 2;  // 购买特惠礼包的奖励
 }
 
@@ -80,20 +91,25 @@ message BattlePassInfo {
   int64 exp                                       = 4;   // 当前经验
   int64 extra_rewards_count                       = 5;   // 可领取的额外奖励数目
   int64 last_shown_level                          = 7;   // 上一次调用这个协议时的等级
-  bool is_advanced                                = 9;   // 是否是高级宝典
+  bool is_advanced                                = 9;   // 是否是高级特典
   repeated int64 normal_rewarded                  = 10;  // 已经领取过的普通等级奖励
   repeated int64 advanced_rewarded                = 11;  // 已经领取过的高级等级奖励
-  int64 fifty_level_can_buy_count                 = 12;  // 50级宝典等级可购买次数(只有50级档位有购买限制)
-  int64 fifty_level_can_buy_limit                 = 13;  // 50级宝典等级可购买上限(只有50级档位有购买限制)
+  int64 fifty_level_can_buy_count                 = 12;  // 50级特典等级可购买次数(只有50级档位有购买限制)
+  int64 fifty_level_can_buy_limit                 = 13;  // 50级特典等级可购买上限(只有50级档位有购买限制)
   bool need_to_show_guide                         = 14;  // 是否需要显示引导
-  BPType type                                     = 15;  // 宝典类型
+  BPType type                                     = 15;  // 特典类型
   int64 special_pack_can_buy_count                = 16;  // 特惠礼包可购买次数
   int64 special_pack_already_buy_count            = 17;  // 特惠礼包已购买次数
   corepb.Item special_pack_cost                   = 18;  // 特惠礼包购买消耗
   repeated corepb.Item special_pack_rewards       = 19;  // 特惠礼包奖励
   map<int64, LevelReward> level_rewards           = 20;  // 等级奖励
-  repeated corepb.Item special_bp_upgrade_rewards = 21;  // 特殊升级宝典的奖励(只有赛季一需要临时处理，之后会废弃)
+  repeated corepb.Item special_bp_upgrade_rewards = 21;  // 特殊升级特典的奖励(只有赛季一需要临时处理，之后会废弃)
   repeated corepb.Item compensation_rewards       = 22;  // 赛季一补偿(只有赛季一需要临时处理，之后会废弃)
+  InheritInfo inherit_info                        = 23;  // 继承信息
+}
+
+message InheritInfo {
+  BPType bp_type = 1;  // 继承的特典类型
 }
 
 message LevelReward {
@@ -136,18 +152,18 @@ message ClaimAllRewardsReply {
 
 message AdvancingBattlePassRequest {
   int64 season_id = 1;  // 赛季ID
-  BPType type     = 2;  // 宝典类型（之后接入直购之后可能流程有变化，先按这样处理）
+  BPType type     = 2;  // 特典类型（之后接入直购之后可能流程有变化，先按这样处理）
 }
 
 message AdvancingBattlePassReply {
-  repeated corepb.Item items = 1;  // 解锁高级宝典的奖励
+  repeated corepb.Item items = 1;  // 解锁高级特典的奖励
 }
 
 enum BPType {
   TYPE_UNKNOWN = 0;
-  NORMAL       = 1;  // 普通宝典
-  ADVANCED     = 2;  // 高级宝典
-  LUXURY       = 3;  // 豪华宝典（特殊的高级宝典）
+  NORMAL       = 1;  // 普通特典
+  ADVANCED     = 2;  // 高级特典
+  LUXURY       = 3;  // 豪华特典（特殊的高级特典）
 }
 
 message TaskInfo {
@@ -181,11 +197,11 @@ message ExchangeItemInfo {
   int64 exchange_id            = 1;  // 兑换ID
   corepb.Item product          = 2;  // 兑换商品
   corepb.Item cost             = 3;  // 单次兑换消耗
-  int64 need_bp_level          = 4;  // 兑换所需宝典等级
+  int64 need_bp_level          = 4;  // 兑换所需特典等级
   int64 exchange_limit         = 5;  // 兑换道具数限制
   int64 already_exchange_count = 6;  // 已经兑换得到道具数
-  int64 own_limit              = 7;   // 拥有数量限制
-  int64 own_count             = 8;   // 拥有数量
+  // int64 own_limit              = 7;   // 拥有数量限制
+  // int64 own_count             = 8;   // 拥有数量
   bool can_exchange           = 9;  // 是否可以兑换
   repeated ExchangeCost costs = 10;  // 按道具数兑换消耗列表，第 i 个 cost 表示道具数在 [i-1].buy_count+1 至 [i].buy_count 区间的消耗，最后一个 cost 是无限购买的消耗
 }
@@ -232,6 +248,7 @@ message TaskSummaryInfo {
   int64 lost_exp_acceleration_percentage = 16;  // 丢失经验中，可加速的百分比
   int64 lost_exp_buy_percentage          = 17;  // 丢失经验中，可购买的百分比
   int64 max_acceleration_percentage      = 18;  // 每周加速的最大百分比
+  int64 weekly_task_exp_limit            = 19;  // 每周任务经验上限
 }
 
 message CompleteTaskRequest {

@@ -50,12 +50,17 @@ message GetCasualInfoReply {
   FastDuelStatus fast_duel_status = 5;  // 极速单挑状态
   MatchMode match_mode            = 6;  // 匹配模式，如果极速单挑关闭，该模式会自动切换为普通娱乐赛模式
   int64 fast_duel_punish_end_ts   = 7;  // 极速单挑惩罚结束时间戳
+
+  int64 year_id    = 8;   // 当前赛年ID
+  int64 season_id  = 9;   // 当前赛季ID
+  int64 comp_level = 10;  // 当前赛年竞技等级
 }
 
 message FastDuelStatus {
-  bool is_open    = 1;  // 极速单挑是否开启
-  int64 open_at   = 2;  // 极速单挑开启时间(unix seconds)
-  int64 finish_at = 3;  // 极速单挑结束时间(unix seconds)
+  bool is_open = 1;  // 极速单挑是否开启
+
+  int64 open_at   = 2;  // deprecated: 极速单挑开启时间(unix seconds)
+  int64 finish_at = 3;  // deprecated: 极速单挑结束时间(unix seconds)
 }
 
 enum MatchMode {

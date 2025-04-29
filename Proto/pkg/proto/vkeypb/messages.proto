@@ -4,6 +4,8 @@ syntax = "proto3";
 package vkeypb;
 option go_package = "git.woa.com/red/fightsvr/pkg/proto/vkeypb";
 
+import "corepb/guildwar_stampede.proto";
+
 // 这里定义 vkey 对应的 protobuf message
 
 message WinResultDetail {
@@ -105,10 +107,10 @@ message KillReport {
   uint32 killed_role_idx = 2;  // 被击杀者
 }
 
-// 地图破坏总数上报
+// 地图破坏上报
 // vkey: REPORT_DESTRUCTION(2123)
 message DestructionReport {
-  uint32 total = 1;  // 当局破坏总数
+  uint32 count = 1;  // 当次破坏数
 }
 
 // 回合信息上报
@@ -148,4 +150,83 @@ message GemValueReport {
   uint32 role_idx       = 1;  // 上报的是谁的宝石
   uint64 gem_value      = 2;  // 总宝石数量，即单局累计的总宝石量
   uint64 pick_gem_value = 3;  // 宝石拾取总量，不包含掉落，只计算拾取
+}
+
+message StampedePlayerDynamicInfo {
+  uint32 role_idx  = 1;
+  int64 hp         = 2;
+  int64 mp         = 3;
+  int32 position_x = 4;
+  int32 position_y = 5;
+  bool is_mirror   = 6;  // 主角朝向
+}
+
+// 夺宝行动上报玩家信息
+// vkey: REPORT_STAMPEDE_PLAYER_INFO(2127)
+message StampedePlayerDynamicInfoReport {
+  repeated StampedePlayerDynamicInfo player_dynamic_info = 1;  //主角的属性，只上报变化的
+}
+
+message Item {
+  uint32 id   = 1;  // 物品id
+  int64 count = 2;  // 物品数量
+}
+
+// 怪物动态信息
+message MonsterDynamicInfo {
+  int64 id      = 1;
+  int32 idx     = 2;
+  int64 init_hp = 3;  // 初始生命
+  reserved 4;
+  int32 position_x = 5;
+  int32 position_y = 6;
+  bool is_mirror   = 7;  // 怪物朝向
+  bool is_dead     = 8;  // 怪物是否死亡
+  int32 quadrant   = 9;  // 象限
+}
+
+// 夺宝行动上报怪物信息
+// vkey: REPORT_STAMPEDE_MONSTER_INFO(2128)
+message StampedeMonsterDynamicInfoReport {
+  repeated MonsterDynamicInfo monster_dynamic_info = 1;  //每只怪物的动态信息,只上报变化的怪物
+}
+
+// 夺宝行动操作物品上报
+// vkey: REPORT_STAMPEDE_ITEM_OP(2129)
+message StampedeItemOpReport {
+  repeated corepb.ActItem items = 1;  // 操作物品列表
+}
+
+// 夺宝行动上报玩家离开当前小地图（进入新的小地图或成功撤离）
+// vkey: REPORT_STAMPEDE_LEAVE(2130)
+message StampedeLeaveReport {
+  uint32 role_idx = 1;  // 离开的玩家
+  int32 block_id  = 2;  // 离开的传送点ID
+}
+
+// 夺宝行动上报玩家击杀怪物
+// vkey: REPORT_STAMPEDE_KILL_MONSTER(2131)
+message StampedeKillMonsterReport {
+  uint32 role_idx   = 1;  // 击杀怪物的玩家
+  int64 monster_id  = 2;  // 怪物ID
+  int32 monster_idx = 3;  // 怪物索引
+}
+
+// 夺宝行动上报该关卡道具掉落状态（宝箱状态）
+// vkey: REPORT_STAMPEDE_ITEM_DROP_STATUS(2132)
+message StampedeItemDropStatusReport {
+  corepb.ItemDropStatus status = 1;  // 道具掉落状态
+}
+
+// 夺宝行动上报buff
+// vkey: REPORT_STAMPEDE_BUFF(2133)
+message StampedeBuffReport {
+  uint32 role_idx = 1;  // 操作该buff的玩家
+  int64 buff_id   = 2;  // buff id
+  int32 op_type   = 3;  // 操作类型,0-添加，1-移除
+}
+
+message PlayerQualityLevelReport {
+  int32 default_quality_level = 1; // 默认品质，即机型档位
+  int32 effect_level = 2; // 画质
 }

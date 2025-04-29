@@ -4,18 +4,22 @@ syntax = "proto3";
 package zonepb.stickerpb;
 option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/stickerpb";
 
+
 import "corepb/common.proto";
+import "pkg/proto/zonepb/dressingpb/dressing.proto";
 
 service CSService {
   // 请求所有的sticker
   rpc QueryOwnedStickers(QueryOwnedStickersRequest) returns (QueryOwnedStickersReply);
+  // 请求单个sticker
+  rpc QueryStickerByItemID(QueryStickerByItemIDRequest) returns (QueryStickerByItemIDReply);
 
   // 请求玩家选择的sticker
   rpc QuerySelectedStickers(QuerySelectedStickersRequest) returns (QuerySelectedStickersReply);
   // 设置装配的sticker
   rpc ApplySelectedStickers(ApplySelectedStickersRequest) returns (ApplySelectedStickersReply);
 
-  // 玩家浏览了stickers面板，新表情不再新
+  // Deprecated: 策划已去掉红点，已经没有NewTag了 玩家浏览了stickers面板，新表情不再新
   rpc VisitStickers(VisitStickersRequest) returns (VisitStickersReply);
   // 请求发送notify，客户端主动请求notify，用于动态全服增加表情或者配置动态更新
   rpc QueryNotify(QueryNotifyRequest) returns (QueryNotifyReply);
@@ -24,6 +28,9 @@ service CSService {
   rpc QueryAutoStickers(QueryAutoStickersRequest) returns (QueryAutoStickersReply);
   // 玩家设置自动发送的sticker
   rpc ApplyAutoStickers(ApplyAutoStickersRequest) returns (ApplyAutoStickersReply);
+
+  // 合并请求所有sticker、玩家选择的sticker及自动发送sticker
+  rpc QueryAllStickerInfo(QueryAllStickerInfoRequest) returns (QueryAllStickerInfoReply);
 }
 
 message ApplyAutoStickersRequest {
@@ -64,6 +71,15 @@ message QueryOwnedStickersReply {
   repeated StickerInfo stickers = 1;  // 要求返回的stickers
 }
 
+message QueryStickerByItemIDRequest {
+  int64 sticker_item_id = 1;  // 表情道具ID
+}
+
+message QueryStickerByItemIDReply {
+  StickerInfo sticker                  = 1;  // 表情信息
+  zonepb.dressingpb.TimeInfo time_info = 2;  // 配置限时信息
+}
+
 message QueryNotifyRequest {}
 
 message QueryNotifyReply {}
@@ -100,4 +116,16 @@ enum Type {
   PERMANENT    = 1;  // 永久表情
   TIME_LIMITED = 2;  // 时间限制表情
   NOT_OBTAINED = 3;  // 未获得表情
+}
+
+// 合并三个sticker请求的请求和返回
+message QueryAllStickerInfoRequest {}
+
+message QueryAllStickerInfoReply {
+  // 所有的sticker
+  repeated StickerInfo owned_stickers = 1;
+  // 玩家已经设置的表情
+  repeated corepb.StickerSetting selected_settings = 2;
+  // 设置了的自动播放的表情
+  repeated corepb.StickerSetting auto_settings = 3;
 }

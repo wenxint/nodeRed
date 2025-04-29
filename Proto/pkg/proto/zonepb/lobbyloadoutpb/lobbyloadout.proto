@@ -11,6 +11,8 @@ service Service {
   rpc ApplyLoadout(ApplyLoadoutRequest) returns (ApplyLoadoutReply);                          // 设置阵容
   rpc RemoveRedpoint(RemoveRedpointRequest) returns (RemoveRedpointReply);                    // 移除红点
   rpc QueryBuddyTokenInfos(QueryBuddyTokenInfosRequest) returns (QueryBuddyTokenInfosReply);  // 请求所有伙伴信物信息
+  rpc SetBuddyTokenMode(SetBuddyTokenModeRequest) returns (SetBuddyTokenModeReply);           // 设置信物模式
+  rpc LikeBuddyToken(LikeBuddyTokenRequest) returns (LikeBuddyTokenReply);                    // 喜欢或者取消喜欢某个信物
 }
 
 // LoadoutInfo
@@ -62,12 +64,36 @@ enum BuddyTokenStatus {
 message BuddyTokenInfo {
   int64 id                = 1;  // 信物id
   BuddyTokenStatus status = 2;  // 信物状态
+  bool like               = 3;  // 打上喜欢标记
+  int64 buddy_id          = 4;  // 伙伴ID
 }
 
 message QueryBuddyTokenInfosReply {
   repeated BuddyTokenInfo buddy_token_infos = 1;
+  BuddyTokenMode buddy_token_mode           = 2;  // 信物展示模式：随机或者固定
 }
 
 message NewBuddyTokenNTF {
   repeated int64 ids = 1;  // 信物id
 }
+
+// SetBuddyTokenModeRequest 设置信物模式请求
+message SetBuddyTokenModeRequest {
+  BuddyTokenMode buddy_mode = 1;  // 信物模式
+}
+
+message SetBuddyTokenModeReply {}
+
+// BuddyTokenMode 伙伴信物模式
+enum BuddyTokenMode {
+  MODE_UNKNOWN = 0;  // 未知模式
+  RANDOM       = 1;  // 随机模式
+  FIXED        = 2;  // 固定模式
+}
+
+message LikeBuddyTokenRequest {
+  int64 id  = 1;  // 信物id
+  bool like = 2;  // 打上喜欢标记
+}
+
+message LikeBuddyTokenReply {}

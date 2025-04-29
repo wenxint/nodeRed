@@ -57,6 +57,7 @@ message PlayerDisplayInfo {
   corepb.PersonalDisplayInfo personal_info = 1;  // 个人显示信息
   int64 ladder_score                       = 2;  // 段位分
   int64 lobby_buddy_id                     = 3;  // 站街伙伴ID
+  int64 lobby_buddy_fashion_id             = 4;  // 站街伙伴时装ID
 }
 
 message InviteReply {

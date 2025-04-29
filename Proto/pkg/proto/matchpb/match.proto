@@ -35,7 +35,9 @@ enum BusinessType {
   PVP_SEAWAR_OF_THE_YEAR   = 15;  // 活动128:新年海战
   PVP_FAST_DUEL            = 16;  // 活动135:快速单挑
   PVP_BRAWL_ARENA          = 17;  // 活动132:乱斗竞技场
-  PVP_BOND_BATTLE          = 18;  // 羁绊挑战赛
+  PVP_BOND_BATTLE          = 18;  // 活动132:羁绊挑战赛
+  PVE_FROZEN_CLASH         = 19;  // 活动101:冰封对决
+  PVP_FAST_DUEL_LADDER     = 21;  // 活动188：极速单挑段位赛
 }
 
 enum PkType {

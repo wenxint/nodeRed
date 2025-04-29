@@ -292,12 +292,29 @@ message VKeyCRModePlayCard {
   int32 index_in_hand = 3; // 在手牌序列中的索引（1-indexed，0为忽略）
 }
 
+message ClientStampedeItem {
+  int32 op_type   = 1;  // 操作类型
+  int32 item_uid = 2;  // 操作道具sid
+  repeated int64 custom_data = 3; //自定义数据 
+}
+
+// 夺宝行动操作物品上报
+message VKeyStampedeItemOpSync {
+  repeated ClientStampedeItem items = 1;  // 操作物品列表
+}
 
 //------------------------------------跨回合vkey--------------------------
 
 message VkeyCrossRoundPlayerInfoAttr{
   int32 attr = 1;
 	int32 value = 2;
+}
+
+message VkeyCrossRoundPlayerInfoVar{
+  string name = 1;
+  int32 type = 2;
+	int32 intValue = 3;
+  string stringValue = 4;
 }
 
 message VkeyCrossRoundPlayerInfo{
@@ -312,6 +329,7 @@ message VkeyCrossRoundPlayerInfo{
 	repeated int32 CrossRoundBuffs = 9;
   repeated VkeyCrossRoundPlayerInfoAttr AttributeValues = 10;		// 属性值,援护次数等在这里
   int32 status = 11;
+  repeated VkeyCrossRoundPlayerInfoVar CustomVariables = 12; // 实体自定义属性
 }
 
 
@@ -332,5 +350,7 @@ message VkeyCrossRoundSharedDataInfo{
   uint32 roundIndex = 1;
   repeated VkeyCrossRoundSharedData sharedData = 2;
 }
+
+
 
 //------------------------------------跨回合end--------------------------

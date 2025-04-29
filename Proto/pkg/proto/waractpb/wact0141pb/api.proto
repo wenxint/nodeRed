@@ -28,9 +28,17 @@ message RoomInfoReply {
   map<int64, Player> players = 1;  // gid -> player
 }
 
+// ntf
+
+// MatchSuccessNTF 匹配成功
+message MatchSuccessNTF {}
+
+// CreateGameErrorNTF 创建对局失败
+message CreateGameErrorNTF {}
+
 // misc
 
-// CustomGameData 是 GameStartMessage 的 PassThrough 字段
+// CustomGameData 是 GameStartMessage 的 CustomData 字段
 message CustomGameData {
   string war_id = 1;
 }

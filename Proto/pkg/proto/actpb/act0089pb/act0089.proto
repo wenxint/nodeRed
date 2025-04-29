@@ -31,6 +31,7 @@ message ActGetDetailReply {
   string bg_image                = 10;  // 活动背景大图
   string recruit_image           = 11;  // 前往招募背景图(只有活动期数为1的时候有)
   actpb.commonpb.Share share     = 12;  // 分享信息
+  bool show_achieved_way         = 13;  // 是否显示跳转入口
 }
 
 // SetOfActs 活动配置

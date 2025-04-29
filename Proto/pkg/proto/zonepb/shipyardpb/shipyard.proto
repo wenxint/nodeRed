@@ -22,6 +22,8 @@ service CSService {
   rpc GetAllShipSoulSkill(GetAllShipSoulSkillRequest) returns (GetAllShipSoulSkillReply);
   // 去除船灵技能新获得标记
   rpc CloseShipSoulSkillNewFlag(CloseShipSoulSkillNewFlagRequest) returns (CloseShipSoulSkillNewFlagReply);
+  // 检查战船部件
+  rpc CheckWarshipPart(CheckWarshipPartRequest) returns (CheckWarshipPartReply);
 }
 
 message GetWarshipListRequest {
@@ -127,3 +129,13 @@ message CloseShipSoulSkillNewFlagRequest {
 }
 
 message CloseShipSoulSkillNewFlagReply {}
+
+message CheckWarshipPartRequest {
+  int64 id = 1;  // 战船id
+}
+
+message CheckWarshipPartReply {
+  int64 current_star   = 1;  // 当前星级 （0级表示未解锁）
+  int64 max_star       = 2;  // 最大星级
+  int64 reachable_star = 3;  // 能升到多少星级 （当未解锁时，该值无意义）
+}

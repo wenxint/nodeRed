@@ -1,0 +1,133 @@
+// cs protocol
+syntax = "proto3";
+
+package guildpb.kingswarpb;
+
+option go_package = "git.woa.com/red/guildsvr/pkg/proto/guildpb/kingswarpb";
+
+
+import "corepb/common.proto";
+
+// 王者争锋服务 - guildsvr 部分
+service KingsWarService {
+
+  // 获取玩家对应的 war 的简要信息
+  rpc WarProfile(WarProfileRequest) returns (WarProfileReply);
+
+  // 点赞
+  rpc Like(LikeRequest) returns (LikeReply);
+
+  // 助威
+  rpc Cheer(CheerRequest) returns (CheerReply);
+
+  // 最近助威列表
+  rpc RecentCheers(RecentCheersRequest) returns (RecentCheersReply);
+
+  // 任务奖励信息
+  rpc TaskRewards(TaskRewardsRequest) returns (TaskRewardsReply);
+
+  // 排行奖励信息
+  rpc RankRewards(RankRewardsRequest) returns (RankRewardsReply);
+
+  // 领取任务奖励
+  rpc ClaimTaskRewards(ClaimTaskRewardsRequest) returns (ClaimTaskRewardsReply);
+
+  // 留言
+  rpc LeaveMessage(LeaveMessageRequest) returns (LeaveMessageReply);
+
+  // 获取留言
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesReply);
+}
+
+message SeasonInfo {
+  int64 year       = 1;  // 年份
+  int64 season     = 2;  // 赛季
+  int64 begin_time = 3;  // 开始时间(unix second)
+  int64 end_time   = 4;  // 结束时间(unix second)
+}
+
+message WarProfileRequest {}
+
+message WarProfileReply {
+  string war_id       = 1;  // war_id 用于后续 warsvr 有状态部分调用
+  bool open_this_week = 2;  // 本周是否开启
+  SeasonInfo season   = 3;  // 赛季信息
+  // int64 season_id = 3;  // 赛季 ID
+  // int64 start_at  = 4;  // 若本周开启，开始时间(unix second)
+  // int64 end_at    = 5;  // 若本周开启，结束时间(unix second)
+}
+
+message TaskReward {
+  int64 task_id                = 1;  // 任务 ID
+  string name                  = 2;  // 任务名称
+  repeated corepb.Item rewards = 3;  // 奖励列表
+  bool achieved                = 4;  // 是否已达成
+  bool claimed                 = 5;  // 是否已领取
+}
+
+message RankReward {
+  string name                  = 1;  // 排行名称
+  repeated corepb.Item rewards = 2;  // 奖励列表
+}
+
+message TaskRewardsRequest {}
+
+message TaskRewardsReply {
+  repeated TaskReward task_rewards = 1;  // 任务奖励列表
+}
+
+message RankRewardsRequest {}
+
+message RankRewardsReply {
+  repeated RankReward rank_rewards = 1;  // 排行奖励列表
+}
+
+message ClaimTaskRewardsRequest {
+  int64 task_id = 1;  // 任务 ID
+}
+
+message ClaimTaskRewardsReply {
+  repeated corepb.Item rewards  = 1;  // 奖励列表
+  TaskRewardsReply task_rewards = 2;  // 任务奖励列表的结果
+}
+
+message LikeRequest {
+  int64 guild_id = 1;  // 公会 ID
+}
+
+message LikeReply {}
+
+message CheerRequest {
+  int64 cheer_id = 1;  // 助威 ID
+}
+
+message CheerReply {}
+
+message RecentCheersRequest {}
+
+message RecentCheersReply {
+  message Cheer {
+    int64 cheer_id     = 1;  // 助威条目 ID
+    int64 sender       = 2;  // 发送者 gid
+    string sender_name = 3;  // 发送者
+  }
+  repeated Cheer cheers = 1;  // 助威列表
+}
+
+message LeaveMessageRequest {
+  string message = 1;  // 留言
+}
+
+message LeaveMessageReply {}
+
+message GetMessagesRequest {}
+
+message GetMessagesReply {
+  repeated Message messages = 1;  // 留言列表
+}
+
+message Message {
+  int64 gid      = 1;  // 留言者 gid
+  string message = 2;  // 留言
+  int64 zone_id  = 3;  // 留言者所在区服
+}

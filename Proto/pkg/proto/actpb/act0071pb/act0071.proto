@@ -1,0 +1,19 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0071pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0071pb";
+
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0071Service {
+  // 领取奖励使用actbasepb.ActDeliverReward
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  int64 bp_level                     = 1;  // 特典等级
+  repeated actpb.commonpb.Task tasks = 2;  // 任务列表
+}

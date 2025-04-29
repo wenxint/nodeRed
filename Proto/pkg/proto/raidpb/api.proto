@@ -377,6 +377,7 @@ message RaidSuccessDetail {
 message GroupFinalRewardInfo {
   corepb.Item show_final_rewards = 1;  // 最终奖励（显示用）
   int64 gid                      = 2;  // 玩家gid
+  string name                    = 3;  // 玩家名字
 }
 
 message PersonalFinalRewardInfo {

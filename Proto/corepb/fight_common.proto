@@ -86,6 +86,12 @@ enum FightType {
   FIGHT_TYPE_PVP_FC_SUPPRESSION_DUEL  = 74;  // 好友切磋带战力压制
   FIGHT_TYPE_PVP_ACT_0134             = 75;  // 134 活动（古堡幽魂夜）
   FIGHT_TYPE_PVP_ACT_0149             = 76;  // 149 活动（协同激斗 2v2）
+  FIGHT_TYPE_PVE_ACT_0140             = 77;  // 140 活动（暴打鱼人）
+  FIGHT_TYPE_PVE_ACT_0185_STAMPEDE    = 78;  // 185 活动（夺金行动）
+  FIGHT_TYPE_PVP_KINGSWAR             = 79;  // 王者争锋(gvg)
+  FIGHT_TYPE_PVE_ACT_0148             = 80;  // 148 活动（强敌连战）
+  FIGHT_TYPE_PVE_ACT_0091             = 81;  // 91 活动（莫利亚pve）
+  FIGHT_TYPE_PVE_ACT_0132_GAME_TYPE_8 = 84;  // 132 活动（乱斗竞技场 - 强者主题）
   // 这些枚举值没有合入 master 之前不得提前与客户端沟通！！！
 };
 
@@ -286,13 +292,13 @@ message FightBuddyInfo {
   FightDialInfo dial_info    = 2;  // 空岛贝信息
   repeated FightSkill skills = 3;  // 技能信息，包括空岛贝技能
 
-  AiInfo ai_info                 = 4;  // ai 信息。ai不等同于机器人，如果玩家自动战斗，也会需要下发ai信息
-  FightAttr buddy_attr           = 5;  // 单独伙伴战斗属性（一般玩法伙伴就使用上层 FightInfo 中的 FightAttr），仅用于每个伙伴属性各不相同的场景
-  repeated int64 ultra_kill_pics = 6;  // 伙伴已装备的奥义图列表
-  bool is_borrowing_buddy        = 7;  // 是否借用伙伴
-  int64 fashion_id               = 8;  // 伙伴时装id
-  repeated FightBuff buff        = 9;  // buff信息（天生buff）
-
+  AiInfo ai_info                 = 4;   // ai 信息。ai不等同于机器人，如果玩家自动战斗，也会需要下发ai信息
+  FightAttr buddy_attr           = 5;   // 单独伙伴战斗属性（一般玩法伙伴就使用上层 FightInfo 中的 FightAttr），仅用于每个伙伴属性各不相同的场景
+  repeated int64 ultra_kill_pics = 6;   // 伙伴已装备的奥义图列表
+  bool is_borrowing_buddy        = 7;   // 是否借用伙伴
+  int64 fashion_id               = 8;   // 伙伴时装id
+  repeated FightBuff buff        = 9;   // 伙伴级别 buff
+  int64 buddy_mastery_tier       = 10;  // 伙伴熟练度级别
 }
 
 // 出战的空岛贝信息，与伙伴绑定
@@ -379,7 +385,22 @@ message FightTeamInfo {
   bytes team_ext_info              = 3;  // 队伍自定义透传数据
 }
 
-// 怪物相关信息 ClientMonsterPack
+// 怪物动态信息  (这代表【每只怪】的信息，怪物类型相关信息在MonsterInfoMsg中)
+// 此结构在MonsterInfoMsg中使用
+message MonsterDynamicInfo {
+  reserved 1;
+  int32 idx     = 2;
+  int64 init_hp = 3;  // 初始生命
+  reserved 4;
+  int32 position_x = 5;
+  int32 position_y = 6;
+  bool is_mirror   = 7;  // 怪物朝向
+  bool is_dead     = 8;  // 是否死亡
+  int32 quadrant   = 9;  // 象限
+}
+
+// 怪物相关信息 （这代表一类怪物的信息，ClientMonsterPack中包含多种怪物）
+// 此结构在ClientMonsterPack中使用
 message MonsterInfoMsg {
   int64 id                  = 1;  // 怪物ID
   FightAttr attr            = 2;  // 属性-复用玩家属性结构
@@ -387,10 +408,11 @@ message MonsterInfoMsg {
   repeated int64 born_buffs = 4;  // 天生Buff-不属于玩家属性
   int64 ai_id               = 5;
   int64 ai_temp             = 6;
-  reserved 7;                                // 删除字段
-  repeated int64 hurt_box_attack_rate = 8;   // 战斗信息.受击框伤害系数
-  repeated int64 hurt_box_attr_value  = 9;   // 战斗信息.受击框耐久属性值
-  int64 level                         = 10;  // 怪物等级
+  reserved 7;                                             // 删除字段
+  repeated int64 hurt_box_attack_rate              = 8;   // 战斗信息.受击框伤害系数
+  repeated int64 hurt_box_attr_value               = 9;   // 战斗信息.受击框耐久属性值
+  int64 level                                      = 10;  // 怪物等级
+  repeated MonsterDynamicInfo monster_dynamic_info = 11;  //每只怪物的动态信息
 }
 
 // 怪物包信息
@@ -434,6 +456,7 @@ message PlayerFightDetail {
   google.protobuf.Any custom_data = 6;  // 玩法自定义战斗详情
   int64 destruction_total         = 7;  // 地图破坏总数
   int64 common_value              = 8;  // 可代表任何整形的含义，比如活动35火爆斗球道具的数量等
+  int32 stars                     = 9;  // 共达成了几颗星，由玩法逻辑填充
   // 后面玩家相关内容会在此扩充
 }
 
@@ -466,6 +489,7 @@ message GameStartMessage {
   GameSettings settings            = 2;  // 单局游戏内设置
   google.protobuf.Any custom_data  = 3;  // 各玩法自定义数据
   google.protobuf.Any pass_through = 4;  // 透传字段
+  bytes fight_custom_data          = 5;  // 战斗自定义数据，客户端C++代码部分目前无法用any，额外加个字段给客户端平替custom_data
 }
 
 // 战斗异常结束错误信息

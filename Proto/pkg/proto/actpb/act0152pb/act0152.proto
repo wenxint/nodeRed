@@ -11,6 +11,7 @@ import "corepb/loadout_comm.proto";
 service CSAct0152Service {
   rpc GameStart(GameStartRequest) returns (GameStartReply);
   rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  rpc GameRaid(GameRaidRequest) returns (GameRaidReply);
   // 获取阵容信息
   rpc LoadoutInfo(LoadoutInfoRequest) returns (LoadoutInfoReply);
   // 设置阵容
@@ -44,16 +45,31 @@ message ActGetDetailReply {
 
   RankInfo rank_info = 5;  // 排名信息
 
-  int64 current_level_pass_person_count = 6;  // 当前关卡通关人数
+  int64 current_level_pass_person_count = 6;  // 废弃-当前关卡通关人数
 
   string rank_instance = 7;  // 排名实例
 
-  message FightAgainPackWeight {
-    int64 fight_again_count = 1;  // 战斗次数
-    int64 rate_percent      = 2;  // 权重
+  // message FightAgainPackWeight {
+  //   int64 fight_again_count = 1;  // 战斗次数
+  //   int64 rate_percent      = 2;  // 权重
+  // }
+  // repeated FightAgainPackWeight fight_again_pack_weights = 8;   // 战斗次数权重
+
+  int64 fight_again_count    = 9;   // 再战次数
+  int64 skip_level_count     = 10;  // 能跳的关卡数量
+  int64 max_skip_level_count = 11;  // 最大跳关数量
+
+  map<int64, int64> level_pass_person_count = 12;  // 关卡通关人数
+  int64 badge_count_warn                    = 13;  // 徽章数提醒
+  bool can_fight                            = 14;  // 是否可以战斗
+  int64 act_fc                              = 15;  // 本活动的赏金
+  int64 accumulated_pack_max_rate_count     = 16;  // 累计最大概率掉落的次数
+
+  message PackWeight {
+    int64 fight_day    = 1;  // 天数
+    int64 rate_percent = 2;  // 权重
   }
-  repeated FightAgainPackWeight fight_again_pack_weights = 8;  // 战斗次数权重
-  int64 fight_again_count                                = 9;  // 再战次数
+  repeated PackWeight pack_weights = 17;  // 掉落包权重
 }
 
 message RankInfo {
@@ -96,6 +112,18 @@ message EventDrop {
 message GameEndReply {
   corepb.GameOverMessage over_message = 1;  // 游戏结束消息
   repeated corepb.Item awards         = 2;  // 奖励
+  int64 first_pass_ranking            = 3;  // 首通排名
+  bool is_badge_over_limit            = 4;  // 是否超过背包上限
+  int64 auto_next_fight_level         = 5;  // 自动挑战的下一关卡
+}
+
+message GameRaidRequest {}
+
+message GameRaidReply {
+  repeated corepb.Item awards = 1;  // 奖励
+  int64 skip_level_count      = 3;  // 能跳的关卡数量
+  int64 max_skip_level_count  = 4;  // 最大跳关数量
+  bool is_badge_over_limit    = 5;  // 是否超过背包上限
 }
 
 message LoadoutInfoRequest {

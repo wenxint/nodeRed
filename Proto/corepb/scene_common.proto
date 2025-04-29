@@ -15,6 +15,7 @@ enum SceneType {
   ST_ISLAND_CLASH     = 5;  // 岛屿激斗
   ST_GUILD_SEAWAR     = 6;  // 同盟海战
   ST_ACT_GUILD_SPRING = 7;  // 活动新春同盟场景
+  ST_KINGSWAR       = 8;
 }
 
 enum SceneRoleStatus {

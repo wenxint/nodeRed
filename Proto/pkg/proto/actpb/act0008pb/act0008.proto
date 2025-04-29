@@ -4,12 +4,15 @@ syntax = "proto3";
 package actpb.act0008pb;
 option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0008pb";
 
+
 import "corepb/common.proto";
 
 // CSAct0008Service 奖励领取服务
 service CSAct0008Service {
   // CheckDirectBuyQualification 检测月卡购买资格.
   rpc CheckDirectBuyQualification(CheckDirectBuyQualificationRequest) returns (CheckDirectBuyQualificationReply);
+  // SetAdvertisementToggle 设置广告图是否拍脸
+  rpc SetAdvertisementToggle(SetAdvertisementToggleRequest) returns (SetAdvertisementToggleReply);
 }
 
 // CheckDirectBuyQualificationRequest 检测月卡购买资格请求
@@ -50,6 +53,7 @@ message PlayerInActInfo {
   bool is_own_buy_qualification          = 6;  // 是否有购买月卡资格
   bool first_rewarded                    = 7;  // 一次性奖励巴奇是否已领取
   int64 remain_receive_recruit_card_days = 8;  // 剩余领取限定招募卡道具天数（如果为 0 表示本期碎片全部领完）
+  bool disable_advertisement             = 9;  // 是否关闭每天拍脸图
 }
 
 // RechargeType 月卡充值状态
@@ -70,3 +74,11 @@ message DirectBuySuccNotify {
 message ActDeliverRewardReply {
   repeated corepb.Item overflow_items = 1;  // 溢出的邮件奖励列表.
 }
+
+// SetAdvertisementToggleRequest 设置广告图是否拍脸请求
+message SetAdvertisementToggleRequest {
+  bool toggle = 1;  // 是否拍脸, true 表示拍脸, false 表示不拍脸
+}
+
+// SetAdvertisementToggleReply 设置广告图是否拍脸响应
+message SetAdvertisementToggleReply {}

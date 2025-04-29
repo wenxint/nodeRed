@@ -175,6 +175,7 @@ message Fight {
   int64 area_id                        = 9;   // 海域 ID
   string x_ob_id                       = 10;  // x_ob_id
   int64 winner_guild_id                = 11;  // 胜利方同盟 ID
+  repeated int64 real_players          = 12;  // 实际参与战斗的玩家 gid 列表
 }
 
 message AreaFightsReply {

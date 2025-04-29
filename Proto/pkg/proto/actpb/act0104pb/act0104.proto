@@ -27,8 +27,9 @@ message ForgingKnifeRequest {
 
 // ForgingKnifeReply 锻刀响应.
 message ForgingKnifeReply {
-  repeated corepb.Item items = 1;  // 锻刀奖励;
-  repeated Quality qualities = 2;  // 锻造结果;
+  repeated corepb.Item items      = 1;  // 锻刀奖励(每轮);
+  repeated Quality qualities      = 2;  // 锻造结果;
+  repeated corepb.Item base_items = 3;  // 每一次锻造的基础奖励
 }
 
 // Quality 锻刀品质

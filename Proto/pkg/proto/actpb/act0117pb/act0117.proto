@@ -1,0 +1,27 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0117pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0117pb";
+
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  int64 score            = 1;
+  int64 score_day        = 2;
+  int64 score_day_limit  = 3;
+  int64 match_begin_hour = 4;  // 匹配开始的小时
+  int64 match_end_hour   = 5;  // 匹配结束的小时(包含)
+}
+
+service CSAct0117Service {
+  rpc AllocRoom(AllocRoomRequest) returns (AllocRoomReply);
+}
+
+message AllocRoomRequest {}
+
+message AllocRoomReply {
+  string war_id = 1;  // 当前房间所属war_id
+}

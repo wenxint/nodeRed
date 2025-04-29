@@ -41,6 +41,8 @@ message Task {
   }
   repeated Condition conditions = 3;
   repeated corepb.Item awards   = 5;
+  int64 award_times             = 6;  // 可奖励次数
+  int64 receive_cnt             = 7;  // 已领取次数
 }
 
 message ActData {

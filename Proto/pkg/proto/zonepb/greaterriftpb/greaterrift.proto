@@ -15,6 +15,8 @@ service GreaterRiftCSService {
   rpc EquipBadge(EquipBadgeRequest) returns (EquipBadgeReply);
   // DetachBadge 卸下徽章
   rpc DetachBadge(DetachBadgeRequest) returns (DetachBadgeReply);
+  // DetachBadges 卸下多个徽章
+  rpc DetachBadges(DetachBadgesRequest) returns (DetachBadgesReply);
   // AdvanceBadge 熔炼徽章
   rpc AdvanceBadge(AdvanceBadgeRequest) returns (AdvanceBadgeReply);
   // DecomposeBadge 分解徽章
@@ -36,8 +38,10 @@ message GetAdvanceInfoRequest {
 }
 
 message GetAdvanceInfoReply {
-  int64 success_rate = 1;  // 熔炼成功率
-  int64 cost_count   = 2;  // 熔炼消耗次数
+  int64 success_rate            = 1;  // 熔炼成功率
+  int64 cost_count              = 2;  // 熔炼消耗
+  int64 final_star_success_rate = 3;  // 熔炼到最终星级成功率
+  int64 final_star              = 4;  // 能熔炼到的最终星级
 }
 
 message GetCanDecomposeBadgeListRequest {}
@@ -92,6 +96,12 @@ message DetachBadgeRequest {
 
 message DetachBadgeReply {}
 
+message DetachBadgesRequest {
+  int64 buddy_id = 1;
+}
+
+message DetachBadgesReply {}
+
 message EquipBadgeRequest {
   int64 unique_id = 1;
   int64 buddy_id  = 2;
@@ -113,6 +123,8 @@ message GetBagRequest {
 message GetBagReply {
   repeated Plan plans   = 1;  // 第一个是推荐方案，第二个是自定义方案
   repeated Badge badges = 2;
+  int64 player_fc       = 3;
+  int64 greater_rift_fc = 4;
 }
 
 message Badge {
@@ -124,15 +136,18 @@ message Badge {
   bool is_equipped                 = 6;  // 当前方案下是否已穿戴
   int64 quality                    = 7;
   int64 score                      = 8;  // 词条评分的加和
+  bool is_over_limit               = 9;  // 是否超过上限，用于标记掉落时这个徽章是否超过上限，前台不必使用，有点hack，后续优化
 }
 
 message Wordstrip {
-  int64 wordstrip_id  = 1;
-  bool is_main        = 2;
-  int64 attr_id       = 3;
-  int64 value         = 4;
-  int64 wordstrip_idx = 5;
-  int64 score         = 6;
+  int64 wordstrip_id              = 1;
+  bool is_main                    = 2;
+  int64 attr_id                   = 3;
+  int64 value                     = 4;
+  int64 wordstrip_idx             = 5;
+  int64 score                     = 6;
+  int64 main_attr_active_buddy_id = 7;  // 主属性生效的伙伴id
+  int64 max_value                 = 8;  // 属性最大值
 }
 
 message Plan {

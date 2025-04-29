@@ -78,6 +78,8 @@ message GetLadderInfoReply {
   bool new_season_redpoint                                        = 17;  // 是否存在新赛季标记
   bool disable_cancel_match                                       = 18;  // 是否禁止取消匹配
   bool is_super_captain                                           = 19;  // 是否超级船长
+  int64 comp_level                                                = 20;  // 竞技等级
+  int64 year_id                                                   = 21;  // 赛年ID
 }
 
 message SetUseProtectCardRequest {

@@ -56,14 +56,14 @@ message QueryStateInfoReply {
   repeated NpcInfo npcs  = 9;   // npc
   bool is_play           = 10;  // 是否播放剧情
   int64 plot_id          = 11;  // 起始剧情ID
-  repeated Pos npc_pos   = 12;  // npc位置
-  RankParam rank_param   = 13;  // 排行榜参数
+  RankParam rank_param   = 12;  // 排行榜参数
 }
 
 message NpcInfo {
   int64 npc_id   = 1;
   int64 event_id = 2;  // 事件id
   int64 plot_id  = 3;  // 剧情id
+  Pos npc_pos    = 4;  // npc位置
 }
 
 message CheckTavernEventRequest {
@@ -105,12 +105,13 @@ message ShopsReply {
   repeated ShopInfo shops = 1;  // 商品列表
 }
 message ShopInfo {
-  int64 shop_id         = 1;  // 商品ID
-  corepb.Item shop_item = 2;  // 商品道具
-  corepb.Item cost_item = 3;  // 消耗道具.
-  int64 bought_count    = 4;  // 已购买次数
-  int64 buy_limit_count = 5;  // 限制总购买次数
-  int64 open_time       = 6;  // 上线时间
+  int64 shop_id                     = 1;  // 商品ID
+  corepb.Item shop_item             = 2;  // 商品道具
+  corepb.Item cost_item             = 3;  // 消耗道具.
+  int64 bought_count                = 4;  // 已购买次数
+  int64 buy_limit_count             = 5;  // 限制总购买次数
+  int64 open_time                   = 6;  // 上线时间
+  repeated corepb.Item unlock_items = 7;  // 为空表示没有解锁道具
 }
 
 message BuyShopItemRequest {
@@ -329,7 +330,7 @@ message CompleteGridEventRequest {
   int64 grid_id     = 3;  // 格子ID
 }
 message CompleteGridEventReply {
-  bool completed                        = 1;  // 是否完成了
+  bool completed                        = 1;  // 宝藏是否完成了
   repeated GridState changed_grids      = 2;  // 变化的格子状态信息 （格子详细信息建议读表）
   repeated corepb.Item rewards          = 3;  // 当前获得的奖励
   repeated corepb.Item obtained_rewards = 4;  // 已获得的所有奖励

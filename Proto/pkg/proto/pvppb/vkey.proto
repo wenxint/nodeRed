@@ -35,12 +35,20 @@ enum PVPVkey {
 
   // 业务通用
   REPORT_DAMAGE_VALUE = 2120;  // 上报伤害量
-  REPORT_PVE_SCORE    = 2121;  // 上报 pve 积分
+  REPORT_COMMON_VALUE = 2121;  // 通用上报数值等，比如pve的积分，pvp的道具数量等
   REPORT_KILL         = 2122;  // 同步击杀和死亡
   REPORT_DESTRUCTION  = 2123;  // 上报地图破坏
   REPORT_SETTLE       = 2124;  // 上报结算
   REPORT_GEM_VALUE    = 2125;  // 上报宝石总数量
   REPORT_SCORE_GROUP  = 2126;  // 莫利亚玩法上报玩家得分和分组
+
+  REPORT_STAMPEDE_PLAYER_INFO      = 2127;  // 夺宝行动上报玩家信息
+  REPORT_STAMPEDE_MONSTER_INFO     = 2128;  // 夺宝行动上报怪物信息
+  REPORT_STAMPEDE_ITEM_OP          = 2129;  // 夺宝行动上报道具操作
+  REPORT_STAMPEDE_LEAVE            = 2130;  // 夺宝行动上报玩家离开当前小地图（进入新的小地图或成功撤离）
+  REPORT_STAMPEDE_KILL_MONSTER     = 2131;  // 夺宝行动上报玩家击杀怪物
+  REPORT_STAMPEDE_ITEM_DROP_STATUS = 2132;  // 夺宝行动上报该关卡道具掉落状态（宝箱状态）
+  REPORT_STAMPEDE_BUFF             = 2133;  // 夺宝行动上报buff
 
   // 关联战斗
   REPORT_RELATEDGAMES_ADD = 2151;  // 累加值
