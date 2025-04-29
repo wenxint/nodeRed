@@ -79,38 +79,9 @@ redApiRoutes.forEach((route) => {
   app.use("/myapi", route.router);
 });
 
-/**
- * @description 在应用启动时从 SVN 导出 Proto 文件夹内容到本地Proto目录
- * @see http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net/Proto
- */
-const { execSync } = require("child_process");
-const protoSVNRepo = 'http://tc-svn.tencent.com/KungfuTeam/Red_proj/trunk/RedApp/Content/Script/Red/Net/Proto';
-const protoDir = path.join(__dirname, "Proto");
-
-// 检查svn命令是否可用
-let svnAvailable = true;
-try {
-  execSync("svn --version", { stdio: "ignore" });
-} catch (err) {
-  svnAvailable = false;
-}
-if (!svnAvailable) {
-  console.warn("未检测到svn命令，跳过Proto文件夹导出");
-} else {
-  try {
-    // 确保本地Proto目录存在
-    if (!fs.existsSync(protoDir)) {
-      fs.mkdirSync(protoDir, { recursive: true });
-    }
-    console.info("SVN导出Proto文件...");
-    execSync(
-      `svn export --force "${protoSVNRepo}" "${protoDir}" --username a1_red --password A1Red@dev --no-auth-cache --non-interactive --trust-server-cert`,
-      { stdio: "inherit" }
-    );
-  } catch (error) {
-    console.error("Proto文件导出失败:", error);
-  }
-}
+// 从common模块调用Proto同步逻辑
+const { syncProtoFromSVN } = require("./common/protoSync");
+syncProtoFromSVN();
 
 app.use(function (req, res, next) {
   next(createError(404));
