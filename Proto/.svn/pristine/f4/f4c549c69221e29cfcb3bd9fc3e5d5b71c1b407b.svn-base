@@ -1,0 +1,109 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0191pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0191pb";
+
+import "corepb/fight_common.proto";
+
+service CSAct0191Service {
+  rpc QueryCardSelection(QueryCardSelectionRequest) returns (QueryCardSelectionReply);           // 查询卡牌选择
+  rpc SelectCard(SelectCardRequest) returns (SelectCardReply);                                   // 选择卡牌
+  rpc RefreshSelection(RefreshSelectionRequest) returns (RefreshSelectionReply);                 // 刷新卡牌选择
+  rpc ResetAllCardSelection(ResetAllCardSelectionRequest) returns (ResetAllCardSelectionReply);  // 重置所有卡牌选择
+  rpc GameStart(GameStartRequest) returns (GameStartReply);                                      // 开战
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);                                            // 结算
+  // 任务奖励托管在actreweard，请使用actrewardpb.CSActRewardService
+}
+
+message ActGetDetailRequest {}
+
+enum ChapterStatus {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  LOCKED   = 0;  // 未解锁
+  UNLOCKED = 1;  // 已解锁
+  PASSED   = 2;  // 已通关
+}
+
+message ChapterInfo {
+  int64 chapter_id     = 1;  // 章节 ID
+  ChapterStatus status = 2;  // 章节状态
+  int64 open_at        = 3;  // 开启时间戳
+  bool new             = 4;  // “新”标记
+}
+
+message ActGetDetailReply {
+  repeated ChapterInfo chapters = 1;  // 所有章节详细信息
+  int64 quest_id                = 2;  // 已通关的关卡 ID
+}
+
+message QueryCardSelectionRequest {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message QueryCardSelectionReply {
+  CardSelection card_selection = 1;  // 下一次卡牌选择详情
+}
+
+message Card {
+  reserved 2, 3;
+  int64 card_id           = 1;  // 卡牌ID
+  repeated int64 buff_ids = 4;  // buff ids
+}
+
+message CardSelection {
+  int64 selection_id          = 1;  // 选择ID
+  bool is_style_selection     = 2;  // 是否是流派选择
+  repeated Card cards         = 3;  // 候选卡牌列表
+  int64 remain_times          = 4;  // 剩余选择次数
+  int64 remain_refresh_times  = 5;  // 剩余刷新次数
+  int64 total_refresh_times   = 6;  // 本章节总刷新次数
+  repeated Card current_cards = 7;  // 当前卡牌
+  bool can_refresh            = 8;  // 是否可以刷新
+  bool is_extra_selection     = 9;  // 是否是额外轮次(奖励轮次)
+}
+
+message SelectCardRequest {
+  int64 selection_id = 1;  // 选择ID
+  int64 card_id      = 2;  // 卡牌ID
+}
+
+message SelectCardReply {
+  CardSelection next_card_selection = 1;  // 下一次卡牌选择详情
+}
+
+message RefreshSelectionRequest {
+  int64 selection_id = 1;  // 选择ID
+}
+
+message RefreshSelectionReply {
+  CardSelection card_selection = 1;
+}
+
+message ResetAllCardSelectionRequest {}
+
+message ResetAllCardSelectionReply {
+  CardSelection card_selection = 1;  // 第一个选择的卡牌项
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡 ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;
+}
+
+message GameEndRequest {
+  int64 quest_id                              = 1;  // 关卡 ID
+  corepb.FightResultType result               = 2;  // 战斗结果
+  int32 reason                                = 3;  // 结算原因:EGameResultReason
+  repeated corepb.DungeonParam dungeon_params = 4;  // 副本自定义变量(客户端上报)
+}
+
+message GameEndReply {
+  reserved 2;
+  corepb.GameOverMessage over_message = 1;
+  // repeated corepb.Item rewards        = 2;  // 奖励
+  CardSelection next_card_selection = 3;  // 下一次卡牌选择详情
+}

@@ -1,0 +1,38 @@
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0136pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0136pb";
+
+import "corepb/common.proto";
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated Rarity crates = 1;  // 待开的箱子品质，下一次敲击开第一个，顺序
+  Rarity last_crate      = 2;  // 上一次敲击的箱子品质
+}
+
+service CSAct0136Service {
+
+  // 敲击
+  rpc Hammer(HammerRequest) returns (HammerReply);
+}
+
+// Hammer
+
+message HammerRequest {}
+
+message HammerReply {
+  repeated corepb.Item items = 1;  // 奖励道具
+  Rarity added_crate         = 2;  // 末尾新增的箱子品质
+}
+
+// types
+
+enum Rarity {
+  RARITY_UNKNOWN = 0;  // 未知
+  RARITY_WOOD    = 1;  // 木
+  RARITY_SILVER  = 2;  // 银
+  RARITY_GOLD    = 3;  // 金
+}

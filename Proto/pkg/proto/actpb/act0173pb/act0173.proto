@@ -1,0 +1,65 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0173pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0173pb";
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+message ActGetDetailRequest {}
+message ActGetDetailReply {
+  repeated Quest quests = 1;  // 关卡进度
+  bool is_rewarded      = 2;  // 是否已领取奖励
+  bool can_reward       = 3;  // 是否可以领取奖励
+}
+
+service CSAct0173Service {
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+  rpc Award(AwardRequest) returns (AwardReply);
+}
+
+message AwardRequest {}
+message AwardReply {
+  repeated corepb.Item awards = 1;  // 奖励
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡id
+}
+message GameStartReply {
+  repeated corepb.GameStartMessage start_msg = 1;
+}
+
+message GameEndRequest {
+  int64 quest_id                  = 1;  // 关卡id
+  bool success                    = 2;  // 是否挑战成功
+  PveCommonInfoReport client_info = 3;  // 通用信息上报
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_message = 1;
+}
+
+message Quest {
+  int64 quest_id    = 1;  // 关卡id
+  bool is_completed = 2;  // 是否完成
+}
+
+message PveCommonInfoReport {
+  int64 fight_time                            = 1;   // 实际战斗时长，不包括暂停这些
+  int64 real_fight_time                       = 2;   // 从加载成功到战斗结束经过的时长
+  bool is_auto_fight                          = 3;   // 是否是自动战斗
+  int64 dead_times                            = 4;   // 死亡次数
+  int64 revive_times                          = 5;   // 复活次数
+  int64 dial_used_cnt                         = 6;   // 空岛贝使用次数
+  int64 damage_sum                            = 7;   // 伤害总量
+  int64 client_time                           = 8;   // 客户端时间
+  int64 round_exit                            = 9;   // 战斗中退出:0没有发生，1点击退出按钮，2可能是杀进程
+  int64 on_hook_time                          = 10;  // 挂机时长
+  corepb.PlayerFightActDetail fight_detail    = 11;  // 战斗详情
+  corepb.MonsterFightActDetail monster_detail = 12;  // 怪物详情
+}

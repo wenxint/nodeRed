@@ -1,0 +1,20 @@
+
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0166pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0166pb";
+
+import "pkg/proto/actpb/commonpb/common.proto";
+
+// rpc ActGetDetail 活动详情使用通用协议
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  repeated actpb.commonpb.Task tasks = 1;  // 所有任务详细信息
+  int64 buddy_id                     = 2;  // 赠送伙伴ID
+}
+
+service CSAct0166Service {
+}

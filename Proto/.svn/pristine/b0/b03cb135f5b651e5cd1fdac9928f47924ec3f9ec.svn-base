@@ -1,0 +1,85 @@
+ 
+// cs protocol
+syntax = "proto3";
+
+package actpb.act0163pb;
+option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0163pb";
+
+
+import "corepb/common.proto";
+import "corepb/fight_common.proto";
+import "pkg/proto/actpb/commonpb/common.proto";
+
+service CSAct0163Service {
+
+  rpc Support(SupportRequest) returns (SupportReply);  // 打赏接口
+  rpc GameStart(GameStartRequest) returns (GameStartReply);
+  rpc GameEnd(GameEndRequest) returns (GameEndReply);
+}
+
+enum NodeStatus {
+  NODE_STATUS_UNKNOWN = 0;  // 默认值 不使用
+  NODE_STATUS_UNDONE  = 1;  // 未完成
+  NODE_STATUS_DONE    = 2;  // 已完成
+}
+
+message NodeInfo {
+  int64 node_id           = 1;  // 节点ID
+  int64 node_target_value = 2;  // 节点目标值
+  NodeStatus node_status  = 3;  // 节点状态
+}
+
+message SupportInfo {
+  int64 member_id     = 1;  // 打赏成员ID
+  int64 ui_id         = 2;  // 成员显示的ui id
+  bool is_support     = 3;  // 是否可以打赏
+  int64 support_count = 4;  // 打赏次数
+}
+
+message ActGetDetailRequest {}
+
+message ActGetDetailReply {
+  corepb.Item support_item           = 1;  // 打赏道具信息
+  bool pre_quest_done                = 2;  // 前置关卡是否完成 为true 序号 6 7 8的才展示
+  int64 pre_quest_id                 = 3;  // 前置关卡ID
+  int64 final_quest_id               = 4;  // 最终的关卡ID 如果字段有值则代表可以挑战 否则不可以
+  repeated actpb.commonpb.Task tasks = 5;  // 任务信息
+  repeated NodeInfo node_infos       = 6;  // 打赏金额的节点信息
+  repeated SupportInfo support_infos = 7;  // 成员打赏信息
+  int64 total_support_coin           = 8;  // 总打赏金额
+  bool is_final_quest_pass           = 9;  // 最终关卡是否通过
+}
+
+message SupportRequest {
+  int64 member_id = 1;  // 打赏的成员ID
+}
+
+message SupportReply {
+  corepb.Item support_item           = 1;  // 打赏道具信息
+  int64 speak_id                     = 2;  // 触发的对话ID 如果触发了对话，那么个字段就会有值，否则没有
+  repeated actpb.commonpb.Task tasks = 3;  // 任务信息
+  repeated NodeInfo node_infos       = 4;  // 打赏金额的节点信息
+  repeated SupportInfo support_infos = 5;  // 成员打赏信息
+  repeated corepb.Item rewards       = 6;  // 本次打赏的奖励信息
+  int64 final_quest_id               = 7;  // 最终关卡ID 如果字段有值则代表可以挑战 否则不可以
+  int64 total_support_coin           = 8;  // 总打赏金额
+}
+
+message GameStartRequest {
+  int64 quest_id = 1;  // 关卡ID
+}
+
+message GameStartReply {
+  corepb.GameStartMessage start_msg = 1;  // 通用战斗开始消息
+}
+
+message GameEndRequest {
+  int64 quest_id                = 1;  // 关卡ID
+  corepb.FightResultType result = 2;  // 战斗结果
+  int32 reason                  = 3;  // 结算原因:EGameResultReason
+}
+
+message GameEndReply {
+  corepb.GameOverMessage over_msg = 1;  // 通用战斗结束消息
+  repeated corepb.Item rewards    = 2;  // 通关奖励
+}

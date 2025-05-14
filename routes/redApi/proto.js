@@ -24,7 +24,7 @@ function findProtoFileByPackage(packageName) {
 
     // 处理包含服务名的情况，例如 actpb.act0152pb.CSAct0152Service
     const parts = packageName.split(".");
-    const targetFolder = parts[1]; // 获取目标文件夹名，例如 act0152pb
+    const targetFolder = parts[parts.length - 2]; // 获取目标文件夹名，例如 act0152pb
 
     // 构建基础目录路径
     const baseDir = path.join(__dirname, "..", "..", "Proto");
@@ -158,6 +158,9 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
       const methodName = parts[parts.length - 1];
       const packagePrefix = parts.slice(0, parts.length - 2).join(".");
       typeName = `${packagePrefix}.${methodName}Reply`;
+    } else {
+      const parts = typeName.split(".");
+      typeName = parts[parts.length - 2];
     }
     console.log(typeName, "typeName");
 
@@ -217,6 +220,8 @@ router.post("/proto/submit", async (req, res, next) => {
 
     // 提取冒号前的部分并按逗号分割
     headerPart = processedStr.substring(0, colonIndex).trim();
+    console.log(headerPart, "headerPart");
+
     const parts = headerPart.split(",").map((part) => part.trim());
 
     if (parts.length < 3) {
@@ -226,6 +231,9 @@ router.post("/proto/submit", async (req, res, next) => {
     // 提取包名和方法名
     const packageName = parts[1]; // 例如: actpb.act0152pb.CSAct0152Service
     const methodName = parts[2]; // 例如: GameEnd 或 ActEntranceDetail
+
+    console.log(packageName, "packageName");
+    console.log(methodName, "methodName");
 
     // 提取base64数据（冒号后的所有内容）
     const base64Data = processedStr.substring(colonIndex + 1).trim();
@@ -248,13 +256,17 @@ router.post("/proto/submit", async (req, res, next) => {
     );
 
     // 使用统一响应格式返回结果
-    return ResponseHelper.success(res, {
-      timestamp, // 添加时间戳到返回结果
-      packageName,
-      methodName,
-      protoFile: protoFilePath,
-      result: jsonResult,
-    }, "解析成功");
+    return ResponseHelper.success(
+      res,
+      {
+        timestamp, // 添加时间戳到返回结果
+        packageName,
+        methodName,
+        protoFile: protoFilePath,
+        result: jsonResult,
+      },
+      "解析成功"
+    );
   } catch (error) {
     next(error);
   }
