@@ -28,3 +28,4 @@ static/RedLogDecompress/shoco/
 # Large log files
 static/RedLogDecompress/RedAppDecompressed.log
 static/RedLogDecompress/RedApp.log
+Proto/
