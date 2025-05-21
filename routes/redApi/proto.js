@@ -54,13 +54,17 @@ function findProtoFileByPackage(packageName) {
                */
               function findProtoFile(files, targetFolder) {
                 // 1. 优先查找同名
-                const exactMatch = files.find(file => file === `${targetFolder}.proto`);
+                const exactMatch = files.find(
+                  (file) => file === `${targetFolder}.proto`
+                );
                 if (exactMatch) return exactMatch;
 
                 // 2. 查找去掉pb后缀的同名
-                const withoutPb = targetFolder.replace(/_?pb$/i, '');
+                const withoutPb = targetFolder.replace(/_?pb$/i, "");
                 if (withoutPb && withoutPb !== targetFolder) {
-                  const pbMatch = files.find(file => file === `${withoutPb}.proto`);
+                  const pbMatch = files.find(
+                    (file) => file === `${withoutPb}.proto`
+                  );
                   if (pbMatch) return pbMatch;
                 }
 
@@ -71,7 +75,7 @@ function findProtoFileByPackage(packageName) {
               const protoFile = findProtoFile(files, targetFolder);
 
               if (protoFile) {
-                console.log(fullPath,'fullPath');
+                console.log(fullPath, "fullPath");
 
                 const filePath = path.join(fullPath, protoFile);
                 console.log(`找到proto文件: ${filePath}`);
@@ -106,9 +110,10 @@ function findProtoFileByPackage(packageName) {
  * @param {string} protoFilePath - proto文件路径
  * @param {string} base64 - base64编码的protobuf数据
  * @param {string|string[]} input - 消息类型名称或包含类型名称的数组
+ * @param {number} resType - 协议类型，1表示请求，其他表示响应
  * @returns {Promise<Object>} 解析后的JSON对象
  */
-async function convertBase64ToJson(protoFilePath, base64, input) {
+async function convertBase64ToJson(protoFilePath, base64, input, resType) {
   try {
     // 验证输入参数
     if (!protoFilePath || !base64) {
@@ -176,34 +181,90 @@ async function convertBase64ToJson(protoFilePath, base64, input) {
       }
     }
 
-    // 智能处理服务方法名称转换为响应类型
+    // 智能处理服务方法名称转换为请求或响应类型
     let typeName = Array.isArray(input) ? input[0] : input;
+    console.log(`原始类型名: ${typeName}, 协议类型: ${resType}`);
 
-    // 检查是否是服务方法，如果是则转换为对应的响应类型
+    // 检查是否是服务方法，如果是则根据resType决定转换为请求类型还是响应类型
     if (typeName.includes("Service.")) {
       const parts = typeName.split(".");
       const methodName = parts[parts.length - 1];
       const packagePrefix = parts.slice(0, parts.length - 2).join(".");
-      typeName = `${packagePrefix}.${methodName}Reply`;
+
+      // 根据resType决定使用Request还是Reply后缀
+      if (resType === 1) {
+        typeName = `${packagePrefix}.${methodName}Request`;
+        console.log(`根据resType=1, 使用Request类型: ${typeName}`);
+      } else {
+        typeName = `${packagePrefix}.${methodName}Reply`;
+        console.log(`根据resType!=1, 使用Reply类型: ${typeName}`);
+      }
     } else {
+      // 如果不包含Service，使用原有逻辑
       const parts = typeName.split(".");
       typeName = parts[parts.length - 2];
+      console.log(`非服务类型，取倒数第二部分: ${typeName}`);
     }
-    console.log(typeName, "typeName");
 
-    // 查找消息类型并解码
-    const Response = root.lookupType(typeName);
-    const decoded = Response.decode(buffer);
+    try {
+      // 查找消息类型并解码
+      const Response = root.lookupType(typeName);
+      const decoded = Response.decode(buffer);
 
-    // 转换为纯JavaScript对象并返回
-    return Response.toObject(decoded, {
-      defaults: true,
-      arrays: true,
-      objects: true,
-      longs: String,
-      enums: String,
-      bytes: String,
-    });
+      // 转换为纯JavaScript对象并返回
+      return Response.toObject(decoded, {
+        defaults: true,
+        arrays: true,
+        objects: true,
+        longs: String,
+        enums: String,
+        bytes: String,
+      });
+    } catch (error) {
+      console.error(`使用 ${typeName} 解析失败, 尝试智能类型匹配...`);
+
+      // 如果指定类型解析失败，尝试智能类型匹配
+      const possibleTypes = [];
+      const parts = typeName.split(".");
+      const methodName = parts[parts.length - 1].replace(/Request$|Reply$/, "");
+      const packagePrefix = parts.slice(0, parts.length - 1).join(".");
+
+      // 尝试多种可能的类型名
+      possibleTypes.push(`${packagePrefix}.${methodName}`);
+      possibleTypes.push(`${packagePrefix}.${methodName}Request`);
+      possibleTypes.push(`${packagePrefix}.${methodName}Reply`);
+      possibleTypes.push(`${packagePrefix}.${methodName}Req`);
+      possibleTypes.push(`${packagePrefix}.${methodName}Res`);
+      possibleTypes.push(`${packagePrefix}.${methodName}Response`);
+      possibleTypes.push(typeName); // 原始类型名
+
+      console.log(`尝试的类型: ${possibleTypes.join(', ')}`);
+
+      // 尝试所有可能的类型
+      for (const type of possibleTypes) {
+        try {
+          console.log(`尝试类型: ${type}`);
+          const messageType = root.lookupType(type);
+          const decoded = messageType.decode(buffer);
+          console.log(`成功使用类型 ${type} 解码`);
+
+          return messageType.toObject(decoded, {
+            defaults: true,
+            arrays: true,
+            objects: true,
+            longs: String,
+            enums: String,
+            bytes: String,
+          });
+        } catch (e) {
+          console.log(`类型 ${type} 解码失败: ${e.message}`);
+          // 继续尝试下一个类型
+        }
+      }
+
+      // 如果都失败了，抛出异常
+      throw new AppError(400, `解析失败: ${error.message}, 尝试了类型: ${possibleTypes.join(', ')}`);
+    }
   } catch (error) {
     console.error("解析失败:", error);
     throw new AppError(400, `解析失败: ${error.message}`);
@@ -224,6 +285,8 @@ router.post("/proto/submit", async (req, res, next) => {
       throw new AppError(400, "缺少sendStr参数");
     }
 
+    console.log(`收到请求: ${sendStr.substring(0, 100)}${sendStr.length > 100 ? '...' : ''}`);
+
     // 初始化变量
     let headerPart;
     let timestamp = null;
@@ -237,7 +300,11 @@ router.post("/proto/submit", async (req, res, next) => {
       timestamp = parseFloat(timestampMatch[1]);
       // 移除时间戳部分，保留剩余字符串
       processedStr = sendStr.substring(timestampMatch[0].length);
+      console.log(`提取到时间戳: ${timestamp}`);
     }
+
+    // 标准化字符串，将制表符替换为空格
+    processedStr = processedStr.replace(/\t/g, ' ');
 
     // 解析sendStr字符串
     const colonIndex = processedStr.indexOf(":");
@@ -247,7 +314,7 @@ router.post("/proto/submit", async (req, res, next) => {
 
     // 提取冒号前的部分并按逗号分割
     headerPart = processedStr.substring(0, colonIndex).trim();
-    console.log(headerPart, "headerPart");
+    console.log(`提取头部: ${headerPart}`);
 
     const parts = headerPart.split(",").map((part) => part.trim());
 
@@ -255,15 +322,20 @@ router.post("/proto/submit", async (req, res, next) => {
       throw new AppError(400, "sendStr格式不正确，缺少必要参数");
     }
 
+    // 提取resType（协议类型）
+    const resType = parseInt(parts[0], 10);
+    console.log(`提取resType: ${resType}`);
+
     // 提取包名和方法名
     const packageName = parts[1]; // 例如: actpb.act0152pb.CSAct0152Service
     const methodName = parts[2]; // 例如: GameEnd 或 ActEntranceDetail
 
-    console.log(packageName, "packageName");
-    console.log(methodName, "methodName");
+    console.log(`包名: ${packageName}`);
+    console.log(`方法名: ${methodName}`);
 
     // 提取base64数据（冒号后的所有内容）
     const base64Data = processedStr.substring(colonIndex + 1).trim();
+    console.log(`base64数据长度: ${base64Data.length}`);
 
     // 使用findProtoFileByPackage查找proto文件
     const protoFilePath = findProtoFileByPackage(packageName);
@@ -271,15 +343,18 @@ router.post("/proto/submit", async (req, res, next) => {
     if (!protoFilePath) {
       throw new AppError(404, `未找到包 ${packageName} 的proto文件`);
     }
+    console.log(`找到proto文件: ${protoFilePath}`);
 
     // 构建完整的类型名称
     const fullTypeName = `${packageName}.${methodName}`;
+    console.log(`完整类型名: ${fullTypeName}, resType: ${resType}`);
 
-    // 调用convertBase64ToJson处理数据
+    // 调用convertBase64ToJson处理数据，传入resType参数
     const jsonResult = await convertBase64ToJson(
       protoFilePath,
       base64Data,
-      fullTypeName
+      fullTypeName,
+      resType
     );
 
     // 使用统一响应格式返回结果
@@ -289,12 +364,14 @@ router.post("/proto/submit", async (req, res, next) => {
         timestamp, // 添加时间戳到返回结果
         packageName,
         methodName,
+        resType,
         protoFile: protoFilePath,
         result: jsonResult,
       },
       "解析成功"
     );
   } catch (error) {
+    console.error("路由处理失败:", error);
     next(error);
   }
 });

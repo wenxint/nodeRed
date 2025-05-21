@@ -45,6 +45,24 @@ message CandiatesProfile {
   int64 max_support_buddies = 8;   // 每套候选阵容最多可选择的援护伙伴数
   int64 min_dials           = 9;   // 每套候选阵容最少要选择的空岛贝数
   int64 max_dials           = 10;  // 每套候选阵容最多可选择的空岛贝数
+
+  repeated corepb.LoadoutBuddyChoice ban_buddy_choices = 11;  // 可ban列表
+  map<int64, BuddyStatus> buddy_status                 = 12;  // buddy对应的拥有状态
+}
+
+// 伙伴类型，是否已拥有等区分
+enum BuddyType {
+  // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+  NOT_ACTIVE = 0;  // 未拥有
+  ACTIVE     = 1;  // 已拥有
+  LIMIT_FREE = 2;  // 限免
+  LIMIT_CARD = 3;  // 限时
+}
+
+// 伙伴是否已获取等分类信息
+message BuddyStatus {
+  BuddyType buddy_type = 1;  // 伙伴类型
+  int64 expire_at      = 2;  // 过期时间(unix second)，默认为0表示永久
 }
 
 // ApplyLoadoutRequest
