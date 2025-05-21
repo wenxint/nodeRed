@@ -20,6 +20,7 @@ message ActGetDetailReply {
   FullStamp full_reward                   = 3;  // 全印章奖励
   actpb.commonpb.Share share              = 4;  // 分享信息
   int64 full_reward_limit                 = 5;  // 全印章领取条件次数
+  bool full_awarded                       = 6;  // 全印章奖励是否领完
 }
 
 message RelateActInfo {

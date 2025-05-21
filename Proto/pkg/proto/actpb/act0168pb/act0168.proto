@@ -12,6 +12,7 @@ service CSAct0168Service {
 message ActGetDetailRequest {}
 message ActGetDetailReply {
   repeated RelateActInfo relate_act_infos = 1;
+  int64 last_enter_gold_got               = 2;  // 上次进入活动时候关联活动已获得的金币
 }
 
 message RelateActInfo {

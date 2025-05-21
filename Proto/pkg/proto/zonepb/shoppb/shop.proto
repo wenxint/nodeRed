@@ -34,6 +34,9 @@ service ShopService {
 
   // 移除【新】标识
   rpc RemoveNewTag(RemoveNewTagRequest) returns (RemoveNewTagReply);
+
+  // 设置橱窗红点提示选择
+  rpc SetShopItemRedpointChoice(SetShopItemRedpointChoiceRequest) returns (SetShopItemRedpointChoiceReply);
 }
 
 message RemoveNewTagRequest {
@@ -145,7 +148,9 @@ message Shop {
   int64 shop_id                                      = 1;
   string shop_name                                   = 2;
   map<int64, ShopWindowGroup> shop_window_group_list = 3;
-  int64 shop_type                                    = 4;  // 商店类型。1=普通 2=推荐页
+  int64 shop_type                                    = 4;  // 商店类型。1=常规 2=限时
+  int64 begin_time                                   = 5;  // 为0表示没有限制
+  int64 end_time                                     = 6;  // 为0表示没有限制，当shop_type=2时，可以用该值算倒计时
 }
 
 message ShopWindowGroup {
@@ -166,6 +171,7 @@ message ShopWindowGroup {
   int64 shop_window_group_template                     = 15;  // 橱窗组模板。1=推荐页主橱窗 2=推荐页道具橱窗 3=礼包商店
   bool is_red_point                                    = 16;  // 是否有红点
   int64 shop_id                                        = 17;  // 商店id
+  int64 shop_window_option_m = 18;  // 需要N选M的情况，这里是M值（N值就是橱窗组中橱窗的个数），为0表示普通橱窗组，非0表示需要N选M有锁定逻辑
 }
 
 message ShopRecommendGroup {
@@ -190,6 +196,7 @@ message ShopWindow {
   int64 tab_id                  = 6;  // 如果该橱窗组有多页签，所属的页签ID
   bool is_new                   = 7;  // 【新】标签
   int64 shop_window_group_id    = 8;  // 所属的橱窗组ID
+  bool is_locked                = 9;  // N选M橱窗选中状态 false-未锁定（当已锁定个数等于shop_window_option_m时，需要置灰） true-已锁定
 }
 
 enum ShopItemTimeType {
@@ -231,6 +238,8 @@ message ShopItem {
   int64 shop_window_id                             = 32;  // 所属的橱窗ID
   int64 buy_dialog_style                           = 33;  // 购买弹窗样式
   BuddyFragmentBuyDialog buddy_fragment_buy_dialog = 34;  // 伙伴碎片购买弹窗信息
+  bool redpoint_visible                            = 35;  // 是否显示“红点提示”
+  bool redpoint_choice                             = 36;  // 如果显示“红点提示”的话，当前是否勾选“红点提示”
 }
 
 message BuddyFragmentBuyDialog {
@@ -292,3 +301,12 @@ enum SystemConditionType {
   WILLCRYSTAL_SEASON_OPEN               = 9;   // 意志赛季开启
   SHIP_LINEAR_UNLOCK_COUNT              = 10;  // 线性船坞解锁数量
 }
+
+message SetShopItemRedpointChoiceRequest {
+  int64 shop_id              = 1;
+  int64 shop_window_group_id = 2;
+  int64 shop_window_id       = 3;
+  int64 shop_item_id         = 4;
+  bool redpoint_choice       = 5;  // true-有红点提示 false-没有红点提示
+}
+message SetShopItemRedpointChoiceReply {}

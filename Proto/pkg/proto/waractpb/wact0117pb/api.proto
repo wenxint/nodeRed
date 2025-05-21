@@ -28,13 +28,14 @@ enum FQResult {
 message FQPlayInfo {
   reserved 8;
   int64 gid                   = 1;
-  FQResult result             = 2;  // 最新一局结果
-  int64 rank                  = 3;  // 对局内名次，如果还没结算为 0
-  int64 correct_count         = 4;  // 正确数
-  int64 max_con_correct_count = 5;  // 最高连续正确数
-  int64 wrong_count           = 6;  // 错误数
-  int64 score                 = 7;  // 该局游戏获取的积分总数
-  int64 con_correct_count     = 9;  // 当前连续正确数
+  FQResult result             = 2;   // 最新一局结果
+  int64 rank                  = 3;   // 对局内名次，如果还没结算为 0
+  int64 correct_count         = 4;   // 正确数
+  int64 max_con_correct_count = 5;   // 最高连续正确数
+  int64 wrong_count           = 6;   // 错误数
+  int64 score                 = 7;   // 该局游戏获取的积分总数
+  int64 con_correct_count     = 9;   // 当前连续正确数
+  int64 score_day_add         = 10;  // 该局游戏获取的今日积分总数（受到日限制）
 }
 
 message FQPlayer {

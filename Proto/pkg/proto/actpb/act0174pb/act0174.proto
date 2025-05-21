@@ -22,6 +22,8 @@ service CSAct0174Service {
   rpc FollowShopItem(FollowShopItemRequest) returns (FollowShopItemReply);
   // 领取金币返利
   rpc ClaimCoinRebate(ClaimCoinRebateRequest) returns (ClaimCoinRebateResponse);
+  // 移除一次性红点
+  rpc RemoveOnceRedPoint(RemoveOnceRedPointRequest) returns (RemoveOnceRedPointResponse);
 }
 
 message ActGetDetailRequest {}
@@ -35,6 +37,10 @@ message ActGetDetailReply {
   int64 config_share_link_score_limit   = 6;  // 配置分享获得的积分上限
   int64 score_item_id                   = 7;  // 积分奖励道具ID
 }
+
+message RemoveOnceRedPointRequest {}
+
+message RemoveOnceRedPointResponse {}
 
 message GetRecallFriendListRequest {}
 

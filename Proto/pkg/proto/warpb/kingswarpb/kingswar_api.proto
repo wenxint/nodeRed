@@ -78,6 +78,7 @@ message GuildProfile {
   string leader_name     = 6;  // 团长名称
   int64 point            = 7;  // 积分(本服岛屿激斗)
   repeated int64 members = 8;  // 同盟成员ID列表
+  int64 level            = 9;  // 同盟等级
 }
 
 message PlayerProfile {
@@ -287,6 +288,7 @@ message GuildPoint {
   GuildProfile guild      = 1;  // 同盟信息
   int64 point             = 2;  // 积分
   int64 participant_count = 3;  // 参赛人数
+  PlayerDetail leader     = 4;  // 团长信息
 }
 
 message LeaderboardReply {

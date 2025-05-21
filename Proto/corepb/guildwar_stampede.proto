@@ -5,6 +5,7 @@ package corepb;
 option go_package = "git.woa.com/red/game-proto/corepb";
 
 import "corepb/common.proto";
+import "corepb/fight_common.proto";
 
 enum StampedeItemStatus {
   // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
@@ -40,11 +41,6 @@ message StampedeTradingInfo {
 }
 
 message StampedeItem {
-  message TaskInfo {
-    int64 owner_buff_id = 1;  // 归属任务buffID
-    int64 gid           = 2;  // 玩家gid
-  }
-
   StampedeItemStatus item_status   = 1;  // 道具状态
   int64 item_uid                   = 2;  // 局内唯一ID
   corepb.Item item                 = 3;  // 常规道具信息
@@ -52,7 +48,6 @@ message StampedeItem {
   bool is_sell_by_shop             = 5;  // 是否为商店售卖道具
   int64 owner_id                   = 6;  // 归属ID（玩家=gid，怪物=怪物ID*100+idx，0=关卡）
   StampedeTradingInfo trading_info = 7;  // 交易行数据
-  TaskInfo task_info               = 8;  // 任务信息
 }
 
 // 玩家位置，目前夺宝行动用
@@ -77,11 +72,23 @@ message StampedeGameStartData {
   StampedeFightMapInfo fight_map_info  = 2;  // 战斗地图信息
   map<int64, StampedeBagInfo> bag_info = 3;  // 玩家 Gid -> 背包信息
   int64 end_time                       = 4;  // 结束时间戳
+  message FightTaskInfo {
+    int64 task_item_count = 1;  // 任务道具数量
+  }
+  FightTaskInfo fight_task_info = 5;  // 局内任务信息
+  message ExternalTaskInfo {
+    int64 task_id                = 1;  // 任务ID
+    int64 task_condition_index   = 2;  // 任务条件索引
+    int64 task_curr_progress     = 3;  // 局外任务当前进度
+    int64 task_required_progress = 4;  // 局外任务所需进度
+    bool is_active               = 5;  // 局外任务是否激活
+  }
+  repeated ExternalTaskInfo external_task_infos = 6;  // 局外任务信息
 }
 
 message StampedeBagInfo {
-  int64 init_equipment_size = 1;  // 初始装备格大小
-  int64 init_treasure_size  = 2;  // 初始宝物格大小
+  int64 bag_size   = 1;  // 背包大小
+  int64 bag_weight = 2;  // 背包重量
 }
 
 // 夺宝行动整局战斗结算自定义数据，GameOverMessage中的custom_data字段
@@ -146,12 +153,14 @@ message StampedeFightMapInfo {
 
 // 战斗结束的玩家动态数据
 message StampedePlayerDynamicInfo {
-  int64 gid        = 1;  // 玩家gid
-  int64 hp         = 2;
-  int64 mp         = 3;
-  int32 position_x = 4;
-  int32 position_y = 5;
-  bool is_mirror   = 6;  // 主角朝向
+  int64 gid = 1;  // 玩家gid
+  int64 hp  = 2;
+  // int64 mp         = 3;
+  int32 position_x                = 4;
+  int32 position_y                = 5;
+  bool is_mirror                  = 6;  // 主角朝向
+  map<int64, int64> attrs         = 7;  // 属性
+  repeated FightSkillCD skills_cd = 8;  // 技能CD
 }
 
 message StampedeMosterDynamicInfo {
@@ -184,4 +193,5 @@ message StampedeGameOverData {
   map<int64, KillMonsterInfos> kill_monster_info            = 6;  // 击杀怪物信息，gid -> 击杀怪物信息
   StampedeItemDropStatus item_drop_status                   = 7;  // 该副本中宝箱的状态
   repeated int64 settle_player_gids                         = 8;  // 本次实际结算的玩家gid列表
+  repeated DungeonParam dungeon_params                      = 9;  // 关卡变量相关的变更
 }

@@ -38,7 +38,8 @@ message VKeyTimeout {
 // vkey: AUTH(2005)
 message Auth {
   uint32 secret_num = 1;  // 开战协议下发的秘密数字，
-  // 此前是 uint16，但是 protobuf 不支持 uint16，而且 protobuf 数字为变长，故此处使用 uint32，仍然填写开战协议下发数据即可
+                          // 此前是 uint16，但是 protobuf 不支持 uint16，而且 protobuf
+                          // 数字为变长，故此处使用 uint32，仍然填写开战协议下发数据即可
 }
 
 // 延迟上报，会广播给所有玩家
@@ -130,11 +131,16 @@ message FPSMsg {
   int32 server_fps = 2;  // 服务器驱动帧率
 }
 
-// PVPVkey_REPORT_FIGHT_EXPERIENCE   PVPVkey = 2027 玩家战斗体验，对局结束上报，0-100的数值，代表玩家在本次战斗中的综合体验
+// PVPVkey_REPORT_FIGHT_EXPERIENCE   PVPVkey = 2027
+// 玩家战斗体验，对局结束上报，0-100的数值，代表玩家在本次战斗中的综合体验
 message FightExperience {
-  int32 experience     = 1;  // 战斗体验
-  int32 double_channel = 2;  // 是否启用双通道 0 -否 1-是
-  int32 logic_fps      = 3;  // 逻辑帧率
+  int32 experience           = 1;  // 战斗体验
+  int32 double_channel       = 2;  // 是否启用双通道 0 -否 1-是
+  int32 logic_fps            = 3;  // 逻辑帧率
+  int32 high_logic_fps_ratio = 4;  // 高逻辑帧率占比（千分比）
+  int32 empty_tick_ratio     = 5;  // 空 tick 占比（和平均逻辑帧率作用相近，相当于归一化；千分比）
+  int32 big_empty_tick_ratio = 6;  // 严重空 tick 占比（千分比）
+  int32 preperform_error     = 7;  // 预表现位置误差（主要反映延迟；x1000）
 }
 
 // 关联战斗上报内容
@@ -152,19 +158,42 @@ message GemValueReport {
   uint64 pick_gem_value = 3;  // 宝石拾取总量，不包含掉落，只计算拾取
 }
 
+// 玩家品质等级上报
+// vkey: PVP_REPORT_PLAYER_QUALITY_LEVEL(2028)
+message PlayerQualityLevelReport {
+  int32 default_quality_level = 1;  // 默认品质，即机型档位
+  int32 effect_level          = 2;  // 画质等级
+}
+
+// 回合战斗详情上报
+// vkey: REPORT_ROUND_FIGHT_DETAIL(2127)
+message RoundFightDetailReport {
+  int64 round_idx                      = 1;  // 回合序号
+  map<int64, int64> round_fight_detail = 2;  // 战斗详情数值
+}
+
+
+message StampedePlayerSkillInfo {
+  int64 skill_id = 1;
+  int64 skill_cd = 2;
+}
+
 message StampedePlayerDynamicInfo {
-  uint32 role_idx  = 1;
-  int64 hp         = 2;
-  int64 mp         = 3;
-  int32 position_x = 4;
-  int32 position_y = 5;
-  bool is_mirror   = 6;  // 主角朝向
+  uint32 role_idx = 1;
+  int64 hp        = 2;
+  // int64 mp                = 3;
+  int32 position_x                           = 4;
+  int32 position_y                           = 5;
+  bool is_mirror                             = 6;  // 主角朝向
+  map<int64, int64> attrs                    = 7;  // 主角属性
+  repeated StampedePlayerSkillInfo skills_cd = 8;  // 技能CD
 }
 
 // 夺宝行动上报玩家信息
 // vkey: REPORT_STAMPEDE_PLAYER_INFO(2134)
 message StampedePlayerDynamicInfoReport {
   repeated StampedePlayerDynamicInfo player_dynamic_info = 1;  //主角的属性，只上报变化的
+  int32 frame_id  = 2;  // 客户端发出时的帧id，即使超时补发，也需要保证是之前触发时的帧ID
 }
 
 message Item {
@@ -189,12 +218,14 @@ message MonsterDynamicInfo {
 // vkey: REPORT_STAMPEDE_MONSTER_INFO(2128)
 message StampedeMonsterDynamicInfoReport {
   repeated MonsterDynamicInfo monster_dynamic_info = 1;  //每只怪物的动态信息,只上报变化的怪物
+  int32 frame_id  = 2;  // 客户端发出时的帧id，即使超时补发，也需要保证是之前触发时的帧ID
 }
 
 // 夺宝行动操作物品上报
 // vkey: REPORT_STAMPEDE_ITEM_OP(2129)
 message StampedeItemOpReport {
   repeated corepb.StampedeItem items = 1;  // 操作物品列表
+  int32 frame_id                     = 2;  // 客户端发出时的帧id，客户端校验服用，目前后台没用
 }
 
 // 夺宝行动上报玩家离开当前小地图（进入新的小地图或成功撤离）
@@ -202,6 +233,7 @@ message StampedeItemOpReport {
 message StampedeLeaveReport {
   uint32 role_idx = 1;  // 离开的玩家
   int32 block_id = 2;  // 离开的传送点ID，传送点ID为3，6，9，12这四个数；当block_id为999时，表示玩家遇敌主动离开地图；当block_id为当前副本ID时，表示撤离成功
+  int32 frame_id = 3;  // 客户端发出时的帧id，客户端校验服用，目前后台没用
 }
 
 // 夺宝行动上报玩家击杀怪物
@@ -210,12 +242,14 @@ message StampedeKillMonsterReport {
   uint32 role_idx   = 1;  // 击杀怪物的玩家
   int64 monster_id  = 2;  // 怪物ID
   int32 monster_idx = 3;  // 怪物索引
+  int32 frame_id    = 4;  // 客户端发出时的帧id，客户端校验服用，目前后台没用
 }
 
 // 夺宝行动上报该关卡道具掉落状态（宝箱状态）
 // vkey: REPORT_STAMPEDE_ITEM_DROP_STATUS(2132)
 message StampedeItemDropStatusReport {
   corepb.StampedeItemDropStatus status = 1;  // 道具掉落状态
+  int32 frame_id  = 2;  // 客户端发出时的帧id，即使超时补发，也需要保证是之前触发时的帧ID
 }
 
 // 夺宝行动上报buff
@@ -226,19 +260,6 @@ message StampedeBuffReport {
   int32 op_type   = 3;  // 操作类型,0-添加，1-移除
   int32 frame_id  = 4;  // 客户端发出时的帧id，即使超时补发，也需要保证是之前触发时的帧ID
 }
-
-message PlayerQualityLevelReport {
-  int32 default_quality_level = 1; // 默认品质，即机型档位
-  int32 effect_level = 2; // 画质
-}
-
-// 回合战斗详情上报
-// vkey: REPORT_ROUND_FIGHT_DETAIL(2227)
-message RoundFightDetailReport {
-  int64 round_idx                      = 1;  // 回合序号
-  map<int64, int64> round_fight_detail = 2;  // 战斗详情数值
-}
-
 
 // 上报关卡变量
 // vkey: REPORT_DUNGEON_PARAM(2135)

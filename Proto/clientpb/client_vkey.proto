@@ -315,6 +315,13 @@ message VKeyStampedeUpdatePortalInfo {
   repeated int64 block_id      = 1;  // 传送点ID
 }
 
+// 夺宝行动撤离点状态变化
+// vkey: GP_STAMPEDE_UPDATE_EVACUATION = 6354，服务器纯透传
+message VKeyStampedeUpdateEvacuationInfo {
+  int32 remain_times          = 1;  // 剩余可撤离次数，-1表示不限次数
+  int64 limit_active_ts       = 2;  // 限时撤离点激活后，实际生效的时间戳（cond_type=3时有效），0表示限时撤离点未激活
+}
+
 //------------------------------------跨回合vkey--------------------------
 
 message VkeyCrossRoundPlayerInfoAttr{

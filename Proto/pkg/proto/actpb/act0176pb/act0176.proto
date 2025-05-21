@@ -21,6 +21,7 @@ enum PartsType {
 // rpc ActGetDetail 活动详情使用通用协议
 message ActGetDetailRequest {}
 message ActGetDetailReply {
+  reserved 8;
   int64 contribute                              = 1;   // 个人贡献值
   int64 progress                                = 2;   // 当前进度 精确到万分比
   repeated ProgressInfo progress_tasks          = 3;   // 阶段进度列表,按阶段ID递增排序
@@ -28,9 +29,9 @@ message ActGetDetailReply {
   string rank_type                              = 5;   // 排行榜类型
   string rank_instance                          = 6;   // 排行榜实例名
   repeated int64 collection_ids                 = 7;   // 藏品对应阶段ID列表,空的话说明无藏品
-  bool is_liked                                 = 8;   // 当天是否点赞过
   int64 zone_contribute                         = 9;   // 小区贡献值
   string zone_name                              = 10;  // 小区名称
+  int64 like_id                                 = 11;  // 点赞ID
 }
 
 // 任务完成进度信息

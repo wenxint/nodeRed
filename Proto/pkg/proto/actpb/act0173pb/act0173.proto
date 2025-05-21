@@ -38,6 +38,8 @@ message GameEndRequest {
   int64 quest_id                  = 1;  // 关卡id
   bool success                    = 2;  // 是否挑战成功
   PveCommonInfoReport client_info = 3;  // 通用信息上报
+  int64 stars                     = 4;  // 客户端计算的获得星数
+  repeated bool stars_state       = 5;
 }
 
 message GameEndReply {

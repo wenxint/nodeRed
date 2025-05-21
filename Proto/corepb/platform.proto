@@ -7,6 +7,7 @@ option go_package = "git.woa.com/red/game-proto/corepb";
 enum OSType {
   OS_TYPE_IOS     = 0;  // 苹果
   OS_TYPE_ANDROID = 1;  // 安卓
+  OS_TYPE_WINDOWS = 2;  // WINDOWS
 }
 
 enum PlatformType {

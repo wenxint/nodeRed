@@ -15,6 +15,8 @@ service LadderService {
   rpc GetLadderInfo(GetLadderInfoRequest) returns (GetLadderInfoReply);
   // 设置是否启用段位保护卡
   rpc SetUseProtectCard(SetUseProtectCardRequest) returns (SetUseProtectCardReply);
+  // 设置是否启用多倍分数
+  rpc SetUseMultiple(SetUseMultipleRequest) returns (SetUseMultipleReply);
   // 移除新赛季红点
   rpc RemoveNewSeasonRedpoint(RemoveNewSeasonRedpointRequest) returns (RemoveNewSeasonRedpointReply);
   // 奖励查询
@@ -49,6 +51,9 @@ message ProtectInfo {
   corepb.Item protect_card         = 5;  // 段位保护卡信息
   bool protect_card_start          = 6;  // 段位保护卡功能是否开启
   bool is_use_protect_card         = 7;  // 是否使用段位保护卡，功能开启可以不使用，客户端有复选框来勾选
+  bool is_use_multiple             = 8;   // 是否使用多倍分数，功能开启可以不使用，客户端有复选框来勾选
+  int64 multiple_usage             = 9;   // 多倍分数，已用量
+  int64 multiple_limit             = 10;  // 多倍分数，限额
 }
 
 message GetLadderInfoReply {
@@ -87,6 +92,12 @@ message SetUseProtectCardRequest {
 }
 
 message SetUseProtectCardReply {}
+
+message SetUseMultipleRequest {
+  bool flag = 1;  // 是否使用多倍分数
+}
+
+message SetUseMultipleReply {}
 
 message RemoveNewSeasonRedpointRequest {
   int64 target_season_id = 1;  // 移除对应赛季ID的新赛季红点

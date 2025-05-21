@@ -25,6 +25,11 @@ message ForgingKnifeRequest {
   bool batch = 1;  // 一键锻刀模式; True: 打开；False：关闭
 }
 
+message TaskDetail {
+  int64 unlocked_timestamp = 1;  // 任务解锁时间戳（0 表示已经解锁）
+  actpb.commonpb.Task task = 2;  // 任务基本信息
+}
+
 // ForgingKnifeReply 锻刀响应.
 message ForgingKnifeReply {
   repeated corepb.Item items      = 1;  // 锻刀奖励(每轮);
@@ -43,8 +48,9 @@ message ActGetDetailRequest {}
 
 // ActGetDetailReply 活动详情响应信息
 message ActGetDetailReply {
-  ActInfo act_info                   = 1;  // 活动基础信息
-  repeated actpb.commonpb.Task tasks = 2;  // 所有任务详细信息
+  reserved 2;
+  ActInfo act_info                 = 1;  // 活动基础信息
+  repeated TaskDetail task_details = 3;  // 所有任务详细信息
 }
 
 message ActInfo {

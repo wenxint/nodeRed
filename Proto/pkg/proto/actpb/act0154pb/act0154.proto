@@ -8,6 +8,8 @@ option go_package = "git.woa.com/red/actsvr/pkg/proto/actpb/act0154pb";
 import "pkg/proto/actpb/commonpb/common.proto";
 
 service CSAct0154Service {
+
+  rpc Share(ShareRequest) returns (ShareReply);
 }
 
 message ActGetDetailRequest {}
@@ -25,4 +27,10 @@ message ActGetDetailReply {
 message Act0154EntranceDetail {
   int64 countdown_show_time = 1;  // 倒计时显示时间 秒级时间戳
   int64 countdown_end_time  = 2;  // 倒计时结束时间 秒级时间戳
+}
+
+message ShareRequest {}
+
+message ShareReply {
+  actpb.commonpb.Share share = 1;  // 分享信息
 }

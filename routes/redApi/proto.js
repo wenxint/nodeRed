@@ -25,6 +25,7 @@ function findProtoFileByPackage(packageName) {
     // 处理包含服务名的情况，例如 actpb.act0152pb.CSAct0152Service
     const parts = packageName.split(".");
     const targetFolder = parts[parts.length - 2]; // 获取目标文件夹名，例如 act0152pb
+    console.log(targetFolder, "targetFolder");
 
     // 构建基础目录路径
     const baseDir = path.join(__dirname, "..", "..", "Proto");
@@ -43,9 +44,35 @@ function findProtoFileByPackage(packageName) {
             if (item === targetFolder) {
               // 获取文件夹中的文件
               const files = fs.readdirSync(fullPath);
-              const protoFile = files.find((file) => file.endsWith(".proto"));
+
+              /**
+               * 优先查找与 targetFolder 同名的 .proto 文件，
+               * 如果没有则查找去掉 pb 后的 targetFolder 名称的 .proto 文件
+               * @param {string[]} files - 目录下所有文件名
+               * @param {string} targetFolder - 目标文件夹名
+               * @returns {string|undefined} 匹配到的 proto 文件名
+               */
+              function findProtoFile(files, targetFolder) {
+                // 1. 优先查找同名
+                const exactMatch = files.find(file => file === `${targetFolder}.proto`);
+                if (exactMatch) return exactMatch;
+
+                // 2. 查找去掉pb后缀的同名
+                const withoutPb = targetFolder.replace(/_?pb$/i, '');
+                if (withoutPb && withoutPb !== targetFolder) {
+                  const pbMatch = files.find(file => file === `${withoutPb}.proto`);
+                  if (pbMatch) return pbMatch;
+                }
+
+                // 3. 没有找到
+                return undefined;
+              }
+
+              const protoFile = findProtoFile(files, targetFolder);
 
               if (protoFile) {
+                console.log(fullPath,'fullPath');
+
                 const filePath = path.join(fullPath, protoFile);
                 console.log(`找到proto文件: ${filePath}`);
                 return filePath;

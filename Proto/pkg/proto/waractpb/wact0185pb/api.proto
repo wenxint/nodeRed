@@ -68,11 +68,18 @@ message MapDeltaUpdateInfo {
 
   repeated Path opened_connections = 1;  // 开放的路径
   reserved 2;
-  repeated Path walked_paths                 = 3;  // 走过的路径
-  AroundPlayerInfo around_player_info        = 4;  // 周围玩家信息
-  int64 born_level_id                        = 5;  // 出生点id (不会变)
-  repeated int64 evacuation_level_id_list    = 6;  // 对应的撤离点列表，待废弃，使用 evacuation_points 替代
+  repeated Path walked_paths          = 3;  // 走过的路径
+  AroundPlayerInfo around_player_info = 4;  // 周围玩家信息
+  int64 born_level_id                 = 5;  // 出生点id (不会变)
+  // repeated int64 evacuation_level_id_list    = 6;  // 对应的撤离点列表，待废弃，使用 evacuation_points 替代
   repeated EvacuationPoint evacuation_points = 7;  // 撤离点信息
+  repeated GlobalMarkInfo global_mark_infos  = 8;  // 全局标记点信息
+  repeated int64 high_resource_level_ids     = 9;  // 高资源地图id列表 (玩家需要显示的全图高资源点)
+}
+
+message GlobalMarkInfo {
+  int64 level_id = 1;
+  int64 buff_id  = 2;
 }
 
 message MapUpdateInfoNtf {

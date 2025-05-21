@@ -91,8 +91,14 @@ enum FightType {
   FIGHT_TYPE_PVP_KINGSWAR             = 79;  // 王者争锋(gvg)
   FIGHT_TYPE_PVE_ACT_0148             = 80;  // 148 活动（强敌连战）
   FIGHT_TYPE_PVE_ACT_0091             = 81;  // 91 活动（莫利亚pve）
+  FIGHT_TYPE_PVE_ACT_0153             = 82;  // 153 活动（海军训练）
+  FIGHT_TYPE_PVE_ACT_0138             = 83;  // 138 活动（秘密行动）
   FIGHT_TYPE_PVE_ACT_0132_GAME_TYPE_8 = 84;  // 132 活动（乱斗竞技场 - 强者主题）
+  FIGHT_TYPE_PVE_ACT_0163             = 85;  // 163 活动（路奇特别行动）
+  FIGHT_TYPE_PVE_ACT_0192             = 86;  // 192 活动（小小站长大冒险）
   FIGHT_TYPE_PVP_ACT_0188             = 87;  // 188 活动（1V1极速单挑段位赛）
+  FIGHT_TYPE_PVE_ACT_0191             = 88;  // 191 活动（变身大作战）
+  FIGHT_TYPE_PVE_ACT_0193             = 89;  // 193 活动（护航突袭战）
   // 这些枚举值没有合入 master 之前不得提前与客户端沟通！！！
 };
 
@@ -121,7 +127,7 @@ enum FightResultType {
   E_FIGHT_LOSE  = 2;  // 失败
 };
 
-// 战斗结束原因
+// 战斗结束原因(需要与fightsvr里的GameEndReason保持一致)
 enum EGameResultReason {
   E_RESULT_REASON_NORMAL                = 0;   // 正常结束
   E_RESULT_REASON_ONELOSE               = 1;   // 有人掉线结束
@@ -136,6 +142,7 @@ enum EGameResultReason {
   E_RESULT_REASON_BEFORE_FIGHT_BP       = 10;  // 未进战斗异常:BP时掉线或退出
   E_RESULT_REASON_HALFWAY_QUIT          = 11;  // 主动中途退出
   E_RESULT_REASON_OUTGAME_TIMEOUT       = 12;  // 外部服务控制超时，强制结束战斗
+  E_RESULT_REASON_GRPC_END              = 13;  //  外部服务通过EndGame这条grpc协议结束战斗
 };
 
 // 局内掉落包
@@ -265,15 +272,24 @@ message AiInfo {
 
 // 通用的玩家战斗信息
 message FightInfo {
-  FightAttr fight_attr                         = 1;  // 战斗属性
-  int64 fc                                     = 2;  // 实力值，用于破防计算
-  repeated FightBuddyInfo buddy_info           = 3;  // 伙伴（和空岛贝）信息
-  repeated FightSupportInfo support_buddy_info = 4;  // 援护信息
-  repeated FightBuff buff                      = 5;  // buff信息（天生buff）
-  repeated FightSkill skill                    = 6;  // 技能信息（全局技能）
-  repeated FightWarshipInfo warship_infos      = 7;  // 战船信息
-  FightConfig fight_config                     = 8;  // 战斗系统配置
-  repeated int64 ship_rogue_weapons            = 9;  // 海战肉鸽携带的武器
+  FightAttr fight_attr                         = 1;   // 战斗属性
+  int64 fc                                     = 2;   // 实力值，用于破防计算
+  repeated FightBuddyInfo buddy_info           = 3;   // 伙伴（和空岛贝）信息
+  repeated FightSupportInfo support_buddy_info = 4;   // 援护信息
+  repeated FightBuff buff                      = 5;   // buff信息（天生buff）
+  repeated FightSkill skill                    = 6;   // 技能信息（全局技能）
+  repeated FightWarshipInfo warship_infos      = 7;   // 战船信息
+  FightConfig fight_config                     = 8;   // 战斗系统配置
+  repeated int64 ship_rogue_weapons            = 9;   // 海战肉鸽携带的武器
+  int64 selected_dungeon_id                    = 10;  // 玩家设置优先使用的副本id(arenascene 竞技场场景系统)
+  repeated int64 ban_buddy_ids                 = 11;  // ban的伙伴ID列表
+  repeated FightSkillCD skill_cd               = 12;  // 技能CD(从上一局保留过来的CD，目前夺宝行动使用)
+}
+
+// 技能CD
+message FightSkillCD {
+  int64 skill_id = 1;  // 技能ID
+  int64 cd       = 2;  // CD
 }
 
 // 战斗系统配置
@@ -301,6 +317,7 @@ message FightBuddyInfo {
   int64 fashion_id               = 8;   // 伙伴时装id
   repeated FightBuff buff        = 9;   // 伙伴级别 buff
   int64 buddy_mastery_tier       = 10;  // 伙伴熟练度级别
+  bool is_from_random_buddy      = 11;  // 是否由随机伙伴转化而来
 }
 
 // 出战的空岛贝信息，与伙伴绑定
@@ -395,11 +412,12 @@ message MonsterDynamicInfo {
   int32 idx     = 2;
   int64 init_hp = 3;  // 初始生命
   reserved 4;
-  int32 position_x = 5;
-  int32 position_y = 6;
-  bool is_mirror   = 7;  // 怪物朝向
-  bool is_dead     = 8;  // 是否死亡
-  int32 quadrant   = 9;  // 象限
+  int32 position_x       = 5;
+  int32 position_y       = 6;
+  bool is_mirror         = 7;   // 怪物朝向
+  bool is_dead           = 8;   // 是否死亡
+  int32 quadrant         = 9;   // 象限
+  bool disable_position_info = 10;  // 是否使用位置信息 (true: 不使用位置信息，默认值false: 使用位置信息)
 }
 
 // 怪物相关信息 （这代表一类怪物的信息，ClientMonsterPack中包含多种怪物）
@@ -460,6 +478,10 @@ message PlayerFightDetail {
   int64 destruction_total         = 7;  // 地图破坏总数
   int64 common_value              = 8;  // 可代表任何整形的含义，比如活动35火爆斗球道具的数量等
   int32 stars                     = 9;  // 共达成了几颗星，由玩法逻辑填充
+  message RoundFightDetail {
+    map<int64, int64> round_fight_detail = 1;  // 战斗详情数值
+  }
+  map<int64, RoundFightDetail> round_fight_detail = 10;  // 对局详情 roundIdx -> RoundFightDetail
   // 后面玩家相关内容会在此扩充
 }
 
@@ -528,10 +550,12 @@ message CheatPlayer {
 // 通用战斗事件消息
 message GameEventMessage {
   enum EventType {
-    NONE          = 0;  // 无
-    PLAYER_LEAVE  = 1;  // 玩家中途离开(包含掉线和主动退出)
-    PLAYER_SETTLE = 2;  // 玩家主动结算
-    PLAYER_KILLED = 3;  // 玩家被击杀
+    NONE             = 0;  // 无
+    PLAYER_LEAVE     = 1;  // 玩家中途离开(包含掉线和主动退出)
+    PLAYER_SETTLE    = 2;  // 玩家主动结算
+    PLAYER_KILLED    = 3;  // 玩家被击杀
+    PLAYER_BUFF_OP   = 4;  // 玩家装备或卸下buff，目前夺宝行动使用
+    GAME_ROUND_BEGIN = 5;  // 回合开始,目前仅夺宝行动会发送，无payload
   }
   message PlayerLeave {
     repeated int64 gids = 2;  // 中途离开的玩家列表
@@ -542,6 +566,14 @@ message GameEventMessage {
     int64 killed_happen_index = 3;  // 被击杀发生在第几个击杀(从1开始计数，如果为 0 表示没有被击杀)
     int64 kills               = 4;  // 该玩家击杀数
     int64 damages             = 5;  // 该玩家造成的伤害
+  }
+
+  message PlayerBuff {
+    int64 gid        = 1;  // 玩家gid,玩家的buff该字段才有意义，否则为0
+    int64 buff_id    = 2;  // 装备或卸下的buff
+    int32 op_type    = 3;  // 操作类型,0-装备，1-卸下
+    int32 frame_id   = 4;  // 帧id，保序用，相当于seq，越大说明时间越晚
+    int64 monster_id = 5;  // 怪物的buff的话，该字段不为0
   }
 
   EventType type                   = 1;  // 事件类型
@@ -769,7 +801,8 @@ message PlayerFightActDetail {
   int64 be_hurt_total_frames      = 133;  // 自己处于受击状态的总帧数
   string motion                   = 134;  // motion 信息
 
-  int64 fashion_id = 135;  // 伙伴皮肤ID(若有)
+  int64 fashion_id         = 135;  // 伙伴皮肤ID(若有)
+  repeated int64 op_ai_ids = 136;  // 对手AI ID，如果是真人为0
 }
 
 // 客户端统计怪物的详情

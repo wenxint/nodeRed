@@ -82,6 +82,7 @@ message LevelInfo {
   int64 story_buddy_id                  = 13;  // 剧情伙伴ID
   int64 open_ts                         = 14;  // 关卡开放时间戳，当level_state为UNPLAYABLE_NOT_TO_OPEN_TIME时有效
   bool is_completed_in_advance          = 15;  // 是否是提前通关的关卡
+  int64 stars_completed_in_advance      = 16;  // 提前通关的关卡获得的星数
 }
 
 // PreCompleteLevel

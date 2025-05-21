@@ -5,6 +5,7 @@ package zonepb.paypb;
 
 option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/paypb";
 
+
 import "corepb/common.proto";
 
 // 支付服务
@@ -62,6 +63,15 @@ message DirectBuySuccessNotify {
 // UnlockNewRechargeEventNtf  解锁新的大额充值档位事件通知.
 message UnlockNewRechargeEventNtf {
   repeated int64 prices = 1;  // 解锁多个价格档位(单位：分)
+}
+
+message RechargeDiamondNotify {
+  enum Source {
+    // buf:lint:ignore ENUM_ZERO_VALUE_SUFFIX
+    IDIP = 0;  // IDIP渠道
+  }
+  Source source                 = 1;  // 充值代币通知渠道来源
+  int64 recharge_diamond_amount = 2;  // 充值代币数量
 }
 
 message GetDirectBuyConfigRequest {}

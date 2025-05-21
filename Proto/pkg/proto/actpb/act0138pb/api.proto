@@ -16,6 +16,8 @@ service CSAct0138Service {
   rpc GameEnd(GameEndRequest) returns (GameEndReply);
   // 上报当前位置
   rpc ReportPosition(ReportPositionRequest) returns (ReportPositionReply);
+  // 设置背景
+  rpc SetBackground(SetBackgroundRequest) returns (SetBackgroundReply);
 }
 
 message ActGetDetailRequest {}
@@ -29,15 +31,17 @@ enum EventStatus {
 }
 
 message EventInfo {
-  int64 id           = 1;  // 事件 ID
-  EventStatus status = 2;  // 事件状态
-  int64 open_at      = 3;  // 开启时间戳
-  bool new           = 4;  // “新”标记
+  int64 id                     = 1;  // 事件 ID
+  EventStatus status           = 2;  // 事件状态
+  int64 open_at                = 3;  // 开启时间戳
+  bool new                     = 4;  // “新”标记
+  repeated corepb.Item rewards = 5;  // 奖励
 }
 
 message ActGetDetailReply {
   repeated EventInfo events = 1;  // 所有事件详细信息
   int64 position            = 2;  // 玩家当前位置
+  int64 background          = 3;  // 玩家背景
 }
 
 message CompleteEventRequest {
@@ -64,7 +68,7 @@ message GameEndRequest {
 
 message GameEndReply {
   corepb.GameOverMessage over_message = 1;
-  repeated corepb.Item rewards        = 2;  // 奖励W
+  repeated corepb.Item rewards        = 2;  // 奖励
 }
 
 message ReportPositionRequest {
@@ -72,3 +76,9 @@ message ReportPositionRequest {
 }
 
 message ReportPositionReply {}
+
+message SetBackgroundRequest {
+  int64 background = 1;  // 背景 ID
+}
+
+message SetBackgroundReply {}

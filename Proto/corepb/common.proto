@@ -26,7 +26,7 @@ message OssInfo {
   string android_OAID      = 16;                      // 匿名设备标识符,安卓上报
   string ios_CAID          = 17;                      // 匿名设备标识符,IOS上报
   string gpu               = 18;                      // gpu型号
-  int32 os_type            = 19;                      // 操作系统类型(OSType 0:iOS 1:android)
+  int32 os_type            = 19;                      // 操作系统类型(OSType 0:iOS 1:android 2:PC)
   int32 platform_type      = 20;                      // 渠道类型(PlatformType 0:UnKnowType 1:WX 2:QQ 3:GUEST)
   string tag               = 21;                      // 类似于子渠道号的功能，客户端上报，记录在login tlog的reserve4字段
   bool is_simulator        = 22;                      // 是否是模拟器
@@ -111,6 +111,7 @@ enum ItemId {
   COMPREHENSION                 = 10011;  // 领悟点
   SECRETFIELD_SWEEP_COUPON      = 10013;  // 秘境扫荡券
   JOINTBATTLE_SWEEP_COUPON      = 10014;  // 小队扫荡券
+  MIRROR_WORLD_SWEEP_COIN       = 10120;  // 镜中世界速通币
   GUILD_EXP                     = 10026;  // 同盟经验
   GUILD_BASIC_CURRENCY          = 10029;  // 同盟基础货币
   FATIGUE                       = 10030;  // 体力
@@ -122,6 +123,7 @@ enum ItemId {
   VOYAGE_EXPLORE_FISHING_COUPON = 10050;  // 海域探险钓鱼扫荡券
   PRAYHOUSE_DONATE_TOKEN        = 10051;  // 同盟互助令牌，用于祈愿屋捐献
   PRAYHOUSE_CALL_FOR_HELP_TOKEN = 10052;  // 同盟征集信物，用于祈愿屋征集
+  EQUIP_EXCHANGE_COIN           = 10101;  // 装备兑换币
   DIAMOND_RECHARGE_CARD         = 10104;  // 钻石充值卡
   DIAMOND_RECHARGE_POINT        = 10111;  // 充值积分
   DIRECTBUY_POINT               = 10112;  // 直购积分
@@ -196,7 +198,8 @@ enum AttributeId {
   SKILL_RESCUE_DMG_DEC     = 286;  // 援护伤害抵抗
   SKILL_EXECUTION_DMG_INC  = 287;  // 强化处决伤害
   SKILL_EXECUTION_DMG_DEC  = 288;  // 处决伤害抵抗
-  ENHANCEMENT_LEVEL        = 343;  // 增强等级
+  ENHANCE_LEVEL            = 343;  // 命座（强化等级）
+  ARMER_PEN                = 344;  // 破甲
 
   MONSTER_SUPPRESSION       = 500;  // 怪物压制
   MONSTER_RESISTANCE        = 501;  // 怪物抵抗
@@ -280,6 +283,7 @@ message GiftSelectedItem {
   int64 gift_id        = 1;  // 礼包id
   int64 index          = 2;  // 备用
   repeated SItem items = 3;  // 选中的道具
+  int64 sub_gift_id    = 4;  // 选中的子礼包id
 }
 
 // 机器人匹配方式类型
@@ -356,15 +360,15 @@ message ArenaSceneInfo {
 
 // 个人显示信息
 message PersonalDisplayInfo {
-  string name                            = 1;  // 角色昵称
-  uint32 level                           = 2;  // 角色等级
-  int64 lobby_buddy_id                   = 3;  // 玩家主界面头像
-  bytes plat_name                        = 4;  // 平台名称
-  string plat_pic                        = 5;  // 玩家平台头像
-  DressInfo dress_info                   = 6;  // 装扮信息
-  int64 zone_id                          = 7;  // 玩家所在小区
-  int64 last_launch_from_gamecenter_time = 8;  // 上次从游戏中心启动的时间
-  Gender gender                          = 9;  // 性别
+  string name                            = 1;   // 角色昵称
+  uint32 level                           = 2;   // 角色等级
+  int64 lobby_buddy_id                   = 3;   // 玩家主界面头像
+  bytes plat_name                        = 4;   // 平台名称
+  string plat_pic                        = 5;   // 玩家平台头像
+  DressInfo dress_info                   = 6;   // 装扮信息
+  int64 zone_id                          = 7;   // 玩家所在小区
+  int64 last_launch_from_gamecenter_time = 8;   // 上次从游戏中心启动的时间
+  Gender gender                          = 9;   // 性别
   int64 comp_level                       = 10;  // 竞技等级
 }
 

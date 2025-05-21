@@ -39,22 +39,42 @@ service KingsWarService {
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesReply);
 }
 
+message GuildProfile {
+  int64 id               = 1;  // 同盟ID
+  string name            = 2;  // 同盟名称
+  int64 flag             = 3;  // 同盟旗帜
+  int64 fc               = 4;  // 同盟战力
+  int64 leader_gid       = 5;  // 团长ID
+  string leader_name     = 6;  // 团长名称
+  int64 point            = 7;  // 积分(本服岛屿激斗)
+  repeated int64 members = 8;  // 同盟成员ID列表
+}
+
+message ZonePoint {
+  int64 zone_id           = 1;  // 小区ID
+  int64 point             = 2;  // 积分
+  int64 participant_count = 3;  // 参赛人数
+  string zone_name        = 4;  // 小区名称
+}
+
 message SeasonInfo {
-  int64 year       = 1;  // 年份
-  int64 season     = 2;  // 赛季
-  int64 begin_time = 3;  // 开始时间(unix second)
-  int64 end_time   = 4;  // 结束时间(unix second)
+  int64 year              = 1;  // 年份
+  int64 season            = 2;  // 赛季
+  int64 begin_time        = 3;  // 开始时间(unix second)
+  int64 end_time          = 4;  // 结束时间(unix second)
+  int64 season_begin_time = 5;  // 赛季开始时间(unix second)
+  int64 season_end_time   = 6;  // 赛季结束时间(unix second)
 }
 
 message WarProfileRequest {}
 
 message WarProfileReply {
-  string war_id       = 1;  // war_id 用于后续 warsvr 有状态部分调用
-  bool open_this_week = 2;  // 本周是否开启
-  SeasonInfo season   = 3;  // 赛季信息
-  // int64 season_id = 3;  // 赛季 ID
-  // int64 start_at  = 4;  // 若本周开启，开始时间(unix second)
-  // int64 end_at    = 5;  // 若本周开启，结束时间(unix second)
+  string war_id                  = 1;  // war_id 用于后续 warsvr 有状态部分调用
+  bool open_this_week            = 2;  // 本周是否开启
+  SeasonInfo season              = 3;  // 赛季信息
+  repeated GuildProfile guilds   = 4;  // 本服参赛同盟列表(已经排序)
+  repeated ZonePoint zone_points = 5;  // 小区积分(仅在结果阶段有效)
+  int64 liked_guild_id           = 6;  // 点赞的公会id
 }
 
 message TaskReward {

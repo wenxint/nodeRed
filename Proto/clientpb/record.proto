@@ -93,6 +93,7 @@ message DungeonHashFrame {
 message DungeonRoundRecord {
   repeated DungeonSyncFrame frame_list = 1;  // 帧列表
   int32 round_idx                      = 2;  // 回合数，从1开始
+  repeated DungeonSyncCmd reported_cmd_list      = 3;  // 帧数据
 }
 
 message CustomInfoInRecord{

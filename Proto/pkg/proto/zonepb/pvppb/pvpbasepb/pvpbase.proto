@@ -36,6 +36,7 @@ message LadderBattleReport {
   int64 result_param            = 6;  // 如果result为win且result_param为1表示完胜，如果result为lose且result_param为1表示完败。其他情况则为普通的胜负平
   int64 sys_id                  = 7;  // 系统ID 用以区分不同系统的战报
   uint64 game_trace_id          = 8;  // game trace id
+  int64 multiple                = 9;  // 多倍分数
 }
 
 message QueryBattleReportReply {

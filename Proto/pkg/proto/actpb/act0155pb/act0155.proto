@@ -24,9 +24,8 @@ message ActGetDetailReply {
   repeated Treasury treasuries   = 3;  // 宝库奖励列表
   actpb.commonpb.Share share     = 4;  // 分享信息
   corepb.Item re_sign_item       = 5;  // 补签道具
-  int64 can_re_sign_days         = 6;  // 可补签天数
-  int64 treasury_sign_total_days = 7;  // 一个宝箱奖励签到所需天数
-  int64 treasury_signed_days     = 8;  // 一个宝箱奖励已签到天数
+  int64 treasury_sign_total_days = 6;  // 一个宝箱奖励签到所需天数
+  int64 treasury_signed_days     = 7;  // 一个宝箱奖励已签到天数
 }
 
 message Task {

@@ -41,6 +41,11 @@ service CSAct0185Service {
   rpc ClaimTaskReward(ClaimTaskRewardRequest) returns (ClaimTaskRewardReply);
   // 接受任务
   rpc AcceptTask(AcceptTaskRequest) returns (AcceptTaskReply);
+
+  // 查询设施信息
+  rpc GetFacilitiesInfo(GetFacilitiesInfoRequest) returns (GetFacilitiesInfoReply);
+  // 升级设施
+  rpc UpgradeFacility(UpgradeFacilityRequest) returns (UpgradeFacilityReply);
 }
 
 message AcceptTaskRequest {
@@ -63,17 +68,26 @@ message ClaimTaskRewardReply {
 message GetTaskDetailRequest {}
 
 message TaskDetail {
-  int64 id                     = 1;  // 任务 ID
-  int64 status                 = 2;  // 任务状态
-  int64 progress               = 3;  // 任务进度
-  int64 required_count         = 4;  // 任务要求数量
-  repeated corepb.Item rewards = 5;  // 任务奖励
-  int64 belong_to_big_map_id   = 6;  // 任务所属大图 ID
-  string target_desc           = 7;  // 任务目标描述
+  int64 id     = 1;  // 任务 ID
+  int64 status = 2;  // 任务状态 (1: 未接取, 2: 已接取, 3: 已完成, 4: 已领取奖励)
+  message TaskConditionProgress {
+    int64 progress       = 1;  // 任务进度
+    int64 required_count = 2;  // 任务要求数量
+  }
+  repeated TaskConditionProgress task_condition_progress = 3;  // 多个任务条件进度
+  repeated corepb.Item rewards                           = 4;  // 任务奖励
+  int64 belong_to_big_map_id                             = 5;  // 任务所属大图 ID
+  int64 belong_to_npc_id                                 = 6;  // 任务所属 NPC ID
 }
 
 message GetTaskDetailReply {
   repeated TaskDetail task_details = 1;  // 任务详情
+  repeated NpcDetail npc_details   = 2;  // NPC 详情
+}
+
+message NpcDetail {
+  int64 id                        = 1;  // NPC ID
+  int64 required_reputation_level = 2;  // NPC 声望等级要求
 }
 
 // StartMatch
@@ -83,7 +97,8 @@ message StartMatchRequest {
 }
 
 message StartMatchReply {
-  int64 timeout_seconds = 1;
+  int64 timeout_seconds   = 1;  // 匹配超时时间
+  int64 estimated_seconds = 2;  // 预计匹配时间
 }
 
 // CancelMatch
@@ -106,11 +121,11 @@ message LevelDetail {
 }
 
 message CommonInfo {
-  corepb.Item basic_item    = 1;  // 夺宝货币道具（用于购买装备，门票等等）
-  int64 equipment_value     = 2;  // 装备价值
-  int64 reputation_level    = 3;  // 玩家声望
-  int64 init_equipment_size = 4;  // 初始装备格大小
-  int64 init_treasure_size  = 5;  // 初始宝物格大小
+  corepb.Item basic_item = 1;  // 夺宝货币道具（用于购买装备，门票等等）
+  int64 equipment_value  = 2;  // 装备价值
+  int64 reputation_level = 3;  // 玩家声望
+  int64 bag_size         = 4;  // 背包大小
+  int64 bag_weight       = 5;  // 背包重量
 }
 
 message ActGetDetailReply {
@@ -166,6 +181,8 @@ message ItemChangedNtf {
   map<int64, corepb.Item> items = 1;  // 变更的道具列表
 }
 
+message TradingStatusChangedNtf {}
+
 message TradingHouseBuysInfoRequest {}
 
 message TradingHouseBuysInfoReply {
@@ -186,6 +203,7 @@ message TradingHouseSellsInfoReply {
   CommonInfo common_info                   = 3;  // 基本信息
   repeated corepb.StampedeItem store_items = 4;  // 仓库中道具信息
   repeated TradingSlot trading_slots       = 5;  // 上架槽位信息
+  bool can_receive_reward                  = 6;  // 是否可以领取出售奖励
 }
 
 message TradingItemInfoRequest {
@@ -230,4 +248,25 @@ message OperateSellItemReply {
   CommonInfo common_info                   = 2;  // 基本信息
   repeated corepb.StampedeItem store_items = 3;  // 仓库中道具信息
   repeated TradingSlot trading_slots       = 4;  // 上架槽位信息
+}
+
+message GetFacilitiesInfoRequest {}
+
+message FacilityInfo {
+  int64 id                        = 1;  // 设施 ID
+  int64 cur_level                 = 2;  // 当前等级 0 表示未解锁
+  int64 max_level                 = 3;  // 最大等级
+  repeated corepb.Item cost_items = 4;  // 升级所需道具
+}
+
+message GetFacilitiesInfoReply {
+  repeated FacilityInfo facilities = 1;  // 设施信息
+}
+
+message UpgradeFacilityRequest {
+  int64 facility_id = 1;  // 设施 ID
+}
+
+message UpgradeFacilityReply {
+  FacilityInfo facility_info = 1;  // 设施信息
 }
