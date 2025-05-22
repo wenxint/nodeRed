@@ -66,15 +66,30 @@ message MapDeltaUpdateInfo {
     int64 limit_active_ts           = 6;  // 限时撤离点激活后，实际生效的时间戳（cond_type=3时有效），0表示限时撤离点未激活
   }
 
+  message MandelChickInfo {
+    int64 level_id = 1;  // 鸡所在的levelID，0表示没有鸡
+    int64 status   = 2;  // 鸡的状态，0-在关卡中掉落 1-在人身上
+  }
+  message MandelPanInfo {
+    int64 level_id = 1;  // 曼德尔锅所在的levelID，0表示没有曼德尔锅
+    int64 status   = 2;  // 曼德尔锅的状态，0-默认状态 1-加工中
+  }
+  // 曼德尔任务全图标记数据
+  message MandelTaskInfo {
+    MandelChickInfo chick_info      = 1;  // 只会有一只鸡
+    repeated MandelPanInfo pan_info = 2;  // 可能有多个曼德尔锅
+  }
+
   repeated Path opened_connections = 1;  // 开放的路径
   reserved 2;
   repeated Path walked_paths          = 3;  // 走过的路径
   AroundPlayerInfo around_player_info = 4;  // 周围玩家信息
   int64 born_level_id                 = 5;  // 出生点id (不会变)
   // repeated int64 evacuation_level_id_list    = 6;  // 对应的撤离点列表，待废弃，使用 evacuation_points 替代
-  repeated EvacuationPoint evacuation_points = 7;  // 撤离点信息
-  repeated GlobalMarkInfo global_mark_infos  = 8;  // 全局标记点信息
-  repeated int64 high_resource_level_ids     = 9;  // 高资源地图id列表 (玩家需要显示的全图高资源点)
+  repeated EvacuationPoint evacuation_points = 7;   // 撤离点信息
+  repeated GlobalMarkInfo global_mark_infos  = 8;   // 全局标记点信息
+  repeated int64 high_resource_level_ids     = 9;   // 高资源地图id列表 (玩家需要显示的全图高资源点)
+  MandelTaskInfo mandel_task_info            = 10;  // 曼德尔任务全图标记数据
 }
 
 message GlobalMarkInfo {

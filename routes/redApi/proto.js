@@ -1,218 +1,230 @@
+// 引入 express 路由模块
 const express = require("express");
 const router = express.Router();
+// 引入自定义上传中间件（未在当前代码中使用，可能用于文件上传场景）
 const createUpload = require("../../middleware/upload");
 
+// 引入路径处理模块（用于拼接/解析文件路径，跨平台兼容）
 const path = require("path");
+// 引入 protobufjs 库（核心：处理 protobuf 编解码，支持 proto 文件加载和消息类型解析）
 const protobuf = require("protobufjs");
+// 引入文件系统模块（用于读取/写入文件，操作本地文件）
 const fs = require("fs");
+// 引入自定义错误处理类（用于抛出业务异常，统一错误格式）
 const { AppError } = require("../../middleware/errorHandler");
+// 引入响应工具类（用于封装接口响应格式，统一返回结构）
 const ResponseHelper = require("../../common/response");
 
-// 缓存已加载的Root实例，避免重复加载
+// 使用 Map 缓存已加载的 protobuf Root 实例（避免重复加载同一个 proto 文件，提升性能）
 const rootCache = new Map();
 
 /**
- * 根据包名查找proto文件路径和类型名
- * @param {string} packageName - 包名，例如 actpb.act0152pb 或 zonepb.pvppb.ascensionpb.UpdateNTF
- * @param {string} methodName - 方法名，例如 Heartbeat 或 Push
- * @param {number} resType - 协议类型，1表示请求，其他表示响应
- * @param {string} typeName - 类型名，适用于非服务调用
- * @returns {Object|null} 包含proto文件路径和类型名的对象或null
+ * 核心功能：根据包名查找对应的 proto 文件路径和消息类型名
+ * @description 支持服务调用（如 "zonepb.LobbyService"）和非服务调用（如 "zonepb.pvppb.ascensionpb.UpdateNTF"）两种场景，
+ *              通过递归搜索目录、匹配文件名/文件内容等策略定位目标 proto 文件，并推断消息类型名
+ * @param {string} packageName - 包名（服务调用场景为服务包名，非服务调用场景为类型包名）
+ * @param {string} methodName - 方法名（如 "Heartbeat" 或 "Push"，用于推断消息类型）
+ * @param {number} resType - 协议类型（1表示请求，其他表示响应，区分请求/响应消息类型）
+ * @param {string} typeName - 类型名（非服务调用时使用，如 "UpdateNTF"）
+ * @returns {Object|null} 包含 proto 文件路径（file）和消息类型名（typeName）的对象，找不到则返回 null
  */
 function findProtoFileByPackage(packageName, methodName, resType, typeName) {
+  // 打印调试日志：标记查找开始（方便排查问题）
   console.log(`======== 查找包路径开始 ========`);
   console.log(`包名: ${packageName}, 方法名: ${methodName}, 协议类型: ${resType}`);
 
   try {
-    // 处理非服务调用的特殊情况，如: zonepb.pvppb.ascensionpb.UpdateNTF
+    // 声明变量：目标文件夹名、服务名、类型名（用于区分服务调用和非服务调用场景）
     let targetFolder, serviceName, typeName;
 
+    // 场景1：包名包含 "Service"（服务调用场景，如 "zonepb.LobbyService"）
     if (packageName.includes('Service')) {
-      // 服务调用，例如: zonepb.LobbyService
+      // 按点分割包名（如 ["zonepb", "LobbyService"]）
       const parts = packageName.split(".");
-      targetFolder = parts.length > 1 ? parts[parts.length - 2] : parts[0]; // 获取目标文件夹名，例如 act0152pb
-      serviceName = parts[parts.length - 1]; // 获取服务名，例如 CSAct0152Service
-      typeName = null; // 稍后从文件内容推断
+      // 目标文件夹名取倒数第二部分（如 "zonepb"），若只有一级则取第一部分（兼容短包名）
+      targetFolder = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+      // 服务名取最后一部分（如 "LobbyService"）
+      serviceName = parts[parts.length - 1];
+      // 类型名初始化为 null（后续从文件内容推断）
+      typeName = null;
     } else {
-      // 非服务调用，例如: zonepb.pvppb.ascensionpb.UpdateNTF
+      // 场景2：非服务调用（如 "zonepb.pvppb.ascensionpb.UpdateNTF"）
+      // 按点分割包名（如 ["zonepb", "pvppb", "ascensionpb", "UpdateNTF"]）
       const parts = packageName.split(".");
-      typeName = parts.pop(); // 最后一部分是类型名，例如 UpdateNTF
-
-      // 如果是通用消息类型，剩余部分是包名路径
+      // 类型名取最后一部分（如 "UpdateNTF"）
+      typeName = parts.pop();
+      // 剩余部分拼接为包路径（如 "zonepb.pvppb.ascensionpb"）
       const packagePath = parts.join(".");
-
-      // 尝试从包路径确定目标文件夹
-      targetFolder = parts.length > 0 ? parts[parts.length - 1] : ''; // 最后一级目录
-      serviceName = ''; // 非服务调用，没有服务名
-
+      // 目标文件夹名取包路径的最后一级（如 "ascensionpb"）
+      targetFolder = parts.length > 0 ? parts[parts.length - 1] : '';
+      // 非服务调用无服务名
+      serviceName = '';
+      // 打印非服务调用调试信息（辅助排查）
       console.log(`非服务调用: 类型名=${typeName}, 包路径=${packagePath}, 目标文件夹=${targetFolder}`);
     }
 
+    // 打印关键变量调试信息（辅助开发调试）
     console.log(`目标文件夹: ${targetFolder}`);
     console.log(`服务名: ${serviceName}`);
     if (typeName) console.log(`预设类型名: ${typeName}`);
 
-    // 构建基础目录路径
+    // 构建 proto 文件的基础目录（指向项目根目录下的 Proto 文件夹，所有 proto 文件的存储根路径）
     const baseDir = path.join(__dirname, "..", "..", "Proto");
     console.log(`基础目录: ${baseDir}`);
 
     /**
-     * 递归查找目标文件夹并返回包含文件路径和类型名的对象
-     * @param {string} dir - 目录路径
-     * @returns {Object|null} 包含file和typeName的对象或null
+     * 辅助函数：递归查找目标文件夹（匹配 targetFolder）
+     * @description 从基础目录开始递归搜索，找到与目标文件夹名（如 "act0152pb"）匹配的目录，
+     *              并调用后续函数进一步处理该目录下的文件
+     * @param {string} dir - 当前搜索的目录路径（初始为基础目录，后续递归子目录）
+     * @returns {Object|null} 匹配到的文件路径和类型名对象，找不到返回 null
      */
     function findTargetFolder(dir) {
       try {
+        // 读取当前目录下的所有文件/文件夹（同步读取，简单直接）
         const items = fs.readdirSync(dir);
 
+        // 遍历目录下的每个条目（文件或文件夹）
         for (const item of items) {
-          const fullPath = path.join(dir, item);
-          const stats = fs.statSync(fullPath);
+          const fullPath = path.join(dir, item); // 拼接完整路径（避免相对路径问题）
+          const stats = fs.statSync(fullPath); // 获取文件状态（判断是文件还是文件夹）
 
-          if (stats.isDirectory()) {
-            // 如果找到目标文件夹
+          if (stats.isDirectory()) { // 条目是文件夹（继续处理）
+            // 如果文件夹名匹配目标文件夹（如 "act0152pb"）
             if (item === targetFolder) {
               console.log(`找到目标文件夹: ${fullPath}`);
-              // 获取文件夹中的文件
+              // 读取目标文件夹下的所有文件（获取该目录下的所有文件名）
               const files = fs.readdirSync(fullPath);
               console.log(`文件夹内容: ${files.join(', ')}`);
-
-              // 查找proto文件并确定类型名
+              // 调用 findProtoFileAndType 查找 proto 文件并确定类型名（核心逻辑入口）
               const result = findProtoFileAndType(files, fullPath, targetFolder, serviceName, methodName, resType, typeName);
-              if (result) {
-                return result;
-              }
+              if (result) return result; // 找到则返回结果（提前终止递归）
             }
-            // 递归搜索子目录
+            // 递归搜索子目录（处理嵌套文件夹，例如 Proto/zonepb/pvppb/ascensionpb 结构）
             const result = findTargetFolder(fullPath);
-            if (result) return result;
+            if (result) return result; // 子目录找到则返回结果（提前终止递归）
           }
         }
-        return null;
+        return null; // 未找到目标文件夹（递归结束）
       } catch (err) {
         console.error(`搜索目录失败: ${err.message}`);
-        return null;
+        return null; // 异常处理（避免程序崩溃）
       }
     }
 
     /**
-     * 查找proto文件并确定类型名
-     * @param {string[]} files - 目录下所有文件名
-     * @param {string} fullPath - 完整目录路径
-     * @param {string} targetFolder - 目标文件夹名
-     * @param {string} serviceName - 服务名
-     * @param {string} methodName - 方法名
-     * @param {number} resType - 协议类型，1表示请求，其他表示响应
-     * @param {string} typeName - 类型名，适用于非服务调用
-     * @returns {Object|null} 包含file和typeName的对象或null
+     * 辅助函数：在目标文件夹中查找 proto 文件并确定消息类型名
+     * @description 基于目标文件夹下的文件列表，通过文件名/内容匹配找到目标 proto 文件，
+     *              并根据文件内容推断消息类型名（带包名前缀）
+     * @param {string[]} files - 目标文件夹下的所有文件名（用于筛选 proto 文件）
+     * @param {string} fullPath - 目标文件夹的完整路径（用于拼接文件绝对路径）
+     * @param {string} targetFolder - 目标文件夹名（如 "act0152pb"，辅助匹配）
+     * @param {string} serviceName - 服务名（服务调用场景，用于匹配服务定义）
+     * @param {string} methodName - 方法名（用于匹配 rpc 方法定义）
+     * @param {number} resType - 协议类型（1=请求，其他=响应，区分请求/响应类型）
+     * @param {string} typeName - 类型名（非服务调用场景，用于匹配消息/枚举定义）
+     * @returns {Object|null} 包含文件路径和类型名的对象，找不到返回 null
      */
     function findProtoFileAndType(files, fullPath, targetFolder, serviceName, methodName, resType, typeName) {
-      // 先找到合适的proto文件
+      // 调用 findProtoFile 查找匹配的 proto 文件（核心筛选逻辑）
       const protoFile = findProtoFile(files, targetFolder, serviceName, fullPath, typeName);
 
-      if (!protoFile) {
+      if (!protoFile) { // 未找到 proto 文件（提前返回）
         console.log(`未找到匹配的proto文件`);
         return null;
       }
 
       console.log(`找到proto文件: ${protoFile}`);
-      const filePath = path.join(fullPath, protoFile);
+      const filePath = path.join(fullPath, protoFile); // 拼接 proto 文件完整路径（绝对路径）
 
-      // 读取文件内容
+      // 读取 proto 文件内容（用于后续类型推断，需处理文件读取异常）
       let content;
       try {
         content = fs.readFileSync(filePath, 'utf8');
       } catch (err) {
         console.error(`无法读取proto文件: ${filePath}, 错误: ${err.message}`);
-        return null;
+        return null; // 读取失败时返回 null
       }
 
-      let finalTypeName = '';
+      let finalTypeName = ''; // 最终确定的消息类型名（带包名前缀，如 "actpb.act0152pb.HeartbeatRequest"）
 
-      // 判断是服务方法还是消息类型
+      // 判断是否是服务调用场景（包名包含 "Service"）
       if (packageName.includes('Service')) {
-        // 是服务方法，需要查找对应的请求或响应类型
+        // 服务调用：需要根据方法名查找请求/响应类型（核心逻辑）
         console.log(`查找服务方法 ${methodName} 的${resType === 1 ? '请求' : '响应'}类型`);
 
-        // 构建正则表达式匹配 rpc methodName(RequestType) returns (ResponseType)
+        // 正则匹配 rpc 方法定义（如 "rpc Heartbeat(RequestType) returns (ResponseType)"）
+        // 正则说明：匹配 "rpc" 关键字 + 方法名 + 括号内的请求类型 + "returns" + 括号内的响应类型
         const methodRegex = new RegExp(`rpc\\s+${methodName}\\s*\\(\\s*([^\\)]+)\\s*\\)\\s*returns\\s*\\(\\s*([^\\)]+)\\s*\\)`, 'i');
         const match = content.match(methodRegex);
 
-        if (match) {
-          // 根据resType决定使用请求类型还是响应类型
-          const requestType = match[1].trim();
-          const responseType = match[2].trim();
-
+        if (match) { // 匹配到方法定义（提取请求/响应类型）
+          const requestType = match[1].trim(); // 请求类型（如 "RequestType"）
+          const responseType = match[2].trim(); // 响应类型（如 "ResponseType"）
           console.log(`找到方法定义: rpc ${methodName}(${requestType}) returns (${responseType})`);
 
-          // 确定完整类型名
-          // 对于请求和响应类型，检查是否包含包名
-          if (resType === 1) {
-            // 如果请求类型包含点，表示已经是完整的包名
+          // 根据协议类型（resType）确定最终类型名（带包名前缀）
+          if (resType === 1) { // 请求类型
+            // 如果请求类型已包含包名（如 "actpb.RequestType"），直接使用；否则拼接包名前缀（去除服务名部分）
             finalTypeName = requestType.includes('.') ? requestType : `${packageName.split('.').slice(0, -1).join('.')}.${requestType}`;
-          } else {
-            // 如果响应类型包含点，表示已经是完整的包名
+          } else { // 响应类型
             finalTypeName = responseType.includes('.') ? responseType : `${packageName.split('.').slice(0, -1).join('.')}.${responseType}`;
           }
-        } else {
+        } else { // 未匹配到方法定义（使用通用命名规则推断）
           console.log(`在文件中未找到方法 ${methodName} 的定义`);
-
-          // 尝试使用通用命名规则
-          const prefix = packageName.split('.').slice(0, -1).join('.');
+          // 通用命名规则：请求类型为 "MethodNameRequest"，响应类型为 "MethodNameResponse"
+          const prefix = packageName.split('.').slice(0, -1).join('.'); // 包名前缀（去除服务名）
           finalTypeName = resType === 1 ? `${prefix}.${methodName}Request` : `${prefix}.${methodName}Response`;
           console.log(`使用通用命名规则推断类型: ${finalTypeName}`);
         }
       } else {
-        // 非服务调用，直接使用预设的类型名或者从文件内容推断
-        if (typeName) {
+        // 非服务调用：直接使用预设类型名或从文件内容推断（处理消息/枚举类型）
+        if (typeName) { // 有预设类型名（如 "UpdateNTF"）
           console.log(`使用预设的类型名: ${typeName}`);
 
-          // 确定包前缀
+          // 从 proto 文件中提取包名（如 "package actpb.act0152pb;"）
           const packageMatch = content.match(/package\s+([^;]+);/);
           const packagePrefix = packageMatch ? packageMatch[1].trim() : '';
 
-          // 检查类型是否已经包含完整包名
-          if (typeName.includes('.')) {
+          // 确定完整类型名（带包名前缀）
+          if (typeName.includes('.')) { // 类型名已包含包名（如 "actpb.UpdateNTF"）
             finalTypeName = typeName;
-          } else if (packagePrefix) {
+          } else if (packagePrefix) { // 使用文件中定义的包名拼接（优先使用文件自身包名）
             finalTypeName = `${packagePrefix}.${typeName}`;
-          } else {
-            // 尝试从调用包名中提取前缀
+          } else { // 从调用包名中提取前缀拼接（兼容文件未定义包名的情况）
             const parts = packageName.split('.');
-            parts.pop(); // 移除类型名部分
+            parts.pop(); // 移除类型名部分（如 ["zonepb", "pvppb", "ascensionpb"]）
             const packagePath = parts.join('.');
             finalTypeName = packagePath ? `${packagePath}.${typeName}` : typeName;
           }
 
-          // 验证类型存在
+          // 验证类型是否存在（检查文件中是否有该消息/枚举定义，避免类型名错误）
           const typePattern = new RegExp(`(message|enum)\\s+${typeName}\\s*\\{`, 'i');
           if (!typePattern.test(content)) {
             console.log(`警告: 在文件中未找到类型 ${typeName} 的定义`);
           }
         } else {
-          // 没有预设类型名，尝试从文件内容推断
+          // 无预设类型名：从方法名推断（如方法名为 "Update"，则类型名为 "Update"）
           console.log(`尝试从方法名 ${methodName} 推断类型名`);
 
-          // 检查文件中是否定义了这个消息类型
+          // 检查文件中是否有同名消息定义（如 "message Update {"）
           const messageRegex = new RegExp(`message\\s+${methodName}\\s*\\{`, 'i');
           if (messageRegex.test(content)) {
             console.log(`在文件中找到消息类型 ${methodName} 的定义`);
-
-            // 确定完整类型名
+            // 拼接包名前缀（如果有文件定义的包名）
             const packageMatch = content.match(/package\s+([^;]+);/);
             const packagePrefix = packageMatch ? packageMatch[1].trim() : '';
             finalTypeName = packagePrefix ? `${packagePrefix}.${methodName}` : methodName;
           } else {
             console.log(`在文件中未找到消息类型 ${methodName} 的定义`);
-
-            // 尝试找出文件中定义的包名
+            // 尝试从文件包名推断（如文件包名为 "actpb.act0152pb"，则类型名为 "actpb.act0152pb.MethodName"）
             const packageMatch = content.match(/package\s+([^;]+);/);
             if (packageMatch) {
               const filePackage = packageMatch[1].trim();
               console.log(`文件中定义的包名: ${filePackage}`);
               finalTypeName = `${filePackage}.${methodName}`;
             } else {
-              // 如果文件中没有定义包名，直接使用传入的包名和方法名
+              // 文件无包名定义，直接拼接调用包名和方法名（兼容极端情况）
               finalTypeName = packageName.includes('.') ? `${packageName}.${methodName}` : methodName;
             }
           }
@@ -220,61 +232,51 @@ function findProtoFileByPackage(packageName, methodName, resType, typeName) {
       }
 
       console.log(`确定的类型名: ${finalTypeName}`);
-
-      return {
-        file: filePath,
-        typeName: finalTypeName
-      };
+      return { file: filePath, typeName: finalTypeName }; // 返回文件路径和类型名（关键输出）
     }
 
     /**
-     * 查找匹配的proto文件
-     * @param {string[]} files - 目录下所有文件名
-     * @param {string} targetFolder - 目标文件夹名
-     * @param {string} serviceName - 服务名
-     * @param {string} fullPath - 完整目录路径
-     * @param {string} typeName - 类型名，适用于非服务调用
-     * @returns {string|null} 匹配的proto文件名或null
+     * 辅助函数：在目标文件夹中匹配 proto 文件（优先文件名匹配，其次内容匹配）
+     * @description 提供多层匹配策略，确保尽可能找到目标 proto 文件：
+     *              1. 精确匹配文件名（如 "act0152pb.proto"）
+     *              2. 去掉 "pb" 后缀匹配（如 "act0152.proto"）
+     *              3. 内容匹配（根据服务名或类型名匹配文件内容）
+     * @param {string[]} files - 目标文件夹下的所有文件名（用于筛选）
+     * @param {string} targetFolder - 目标文件夹名（如 "act0152pb"，辅助匹配）
+     * @param {string} serviceName - 服务名（服务调用场景，用于匹配服务定义）
+     * @param {string} fullPath - 目标文件夹完整路径（用于拼接文件绝对路径）
+     * @param {string} typeName - 类型名（非服务调用场景，用于匹配消息/枚举定义）
+     * @returns {string|null} 匹配的 proto 文件名，找不到返回 null
      */
     function findProtoFile(files, targetFolder, serviceName, fullPath, typeName) {
-      // 1. 优先查找同名
-      const exactMatch = files.find(
-        (file) => file === `${targetFolder}.proto`
-      );
+      // 策略1：优先匹配同名 proto 文件（如 "act0152pb.proto"，最直接的匹配方式）
+      const exactMatch = files.find(file => file === `${targetFolder}.proto`);
       if (exactMatch) {
         console.log(`找到精确匹配的proto文件: ${exactMatch}`);
         return exactMatch;
       }
 
-      // 2. 查找去掉pb后缀的同名
+      // 策略2：尝试去掉 "pb" 后缀匹配（如 "act0152.proto"）
       const withoutPb = targetFolder.replace(/_?pb$/i, "");
       if (withoutPb && withoutPb !== targetFolder) {
-        const pbMatch = files.find(
-          (file) => file === `${withoutPb}.proto`
-        );
+        const pbMatch = files.find(file => file === `${withoutPb}.proto`);
         if (pbMatch) {
           console.log(`找到去掉pb后缀的proto文件: ${pbMatch}`);
           return pbMatch;
         }
       }
 
-      // 3. 按文件内容匹配
-      // 获取目录下所有proto文件
-      const protoFiles = files.filter(file => file.endsWith('.proto'));
+      // 策略3：按文件内容匹配（服务调用或非服务调用场景）
+      const protoFiles = files.filter(file => file.endsWith('.proto')); // 过滤出所有 proto 文件
 
-      // 区分服务调用和非服务调用的文件内容匹配策略
-      if (serviceName) {
-        // 服务调用场景: 查找包含服务名定义的文件
+      if (serviceName) { // 服务调用场景：查找包含服务名的文件（如 "service CSAct0152Service"）
         console.log(`按文件名未匹配到，尝试通过文件内容查找服务: ${serviceName}`);
-
         for (const file of protoFiles) {
           try {
             const filePath = path.join(fullPath, file);
             const content = fs.readFileSync(filePath, 'utf8');
-
-            // 检查文件内容是否包含服务名定义，例如"service XXXService"或"XXXService {"
-            if (content.includes(`service ${serviceName}`) ||
-                content.includes(`${serviceName} {`)) {
+            // 检查文件内容是否包含服务名定义
+            if (content.includes(`service ${serviceName}`) || content.includes(`${serviceName} {`)) {
               console.log(`通过文件内容匹配到服务 ${serviceName} 在文件 ${file} 中`);
               return file;
             }
@@ -282,16 +284,13 @@ function findProtoFileByPackage(packageName, methodName, resType, typeName) {
             console.error(`读取文件 ${file} 失败: ${err.message}`);
           }
         }
-      } else if (typeName) {
-        // 非服务调用场景: 查找包含消息类型定义的文件
+      } else if (typeName) { // 非服务调用场景：查找包含类型名的文件（如 "message UpdateNTF {"）
         console.log(`按文件名未匹配到，尝试通过文件内容查找类型: ${typeName}`);
-
         for (const file of protoFiles) {
           try {
             const filePath = path.join(fullPath, file);
             const content = fs.readFileSync(filePath, 'utf8');
-
-            // 检查文件内容是否包含类型定义，例如"message TypeName {"或"enum TypeName {"
+            // 正则匹配类型定义（消息或枚举）
             const typePattern = new RegExp(`(message|enum)\\s+${typeName}\\s*\\{`, 'i');
             if (typePattern.test(content)) {
               console.log(`通过文件内容匹配到类型 ${typeName} 在文件 ${file} 中`);
@@ -305,7 +304,7 @@ function findProtoFileByPackage(packageName, methodName, resType, typeName) {
         console.log(`无法进行内容匹配: 服务名和类型名都为空`);
       }
 
-      // 4. 没有找到
+      // 所有策略失败，返回 null
       console.log(`未找到匹配的proto文件，已尝试文件名和内容匹配`);
       return null;
     }
