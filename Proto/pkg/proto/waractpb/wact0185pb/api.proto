@@ -43,6 +43,8 @@ message LevelConf {
 }
 
 message MapDeltaUpdateInfo {
+  reserved 2, 6;
+
   // 地图连接关系
   message Path {
     int64 source_level_id  = 1;
@@ -54,6 +56,7 @@ message MapDeltaUpdateInfo {
     bool is_changed                       = 1;  // 增量是否变更  (此结构通过这个字段判断是否需要处理)
     bool has_around_players               = 2;  // 周围是否有其他玩家
     map<int64, bool> direction_has_player = 3;  // 上下左右是否有人, 此map直接覆盖 (key: 方向3,6,9,12, value: 是否有人)
+    map<int64, int64> around_player_count = 4;  // 关卡ID -> 玩家数量
   }
 
   message EvacuationPoint {
@@ -64,37 +67,61 @@ message MapDeltaUpdateInfo {
     int64 cond_type                 = 4;  // 撤离条件：0-无条件，1-提交指定物品，2-丢弃背包（即背包为空），3-限时撤离点
     repeated corepb.Item cond_items = 5;  // 提交指定物品列表（cond_type=1时有效）
     int64 limit_active_ts           = 6;  // 限时撤离点激活后，实际生效的时间戳（cond_type=3时有效），0表示限时撤离点未激活
+    repeated int64 report_level_ids = 7;  // 拉闸上报控制限时撤离点关卡ID列表
   }
 
   message MandelChickInfo {
     int64 level_id = 1;  // 鸡所在的levelID，0表示没有鸡
-    int64 status   = 2;  // 鸡的状态，0-在关卡中掉落 1-在人身上
+    int64 status   = 2;  // 鸡的状态，0-没被捡起过 1-被捡起过
   }
+
   message MandelPanInfo {
-    int64 level_id = 1;  // 曼德尔锅所在的levelID，0表示没有曼德尔锅
-    int64 status   = 2;  // 曼德尔锅的状态，0-默认状态 1-加工中
+    int64 level_id       = 1;  // 曼德尔锅所在的levelID，0表示没有曼德尔锅
+    int64 status         = 2;  // 曼德尔锅的状态，0-默认状态 1-加工中
+    int64 process_end_ts = 3;  // 曼德尔锅加工结束时间戳，status=1时有效
   }
+
   // 曼德尔任务全图标记数据
   message MandelTaskInfo {
     MandelChickInfo chick_info      = 1;  // 只会有一只鸡
     repeated MandelPanInfo pan_info = 2;  // 可能有多个曼德尔锅
   }
 
-  repeated Path opened_connections = 1;  // 开放的路径
-  reserved 2;
-  repeated Path walked_paths          = 3;  // 走过的路径
-  AroundPlayerInfo around_player_info = 4;  // 周围玩家信息
-  int64 born_level_id                 = 5;  // 出生点id (不会变)
-  // repeated int64 evacuation_level_id_list    = 6;  // 对应的撤离点列表，待废弃，使用 evacuation_points 替代
-  repeated EvacuationPoint evacuation_points = 7;   // 撤离点信息
-  repeated GlobalMarkInfo global_mark_infos  = 8;   // 全局标记点信息
-  repeated int64 high_resource_level_ids     = 9;   // 高资源地图id列表 (玩家需要显示的全图高资源点)
-  MandelTaskInfo mandel_task_info            = 10;  // 曼德尔任务全图标记数据
+  message BuffDisplayInfo {
+    int64 buff_id                    = 1;  // buffID
+    int64 display_type               = 2;  // 显示类型（与StampedeBigMap/BuffEffectInfo中BuffDisplayType一致）
+    repeated int64 display_level_ids = 3;  // 显示buff所在的levelID列表
+    int64 display_end_ts             = 4;  // 显示结束时间戳（0表示永久显示）
+  }
+
+  message FightTaskInfo {
+    int64 task_buff_id     = 1;  // 任务buffID
+    int64 task_buff_status = 2;  // 0-未接取，1-已接取
+  }
+
+  repeated Path opened_connections                         = 1;   // 开放的路径
+  repeated Path walked_paths                               = 3;   // 走过的路径
+  AroundPlayerInfo around_player_info                      = 4;   // 周围玩家信息
+  int64 born_level_id                                      = 5;   // 出生点id (不会变)
+  repeated EvacuationPoint evacuation_points               = 7;   // 撤离点信息
+  repeated GlobalMarkInfo global_mark_infos                = 8;   // 全局标记点信息
+  repeated HighResourceLevelInfo high_resource_level_infos = 9;   // 高资源地图id列表 (玩家需要显示的全图高资源点)
+  MandelTaskInfo mandel_task_info                          = 10;  // 曼德尔任务全图标记数据
+  repeated FightTaskInfo fight_task_display_buff_ids       = 11;  // 局内任务地图id列表 (玩家需要显示的全图战斗任务点)
+  repeated BuffDisplayInfo buff_display_infos              = 12;  // 全图buff显示信息
+}
+
+message HighResourceLevelInfo {
+  int64 level_id                     = 1;  // 高资源地图id
+  int64 display_type                 = 2;  // 高资源宝箱显示类型
+  string display_content             = 3;  // 高资源宝箱显示内容
+  repeated corepb.Item display_items = 4;  // 高资源宝箱显示奖励
 }
 
 message GlobalMarkInfo {
-  int64 level_id = 1;
-  int64 buff_id  = 2;
+  int64 level_id            = 1;
+  int64 buff_id             = 2;
+  int64 vision_control_type = 3;
 }
 
 message MapUpdateInfoNtf {
@@ -161,3 +188,21 @@ message CheckLeaveDungeonRequest {
 }
 
 message CheckLeaveDungeonReply {}
+
+// 局内任务获得道具变化
+message FightTaskItemChangeNtf {
+  int64 after_count  = 1;  // 变化后数量
+  int64 change_count = 2;  // 变化量，减少的话为负数
+}
+
+// 全员广播的跑马灯
+message BroadcastTipsNtf {
+  enum Type {
+    TYPE_UNKNOWN            = 0;
+    TYPE_PICK_CHICK         = 1;  // 捡起曼德尔鸡
+    TYPE_DROP_CHICK         = 2;  // 丢弃曼德尔鸡
+    TYPE_PAN_START_PROCESS  = 3;  // 曼德尔锅开始加工
+    TYPE_PAN_FINISH_PROCESS = 4;  // 曼德尔锅加工完成
+  }
+  Type type = 1;
+}

@@ -248,7 +248,7 @@ message StampedeKillMonsterReport {
 // 夺宝行动上报该关卡道具掉落状态（宝箱状态）
 // vkey: REPORT_STAMPEDE_ITEM_DROP_STATUS(2132)
 message StampedeItemDropStatusReport {
-  corepb.StampedeItemDropStatus status = 1;  // 道具掉落状态
+  map<int64, corepb.StampedeItemDropStatusDetail> status = 1;  // 玩家/0（表示怪物掉落） -> 道具掉落状态
   int32 frame_id  = 2;  // 客户端发出时的帧id，即使超时补发，也需要保证是之前触发时的帧ID
 }
 

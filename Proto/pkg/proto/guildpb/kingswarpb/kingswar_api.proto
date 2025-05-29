@@ -75,14 +75,17 @@ message WarProfileReply {
   repeated GuildProfile guilds   = 4;  // 本服参赛同盟列表(已经排序)
   repeated ZonePoint zone_points = 5;  // 小区积分(仅在结果阶段有效)
   int64 liked_guild_id           = 6;  // 点赞的公会id
+  bool is_end                    = 7;  // 是否结束
 }
 
 message TaskReward {
   int64 task_id                = 1;  // 任务 ID
   string name                  = 2;  // 任务名称
   repeated corepb.Item rewards = 3;  // 奖励列表
-  bool achieved                = 4;  // 是否已达成
-  bool claimed                 = 5;  // 是否已领取
+  // bool achieved                = 4;  // 是否已达成
+  bool claimed   = 5;  // 是否已领取
+  int64 progress = 6;  // 进度
+  int64 total    = 7;  // 总数
 }
 
 message RankReward {

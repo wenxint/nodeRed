@@ -241,6 +241,7 @@ message GuildResult {
 // 海战结果通知 notify
 message ResultNotify {
   repeated GuildResult results = 1;  // 各同盟结果
+  bool is_final_result         = 2;  // 是否是最终结果，如果是最终结果代表没有接下来的比赛了，否则代表晋级
 }
 
 message GuildFightExt {

@@ -82,10 +82,11 @@ message GuildProfile {
 }
 
 message PlayerProfile {
-  int64 gid     = 1;  // 玩家ID
-  int64 zone_id = 2;  // 小区ID
-  string name   = 3;  // 玩家名称
-  int64 fc      = 4;  // 战力
+  int64 gid                 = 1;  // 玩家ID
+  int64 zone_id             = 2;  // 小区ID
+  string name               = 3;  // 玩家名称
+  int64 fc                  = 4;  // 战力
+  bool is_ranking_anonymous = 5;  // 是否排行榜匿名
 }
 
 message PlayerDetail {
@@ -172,28 +173,37 @@ message WildAreaProfile {
 }
 
 message WildNode {
-  int64 id                   = 1;  // 据点ID
-  PlayerProfile owner        = 2;  // 占领者，如果没有表示尚未占领
-  bool fighting              = 3;  // 是否正在战斗
-  int64 could_fight_after    = 4;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
-  int64 successive_win_count = 5;  // 连续胜利次数
-  int64 remain_hp_percent    = 6;  // 剩余血量百分比(万分比)
+  int64 id                = 1;  // 据点ID
+  PlayerProfile owner     = 2;  // 占领者，如果没有表示尚未占领
+  bool fighting           = 3;  // 是否正在战斗
+  int64 could_fight_after = 4;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
+  int64 win_count         = 5;  // 胜利次数
+  int64 remain_hp_percent = 6;  // 剩余血量百分比(万分比)
 }
 
 message TreasureArea {
-  int64 id                           = 1;  // 宝藏点ID
-  bool exist                         = 2;  // 是否存在
-  int64 round_id                     = 3;  // 当前轮次ID
-  repeated PlayerDetail players      = 4;  // 争夺者列表(全量设置)
-  map<int64, bool> player_eliminated = 5;  // 玩家是否被淘汰(key 为玩家ID, value 为是否被淘汰)
+  int64 id = 1;  // 宝藏点ID
+  enum Status {
+    STATUS_UNKNOWN = 0;  // 未知
+    STATUS_SIGN_UP = 1;  // 报名中
+    STATUS_FIGHT   = 2;  // 战斗中
+    STATUS_WAITING = 3;  // 等待中
+  }
+  Status status = 2;  // 状态
+
   message Round {
     int64 round_id         = 1;  // 轮次ID
     int64 sign_up_start_at = 2;  // 报名开始时间(unix second)
-    int64 sign_up_end_at   = 3;  // 报名结束时间(unix second)
+    int64 sign_up_end_at   = 3;  // 报名结束时间(unix second)，即战斗开始时间
   }
-  repeated Round rounds = 6;  // 宝藏点刷新轮次列表
-  int64 players_count   = 7;  // 已进入人数
-  int64 players_limit   = 8;  // 最大进入人数
+  repeated Round rounds = 3;  // 宝藏点刷新轮次列表
+
+  repeated PlayerDetail players      = 4;  // 争夺者列表(全量设置)，如果在报名阶段或者战斗阶段，本字段有效
+  map<int64, bool> player_eliminated = 5;  // 玩家是否被淘汰(key 为玩家ID, value 为是否被淘汰)，仅在战斗阶段有效
+
+  int64 players_count = 6;  // 本服已进入人数
+  int64 players_limit = 7;  // 本服最大进入人数
+  int64 current_round = 8;  // 当前轮次ID
 }
 
 message NormalFieldInfo {
@@ -213,7 +223,11 @@ message LeaveFieldRequest {
   int64 field_id = 1;  // 战场ID
 }
 
-message LeaveFieldReply {}
+message LeaveFieldReply {
+  int64 finish_at                              = 1;  // 结束时间(unix second)
+  repeated FieldProfile fields                 = 2;  // 战场简略信息
+  map<int64, FightWillInfo> fight_will_by_zone = 3;  // 每个小区战意信息(key 为 zone_id, value 为战意信息)
+}
 
 message EnterMainCityRequest {
   int64 field_id = 1;  // 战场ID
@@ -221,12 +235,12 @@ message EnterMainCityRequest {
 }
 
 message MainCityNode {
-  int64 id                   = 1;  // 据点ID
-  string name                = 2;  // 据点名称
-  PlayerProfile owner        = 3;  // 占领者，如果没有表示尚未占领
-  bool fighting              = 4;  // 是否正在战斗
-  int64 could_fight_after    = 5;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
-  int64 successive_win_count = 6;  // 连续胜利次数
+  int64 id                = 1;  // 据点ID
+  string name             = 2;  // 据点名称
+  PlayerProfile owner     = 3;  // 占领者，如果没有表示尚未占领
+  bool fighting           = 4;  // 是否正在战斗
+  int64 could_fight_after = 5;  // 如果在冷却中，则在此之前不可发起战斗(unix second)
+  int64 win_count         = 6;  // 胜利次数
 }
 
 message MainCityInfo {
@@ -246,7 +260,9 @@ message LeaveMainCityRequest {
   int64 city_id  = 2;  // 主城ID
 }
 
-message LeaveMainCityReply {}
+message LeaveMainCityReply {
+  NormalFieldInfo normal_field = 1;  // 离开主城后会回到战场界面，此时返回更新后的战场信息
+}
 
 message EnterWildAreaRequest {
   int64 field_id = 1;  // 战场ID
@@ -267,6 +283,8 @@ message WildAreaStatics {
   int64 occpuied_node_count                      = 3;  // 已占领据点数
   map<int64, int64> occpuied_node_count_by_guild = 4;  // 已占领据点数(按同盟分组)
   int64 total_node_count                         = 5;  // 据点总数
+  map<int64, int64> online_players_by_zone       = 6;  // 在线人数(按小区分组)
+  map<int64, int64> occupied_node_count_by_zone  = 7;  // 已占领据点数(按小区分组)
 }
 
 message EnterWildAreaReply {
@@ -278,7 +296,9 @@ message LeaveWildAreaRequest {
   int64 area_id  = 2;  // 野外资源点ID
 }
 
-message LeaveWildAreaReply {}
+message LeaveWildAreaReply {
+  NormalFieldInfo normal_field = 1;  // 离开野外资源点后会回到战场界面，此时返回更新后的战场信息
+}
 
 message LeaderboardRequest {
   int64 field_id = 1;  // 战场ID(如果传入 0 表示返回整个全部战场综合排名)
@@ -346,7 +366,9 @@ message LeaveTreasureRequest {
   int64 area_id  = 2;  // 宝藏点ID
 }
 
-message LeaveTreasureReply {}
+message LeaveTreasureReply {
+  NormalFieldInfo normal_field = 1;  // 离开宝藏点后会回到战场界面，此时返回更新后的战场信息
+}
 
 message SignUpTreasureRequest {
   int64 field_id = 1;  // 战场ID
@@ -376,6 +398,8 @@ message FightRecord {
   GuildProfile right_guild           = 4;  // 右同盟信息
   corepb.FightResultType result_type = 5;  // 战斗结果类型(对于玩家自己而言)
   int64 finished_at                  = 6;  // 战斗结束时间(unix second)
+  int64 left_buddy_id                = 7;  // 左玩家出战伙伴ID
+  int64 right_buddy_id               = 8;  // 右玩家出战伙伴ID
 }
 
 message FightRecordReply {
@@ -431,7 +455,7 @@ message TreasureAreaNTF {
 // 宝藏争夺结果通知，会向该战场内所有玩家推送 TreasureResultNTF
 message TreasureResultNTF {
   int64 area_id        = 1;  // 宝藏点ID
-  int64 treasure_id    = 2;  // 宝藏点刷新次数
+  int64 round          = 2;  // 宝藏点轮次
   PlayerProfile winner = 3;  // 胜利者
   int64 points         = 4;  // 积分奖励
 }
@@ -454,6 +478,6 @@ message SettleNTF {
 
 // FightCustomData 战斗自定义数据，在 GameOverMessage 中传递玩家积分变化情况
 message FightCustomData {
-  map<int64, int64> scores_change   = 1;  // 玩家积分变化(key 为玩家ID, value 为积分变化值)
-  map<int64, int64> successive_wins = 2;  // 玩家连胜次数(key 为玩家ID, value 为连续胜利次数)
+  map<int64, int64> scores_change = 1;  // 玩家积分变化(key 为玩家ID, value 为积分变化值)
+  map<int64, int64> win_counts    = 2;  // 玩家胜利次数(key 为玩家ID, value 为胜利次数)
 }
