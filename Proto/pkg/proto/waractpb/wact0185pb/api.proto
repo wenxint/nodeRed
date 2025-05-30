@@ -128,6 +128,13 @@ message MapUpdateInfoNtf {
   MapDeltaUpdateInfo delta_update_info = 1;
 }
 
+message MapInfoNtf {
+  string war_id                        = 1;  // metadata的x-warid
+  int64 big_map_id                     = 2;
+  MapConf map_conf                     = 3;  // 大图配置，透传给客户端，比较大，不要经常拉
+  MapDeltaUpdateInfo delta_update_info = 4;  // 增量更新信息
+}
+
 message MapConfig {
   int64 id       = 1;
   string name    = 2;
