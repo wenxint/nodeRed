@@ -5,6 +5,7 @@ package zonepb.pokedexpb;
 
 option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/pokedexpb";
 
+
 import "corepb/common.proto";
 
 // PokedexService 为伙伴图鉴系统
@@ -28,6 +29,13 @@ message PokedexInfo {
   bool open                             = 2;  // 是否开启
   map<int64, PokedexRewardInfo> rewards = 3;  // 图鉴奖励
   map<int64, int64> buddies             = 4;  // buddy id -> buddy star，图鉴伙伴列表及其星级，若未解锁则星级为0
+
+  string name        = 5;   // 图鉴名称
+  string chapter     = 6;   // 篇章
+  string desc        = 7;   // 图鉴描述
+  string name_image  = 8;   // 图鉴名称图片
+  string cover_image = 9;   // 图鉴封面图片
+  int64 border_image = 10;  // 图鉴封面边框
 }
 
 message PokedexRewardInfo {
@@ -38,6 +46,9 @@ message PokedexRewardInfo {
   int64 count_actual         = 5;  // 实际数量
   repeated corepb.Item items = 6;  // 奖励列表
   corepb.FightAttr addition  = 7;  // 奖励的属性加成
+
+  string name = 8;  // 奖励名称
+  string desc = 9;  // 奖励描述
 }
 
 message ReceivePokedexRewardRequest {

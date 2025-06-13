@@ -124,6 +124,9 @@ message ProtectInfo {
   bool fail_lose_sub_grade_protect = 2;  // 失败掉小段保护是否生效
   bool fail_lose_grade_protect     = 3;  // 失败掉大段保护是否生效
   bool warrior_score_protect       = 4;  // 勇士积分保护是否生效
+  bool is_use_multiple             = 5;   // 是否使用多倍分数，功能开启可以不使用，客户端有复选框来勾选
+  int64 multiple_usage             = 6;   // 多倍分数，已用量
+  int64 multiple_limit             = 7;  // 多倍分数，限额
 }
 
 message BuddyWinning {

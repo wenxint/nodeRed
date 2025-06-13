@@ -4,6 +4,7 @@ syntax = "proto3";
 package zonepb.achievepb;
 option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/achievepb";
 
+
 import "corepb/common.proto";
 
 service CSService {
@@ -42,6 +43,10 @@ message DeliverRewardReply {
   repeated corepb.Item items = 1;  // 本次领取的奖励
 }
 
+message GiftSelectedItems {
+  repeated corepb.GiftSelectedItem items = 1;  // 可选礼包
+}
+
 message BatchDeliverRewardRequest {
   int64 task_id = 1;  // 任务id
   int32 tab     = 2;  // 任务类型
@@ -54,16 +59,17 @@ message BatchDeliverRewardReply {
 }
 
 message Task {
-  int64 id                 = 1;   // 任务id
-  bool is_chained          = 2;   // 是否是链式任务
-  int64 step               = 3;   // 当前成就链任务的步骤
-  int32 condition_type     = 4;   // 任务条件枚举
-  repeated Process process = 5;   // 任务进度 用数组兼容多个成就参数多个进度
-  bool is_hidden           = 6;   // 是否是隐藏任务
-  bool is_finished         = 7;   // 是否完成
-  int64 complete_time      = 8;   // 完成时间
-  bool is_rewarded         = 9;   // 是否领取奖励
-  bool is_hidden_new       = 10;  // 是否是新发现的隐藏任务
+  int64 id                     = 1;   // 任务id
+  bool is_chained              = 2;   // 是否是链式任务
+  int64 step                   = 3;   // 当前成就链任务的步骤
+  int32 condition_type         = 4;   // 任务条件枚举
+  repeated Process process     = 5;   // 任务进度 用数组兼容多个成就参数多个进度
+  bool is_hidden               = 6;   // 是否是隐藏任务
+  bool is_finished             = 7;   // 是否完成
+  int64 complete_time          = 8;   // 完成时间
+  bool is_rewarded             = 9;   // 是否领取奖励
+  bool is_hidden_new           = 10;  // 是否是新发现的隐藏任务
+  repeated corepb.Item rewards = 11;  // 奖励由后台传给客户端
 }
 
 message Process {

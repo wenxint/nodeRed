@@ -675,4 +675,192 @@ router.post("/proto/submit", async (req, res, next) => {
   }
 });
 
+/**
+ * 解析自定义格式的protobuf请求
+ * @description 处理简化格式的protobuf解析请求
+ * @route POST /proto/submitCustome
+ * @param {string} proto - 协议信息，支持三种格式:
+ *                        1. "协议类型, 包名, 方法名" (例如: "2, actpb.actbasepb.CSActService, ActEntranceDetail")
+ *                        2. "协议类型, 包名" (例如: "3, pvppb.PVPGameStartNtf")
+ *                        3. "包名" (例如: "corepb.StampedeGameStartData"，默认协议类型为3)
+ * @param {string} base64 - base64编码的protobuf数据
+ * @returns {Object} 解析后的JSON数据
+ *
+ * @example
+ * POST /proto/submitCustome
+ * Content-Type: application/json
+ *
+ * // 格式1：带方法名的服务调用
+ * {
+ *   "proto": "2, actpb.actbasepb.CSActService, ActEntranceDetail",
+ *   "base64": "CgVIZWxsbyABKAE="
+ * }
+ *
+ * // 格式2：带协议类型
+ * {
+ *   "proto": "3, pvppb.PVPGameStartNtf",
+ *   "base64": "CgVIZWxsbyABKAE="
+ * }
+ *
+ * // 格式3：只有包名，默认协议类型为3
+ * {
+ *   "proto": "corepb.StampedeGameStartData",
+ *   "base64": "CgVIZWxsbyABKAE="
+ * }
+ */
+router.post("/proto/submitCustome", async (req, res, next) => {
+  try {
+    const { proto, base64 } = req.body;
+
+    // 参数验证
+    if (!proto) {
+      throw new AppError(400, "缺少proto参数");
+    }
+
+    if (!base64) {
+      throw new AppError(400, "缺少base64参数");
+    }
+
+    console.log(`收到自定义格式请求: proto="${proto}", base64长度=${base64.length}`);
+
+    // 初始化变量
+    let resType = 3; // 默认协议类型
+    let packageName = '';
+    let methodName = 'Push'; // 默认方法名
+    let typeName = null;
+
+    // 判断是否包含Service来决定处理方式
+    if (proto.includes('Service')) {
+      // 服务调用模式：需要解析resType, packageName, methodName
+      console.log(`检测到服务调用模式`);
+
+      if (proto.includes(',')) {
+        // 格式：resType, packageName, methodName
+        // 例如：2, actpb.actbasepb.CSActService, ActEntranceDetail
+        const parts = proto.split(",").map((part) => part.trim());
+
+        if (parts.length >= 3) {
+          // 提取resType
+          const parsedResType = parseInt(parts[0], 10);
+          if (isNaN(parsedResType)) {
+            throw new AppError(400, "协议类型必须是数字");
+          }
+          resType = parsedResType;
+
+          // 提取packageName（包含Service的完整包名）
+          packageName = parts[1];
+
+          // 提取methodName（逗号分隔的最后位置）
+          methodName = parts[parts.length - 1];
+
+          console.log(`服务调用三参数格式: resType=${resType}, packageName=${packageName}, methodName=${methodName}`);
+        } else {
+          throw new AppError(400, "服务调用格式错误，应为: 'resType, packageName, methodName'");
+        }
+      } else {
+        throw new AppError(400, "服务调用必须包含resType和methodName，格式: 'resType, packageName, methodName'");
+      }
+
+      // 从packageName中提取serviceName（点分隔的最后一个位置）
+      const packageParts = packageName.split('.');
+      const serviceName = packageParts[packageParts.length - 1];
+      console.log(`提取的serviceName: ${serviceName}`);
+
+    } else {
+      // 非服务调用模式：通知/消息类型
+      console.log(`检测到非服务调用模式`);
+
+      if (proto.includes(',')) {
+        // 格式：resType, packageName
+        // 例如：3, corepb.StampedeGameStartData
+        const parts = proto.split(",").map((part) => part.trim());
+
+        if (parts.length >= 2) {
+          // 提取resType
+          const parsedResType = parseInt(parts[0], 10);
+          if (isNaN(parsedResType)) {
+            throw new AppError(400, "协议类型必须是数字");
+          }
+          resType = parsedResType;
+
+          // 提取packageName
+          packageName = parts[1];
+
+          console.log(`非服务调用两参数格式: resType=${resType}, packageName=${packageName}`);
+        } else {
+          throw new AppError(400, "非服务调用格式错误，应为: 'resType, packageName' 或 'packageName'");
+        }
+      } else {
+        // 格式：只有packageName，使用默认resType=3
+        // 例如：corepb.StampedeGameStartData
+        packageName = proto.trim();
+        console.log(`非服务调用单参数格式: packageName=${packageName}, 使用默认resType=${resType}`);
+      }
+
+      // 从包名中提取类型名（点分隔的最后一个位置）
+      const packageParts = packageName.split('.');
+      const lastPart = packageParts[packageParts.length - 1];
+
+      // 检查最后一部分是否是类型名（大写开头或包含大写字母）
+      const isTypeName = /[A-Z]/.test(lastPart);
+
+      if (isTypeName) {
+        typeName = lastPart;
+        console.log(`提取的typeName: ${typeName}`);
+      } else {
+        // 如果无法确定类型名，使用整个包名的最后部分
+        typeName = lastPart;
+        console.log(`使用包名最后部分作为typeName: ${typeName}`);
+      }
+
+      methodName = 'Push'; // 非服务调用固定使用Push
+    }
+
+    // 验证包名不为空
+    if (!packageName) {
+      throw new AppError(400, "包名不能为空");
+    }
+
+    console.log(`最终解析结果: resType=${resType}, packageName=${packageName}, methodName=${methodName}, typeName=${typeName}`);
+
+    // 查找proto文件和类型名
+    const protoInfo = findProtoFileByPackage(packageName, methodName, resType, typeName);
+
+    if (!protoInfo) {
+      throw new AppError(404, `未找到包 ${packageName} 方法 ${methodName} 的proto文件或类型定义`);
+    }
+
+    console.log(`找到proto文件: ${protoInfo.file}`);
+    console.log(`确定的完整类型名: ${protoInfo.typeName}`);
+
+    // 解析base64数据
+    const jsonResult = await convertBase64ToJson(
+      protoInfo.file,
+      base64,
+      protoInfo.typeName
+    );
+
+    // 使用统一响应格式返回结果
+    return ResponseHelper.success(
+      res,
+      {
+        packageName,
+        methodName,
+        resType,
+        typeName,
+        protoFile: protoInfo.file,
+        resolvedTypeName: protoInfo.typeName,
+        isServiceCall: packageName.includes('Service'),
+        formatType: packageName.includes('Service') ? 'serviceCall' :
+          (proto.includes(',') ? 'withResType' : 'packageOnly'),
+        result: jsonResult,
+      },
+      "自定义格式解析成功"
+    );
+  } catch (error) {
+    console.error("自定义格式路由处理失败:", error);
+    next(error);
+  }
+});
+
 module.exports = router;

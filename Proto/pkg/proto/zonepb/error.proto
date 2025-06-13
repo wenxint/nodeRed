@@ -597,6 +597,7 @@ enum ZoneError {
   PasscodePasscodeTooLong  = 1004704;  // 二级密码太长
   PasscodePasscodeInvalid  = 1004705;  // 二级密码非法
   PasscodeAccessDenied     = 1004706;  // 密保功能拒绝访问
+  PasscodeLocked           = 1004709;  // 二级密码锁定
 
   // 48 秘境宝箱相关
   SecretFieldBoxBagFull = 1004801;  // 秘境宝箱背包已满

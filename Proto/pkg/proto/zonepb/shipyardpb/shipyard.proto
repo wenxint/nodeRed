@@ -7,6 +7,8 @@ option go_package = "git.code.oa.com/red/zonesvr/pkg/proto/zonepb/shipyardpb";
 
 
 import "corepb/common.proto";
+import "corepb/fight_common.proto";
+
 import "pkg/proto/zonepb/specialpackpb/specialpack.proto";
 
 service CSService {
@@ -24,6 +26,8 @@ service CSService {
   rpc CloseShipSoulSkillNewFlag(CloseShipSoulSkillNewFlagRequest) returns (CloseShipSoulSkillNewFlagReply);
   // 检查战船部件
   rpc CheckWarshipPart(CheckWarshipPartRequest) returns (CheckWarshipPartReply);
+  // 战船练习场战斗数据
+  rpc PracticeFightData(PracticeFightDataRequest) returns (PracticeFightDataResponse);
 }
 
 message GetWarshipListRequest {
@@ -131,12 +135,20 @@ message CloseShipSoulSkillNewFlagRequest {
 message CloseShipSoulSkillNewFlagReply {}
 
 message CheckWarshipPartRequest {
-  int64 id    = 1;  // 部件id
-  int64 count = 2;  // 部件个数 （保留，暂没用）
+  int64 id = 1;  // 战船id
 }
 
 message CheckWarshipPartReply {
   int64 current_star   = 1;  // 当前星级 （0星表示未解锁）
   int64 max_star       = 2;  // 最大星级
-  int64 reachable_star = 3;  // 能升到多少星级
+  int64 reachable_star = 3;  // 能升到多少星级 （当未解锁时，该值无意义）
+}
+
+message PracticeFightDataRequest {
+  int64 id         = 1;  // 战船 ID
+  int64 dungeon_id = 2;  // 关卡 ID
+}
+
+message PracticeFightDataResponse {
+  corepb.FightInfo fight_info = 1;
 }

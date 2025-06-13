@@ -9,9 +9,10 @@ import "corepb/common.proto";
 
 // 同盟海战服务 - 有状态部分，请求需要携带 x-warid 标头且值为「war_id」
 service StatefulGuildSeaWarService {
-  rpc EnterMain(EnterMainRequest) returns (EnterMainReply);  // 进入同盟海战主界面
-  rpc EnterArea(EnterAreaRequest) returns (EnterAreaReply);  // 进入海域
-  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);  // 心跳
+  rpc EnterMain(EnterMainRequest) returns (EnterMainReply);                          // 进入同盟海战主界面
+  rpc EnterArea(EnterAreaRequest) returns (EnterAreaReply);                          // 进入海域
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatReply);                          // 心跳
+  rpc ParticipantDetail(ParticipantDetailRequest) returns (ParticipantDetailReply);  // 查询同盟成员参战详情
 
   // 全员权限:
   rpc Participant(ParticipantRequest) returns (ParticipantReply);        // 玩家参与
@@ -86,6 +87,7 @@ message AreaTeam {
   repeated PlayerProfile players = 2;  // 玩家列表
   repeated int64 alive_players   = 3;  // 有心跳玩家 gid 列表
   int64 guild_id                 = 4;  // 同盟 ID
+  string guild_name              = 5;  // 同盟名称
 }
 
 message AreaTeamAgainst {
@@ -120,6 +122,21 @@ message HeartbeatRequest {
 }
 
 message HeartbeatReply {}
+
+message ParticipantDetailRequest {
+  int64 guild_id = 1;  // 同盟 ID
+}
+
+message ParticipantDetailReply {
+  message Member {
+    int64 gid                      = 1;  // 玩家 gid
+    PlayerProfile player_profile   = 2;  // 玩家信息
+    bool participated              = 3;  // 是否参战
+    bool have_right_to_participate = 4;  // 是否有权参战
+  }
+  repeated Member members            = 1;  // 同盟成员列表
+  repeated GlobalSkill global_skills = 2;  // 全局技能列表
+}
 
 message ParticipantRequest {}
 
@@ -199,12 +216,13 @@ message AreaDeployment {
   repeated PlayerProfile player_profiles = 4;  // 玩家 gid -> 玩家信息(仅在查询部署时有效)
 }
 
+message GlobalSkill {
+  int64 global_skill_id     = 1;  // 全局技能 ID
+  bool unlocked             = 2;  // 是否解锁
+  int64 participants_needed = 3;  // 解锁需要参与人数
+}
+
 message DeploymentInfoReply {
-  message GlobalSkill {
-    int64 global_skill_id     = 1;  // 全局技能 ID
-    bool unlocked             = 2;  // 是否解锁
-    int64 participants_needed = 3;  // 解锁需要参与人数
-  }
   repeated AreaDeployment area_deployments = 1;  // 部署信息
   repeated PlayerProfile candidates        = 2;  // 可选玩家列表
   repeated GlobalSkill global_skills       = 3;  // 全局技能列表
