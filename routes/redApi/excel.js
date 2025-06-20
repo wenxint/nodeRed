@@ -45,6 +45,11 @@ const { AppError } = require("../../middleware/errorHandler");
 // 引入响应工具类（用于封装接口响应格式，统一返回结构）
 const ResponseHelper = require("../../common/response");
 
+// 注释掉图片处理相关的依赖
+// const jimp = require('jimp'); // 图片处理库 (Jimp 1.6.0)
+// const Tesseract = require('tesseract.js'); // OCR 识别库
+// const ExifReader = require('exifreader'); // EXIF 信息读取
+
 /**
  * 生成唯一文件名
  * @description 为避免多用户并发上传时文件名冲突，生成带时间戳和随机数的唯一文件名
@@ -72,14 +77,23 @@ const upload = createUpload({
     cb(null, uniqueName);
   },
   fileFilter: (req, file, cb) => {
-    // 检查文件类型，只允许 Excel 文件
+    // 检查文件类型，只允许 Excel 文件和 JSON 文件
     const allowedMimes = [
       "application/vnd.ms-excel", // .xls
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
       "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
+      "application/json", // .json
+      "text/json", // .json (某些系统)
+      // 注释掉图片文件类型支持
+      // "image/jpeg", // .jpg, .jpeg
+      // "image/png", // .png
+      // "image/gif", // .gif
+      // "image/bmp", // .bmp
+      // "image/tiff", // .tiff
+      // "image/webp", // .webp
     ];
 
-    const allowedExtensions = [".xls", ".xlsx", ".xlsm"];
+    const allowedExtensions = [".xls", ".xlsx", ".xlsm", ".json"]; // 移除图片扩展名
     const fileExtension = path.extname(file.originalname).toLowerCase();
 
     if (
@@ -89,7 +103,7 @@ const upload = createUpload({
       cb(null, true);
     } else {
       cb(
-        new AppError(400, "只支持 Excel 文件格式 (.xls, .xlsx, .xlsm)"),
+        new AppError(400, "只支持 Excel 文件格式 (.xls, .xlsx, .xlsm) 和 JSON 文件格式 (.json)"),
         false
       );
     }
@@ -256,28 +270,177 @@ async function cleanupTempFile(filePath) {
 }
 
 /**
+ * 将 JSON 数据转换为 Excel 文件
+ * @description 接收 JSON 数据并转换为 Excel 文件，支持字段映射
+ * @param {Object|Array} jsonData - JSON 数据（对象或数组）
+ * @param {string} outputPath - 输出 Excel 文件路径
+ * @param {Object} [fieldMapping] - 字段映射关系对象，key为JSON字段名，value为Excel表头名
+ * @returns {Object} 转换结果信息
+ */
+function convertJsonToExcel(jsonData, outputPath, fieldMapping = null) {
+  try {
+    console.log(`开始将 JSON 数据转换为 Excel 文件: ${outputPath}`);
+    if (fieldMapping) {
+      console.log(`使用字段映射:`, fieldMapping);
+    }
+
+    let processedData = [];
+    let sheetName = 'Sheet1';
+
+    // 处理不同类型的 JSON 数据结构
+    if (Array.isArray(jsonData)) {
+      // 数组格式：直接使用
+      processedData = jsonData;
+      console.log(`处理数组格式数据，共 ${processedData.length} 条记录`);
+    } else if (typeof jsonData === 'object' && jsonData !== null) {
+      if (jsonData.sheets && typeof jsonData.sheets === 'object') {
+        // 多工作表格式：取第一个工作表的数据
+        const firstSheetName = Object.keys(jsonData.sheets)[0];
+        if (firstSheetName && jsonData.sheets[firstSheetName].data) {
+          processedData = Array.isArray(jsonData.sheets[firstSheetName].data[0])
+            ? jsonData.sheets[firstSheetName].data[0]
+            : jsonData.sheets[firstSheetName].data;
+          sheetName = firstSheetName;
+          console.log(`处理多工作表格式数据，使用工作表: ${sheetName}，共 ${processedData.length} 条记录`);
+        }
+      } else if (jsonData.data && Array.isArray(jsonData.data)) {
+        // 包装格式：{ data: [...] }
+        processedData = jsonData.data;
+        console.log(`处理包装格式数据，共 ${processedData.length} 条记录`);
+      } else {
+        // 单个对象：转换为数组
+        processedData = [jsonData];
+        console.log(`处理单个对象数据`);
+      }
+    } else {
+      throw new Error('不支持的 JSON 数据格式');
+    }
+
+    // 验证处理后的数据
+    if (!Array.isArray(processedData) || processedData.length === 0) {
+      throw new Error('JSON 数据为空或格式不正确');
+    }
+
+    // 应用字段映射（如果提供）
+    if (fieldMapping && Object.keys(fieldMapping).length > 0) {
+      console.log(`应用字段映射转换`);
+      processedData = processedData.map(row => {
+        const mappedRow = {};
+        Object.keys(row).forEach(key => {
+          // 如果有映射关系，使用映射后的字段名，否则保持原字段名
+          const mappedKey = fieldMapping[key] || key;
+          mappedRow[mappedKey] = row[key];
+        });
+        return mappedRow;
+      });
+    }
+
+    // 创建工作簿
+    const workbook = XLSX.utils.book_new();
+
+    // 将 JSON 数据转换为工作表
+    const worksheet = XLSX.utils.json_to_sheet(processedData);
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    // 写入 Excel 文件
+    XLSX.writeFile(workbook, outputPath);
+
+    console.log(`JSON 转 Excel 转换完成: ${outputPath}`);
+
+    return {
+      success: true,
+      outputPath: outputPath,
+      sheetName: sheetName,
+      recordCount: processedData.length,
+      fieldMapping: fieldMapping,
+      hasMapping: fieldMapping !== null && Object.keys(fieldMapping).length > 0
+    };
+
+  } catch (error) {
+    console.error(`JSON 转 Excel 转换失败: ${error.message}`);
+    throw new AppError(400, `JSON 转 Excel 转换失败: ${error.message}`);
+  }
+}
+
+/**
+ * 解析 JSON 文件内容
+ * @description 读取并解析 JSON 文件，支持多种 JSON 格式
+ * @param {string} filePath - JSON 文件路径
+ * @returns {Object} 解析后的 JSON 数据
+ */
+function parseJsonFile(filePath) {
+  try {
+    console.log(`开始解析 JSON 文件: ${filePath}`);
+
+    // 读取文件内容
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+
+    // 解析 JSON
+    const jsonData = JSON.parse(fileContent);
+
+    console.log(`JSON 文件解析成功`);
+    return jsonData;
+
+  } catch (error) {
+    console.error(`JSON 文件解析失败: ${error.message}`);
+    throw new AppError(400, `JSON 文件解析失败: ${error.message}`);
+  }
+}
+
+// 注释掉图片处理相关函数 - 开始
+/*
+async function extractTableFromImage(imagePath, options = {}) {
+  // 图片OCR识别功能已注释掉
+}
+
+async function preprocessImageForOCR(imagePath) {
+  // 图片预处理功能已注释掉
+}
+
+function parseOCRTextToTable(text, words) {
+  // OCR文本解析功能已注释掉
+}
+
+async function extractImageMetadata(imagePath) {
+  // 图片元数据提取功能已注释掉
+}
+
+function convertImageDataToExcel(imageData, outputPath, fieldMapping = null) {
+  // 图片数据转Excel功能已注释掉
+}
+*/
+// 注释掉图片处理相关函数 - 结束
+
+/**
  * POST /excel/excelUpload
- * @description 上传 Excel 文件并转换为二维数组格式
+ * @description 上传文件并处理：Excel 文件转换为 JSON，JSON 文件转换为 Excel，图片文件进行 OCR 识别并转换为 Excel
  * @route POST /excel/excelUpload
- * @param {File} file - 上传的 Excel 文件（通过 multipart/form-data）
+ * @param {File} file - 上传的文件（Excel、JSON 或图片）
  * @param {string} [options] - 解析选项（JSON 字符串格式）
- * @param {string} [map] - 字段映射关系（JSON 字符串格式），key为Excel表头，value为用户自定义字段名
- * @returns {Object} 包含所有工作表二维数组数据的响应
+ * @param {string} [map] - 字段映射关系（JSON 字符串格式）
+ * @param {string} [imageProcessType] - 图片处理类型：'ocr'(OCR识别) 或 'metadata'(元数据提取) 或 'both'(两者都做)
+ * @returns {Object} 处理结果
  */
 router.post("/excelUpload", upload.single("file"), async (req, res, next) => {
   let tempFilePath = null;
+  let outputFilePath = null;
+  let processedImagePath = null;
 
   try {
     // 检查是否有文件上传
     if (!req.file) {
-      throw new AppError(400, "请选择要上传的 Excel 文件");
+      throw new AppError(400, "请选择要上传的文件");
     }
 
     tempFilePath = req.file.path;
     const originalName = req.file.originalname;
     const fileSize = req.file.size;
+    const fileExtension = path.extname(originalName).toLowerCase();
 
-    console.log(`收到 Excel 文件上传请求: ${originalName} (${fileSize} 字节)`);
+    console.log(`收到文件上传请求: ${originalName} (${fileSize} 字节)`);
+    console.log(`文件扩展名: ${fileExtension}`);
     console.log(`临时文件路径: ${tempFilePath}`);
 
     // 解析可选的配置参数
@@ -316,52 +479,130 @@ router.post("/excelUpload", upload.single("file"), async (req, res, next) => {
       }
     }
 
-    // 解析 Excel 文件，传入字段映射
-    const result = parseExcelToJson(tempFilePath, parseOptions, fieldMapping);
-    console.log("Excel 解析结果:", JSON.stringify(result, null, 2));
+    // 注释掉图片处理类型解析
+    // const imageProcessType = req.body.imageProcessType || 'both'; // 默认两者都做
 
-    // 添加文件信息到结果中
-    result.fileInfo = {
-      originalName: originalName,
-      size: fileSize,
-      uploadTime: new Date().toISOString(),
-      mimeType: req.file.mimetype,
-      tempFileName: path.basename(tempFilePath),
-      hasFieldMapping: fieldMapping !== null,
-    };
+    let result;
 
-    // 统计总数据量
-    let totalRows = 0;
-    Object.values(result.sheets).forEach((sheet) => {
-      if (sheet.stats) {
-        totalRows += sheet.stats.rowCount;
-      }
-    });
+    // 根据文件扩展名判断处理方式
+    if (['.xls', '.xlsx', '.xlsm'].includes(fileExtension)) {
+      // Excel 文件：转换为 JSON（原有逻辑）
+      console.log(`处理 Excel 文件转 JSON`);
 
-    result.summary = {
-      totalSheets: result.totalSheets,
-      totalRows: totalRows,
-      successfulSheets: Object.values(result.sheets).filter(
-        (sheet) => !sheet.error
-      ).length,
-      failedSheets: Object.values(result.sheets).filter((sheet) => sheet.error)
-        .length,
-      fieldMappingApplied: fieldMapping !== null,
-      mappedFieldsCount: fieldMapping ? Object.keys(fieldMapping).length : 0,
-    };
+      result = parseExcelToJson(tempFilePath, parseOptions, fieldMapping);
 
-    console.log(
-      `Excel 解析完成: ${result.summary.totalSheets} 个工作表, ${result.summary.totalRows} 行数据${fieldMapping ? ', 已应用字段映射' : ''}`
-    );
+      // 添加文件信息到结果中
+      result.fileInfo = {
+        originalName: originalName,
+        size: fileSize,
+        uploadTime: new Date().toISOString(),
+        mimeType: req.file.mimetype,
+        tempFileName: path.basename(tempFilePath),
+        hasFieldMapping: fieldMapping !== null,
+        processType: 'excel-to-json'
+      };
 
-    // 使用统一响应格式返回结果
-    return ResponseHelper.success(
-      res,
-      result,
-      `Excel 文件解析成功，共处理 ${result.summary.totalSheets} 个工作表，${result.summary.totalRows} 行数据${fieldMapping ? '，已应用字段映射' : ''}`
-    );
+      // 统计总数据量
+      let totalRows = 0;
+      Object.values(result.sheets).forEach((sheet) => {
+        if (sheet.stats) {
+          totalRows += sheet.stats.rowCount;
+        }
+      });
+
+      result.summary = {
+        totalSheets: result.totalSheets,
+        totalRows: totalRows,
+        successfulSheets: Object.values(result.sheets).filter(
+          (sheet) => !sheet.error
+        ).length,
+        failedSheets: Object.values(result.sheets).filter((sheet) => sheet.error)
+          .length,
+        fieldMappingApplied: fieldMapping !== null,
+        mappedFieldsCount: fieldMapping ? Object.keys(fieldMapping).length : 0,
+      };
+
+      console.log(
+        `Excel 解析完成: ${result.summary.totalSheets} 个工作表, ${result.summary.totalRows} 行数据${fieldMapping ? ', 已应用字段映射' : ''}`
+      );
+
+      return ResponseHelper.success(
+        res,
+        result,
+        `Excel 文件解析成功，共处理 ${result.summary.totalSheets} 个工作表，${result.summary.totalRows} 行数据${fieldMapping ? '，已应用字段映射' : ''}`
+      );
+
+    } else if (fileExtension === '.json') {
+      // JSON 文件：转换为 Excel（原有逻辑）
+      console.log(`处理 JSON 文件转 Excel`);
+
+      // 解析 JSON 文件
+      const jsonData = parseJsonFile(tempFilePath);
+
+      // 生成输出 Excel 文件路径
+      const outputFileName = `converted_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.xlsx`;
+      outputFilePath = path.join(path.dirname(tempFilePath), outputFileName);
+
+      // 转换 JSON 为 Excel
+      const conversionResult = convertJsonToExcel(jsonData, outputFilePath, fieldMapping);
+
+      // 读取生成的 Excel 文件内容（转换为 base64 供下载）
+      const excelBuffer = fs.readFileSync(outputFilePath);
+      const base64Excel = excelBuffer.toString('base64');
+
+      result = {
+        fileName: originalName,
+        convertedFileName: outputFileName,
+        processType: 'json-to-excel',
+        conversion: conversionResult,
+        excelData: base64Excel, // Excel 文件的 base64 数据
+        fileInfo: {
+          originalName: originalName,
+          size: fileSize,
+          uploadTime: new Date().toISOString(),
+          mimeType: req.file.mimetype,
+          tempFileName: path.basename(tempFilePath),
+          outputFileName: outputFileName,
+          outputSize: excelBuffer.length,
+          hasFieldMapping: fieldMapping !== null,
+          processType: 'json-to-excel'
+        },
+        summary: {
+          recordCount: conversionResult.recordCount,
+          sheetName: conversionResult.sheetName,
+          fieldMappingApplied: conversionResult.hasMapping,
+          mappedFieldsCount: fieldMapping ? Object.keys(fieldMapping).length : 0,
+        }
+      };
+
+      console.log(
+        `JSON 转 Excel 完成: ${conversionResult.recordCount} 条记录${fieldMapping ? ', 已应用字段映射' : ''}`
+      );
+
+      return ResponseHelper.success(
+        res,
+        result,
+        `JSON 文件转换成功，共处理 ${conversionResult.recordCount} 条记录${fieldMapping ? '，已应用字段映射' : ''}`
+      );
+
+    }
+
+    // 注释掉图片文件处理逻辑
+    /*
+    else if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'].includes(fileExtension)) {
+      // 图片文件处理功能已注释掉
+      console.log(`图片文件处理功能已禁用`);
+      throw new AppError(400, '图片文件处理功能当前不可用');
+    }
+    */
+
+    else {
+      // 不支持的文件类型
+      throw new AppError(400, `不支持的文件类型: ${fileExtension}。仅支持 Excel (.xls, .xlsx, .xlsm) 和 JSON (.json) 文件`);
+    }
+
   } catch (error) {
-    console.error("Excel 文件处理失败:", error);
+    console.error("文件处理失败:", error);
     next(error);
   } finally {
     // 确保在所有情况下都清理临时文件
@@ -370,7 +611,24 @@ router.post("/excelUpload", upload.single("file"), async (req, res, next) => {
         await cleanupTempFile(tempFilePath);
       } catch (cleanupError) {
         console.error("清理临时文件时发生错误:", cleanupError);
-        // 不抛出错误，避免影响主要的响应
+      }
+    }
+
+    // 清理输出文件
+    if (outputFilePath) {
+      try {
+        await cleanupTempFile(outputFilePath);
+      } catch (cleanupError) {
+        console.error("清理输出文件时发生错误:", cleanupError);
+      }
+    }
+
+    // 清理处理过的图片文件
+    if (processedImagePath) {
+      try {
+        await cleanupTempFile(processedImagePath);
+      } catch (cleanupError) {
+        console.error("清理处理图片时发生错误:", cleanupError);
       }
     }
   }
